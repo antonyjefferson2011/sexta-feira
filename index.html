@@ -1,27 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sexta-Feira Studies</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Sexta-Feira Studies</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Sexta-Feira Studies</h1>
-        <nav>
-            <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#materias">Matérias</a></li>
-            </ul>
-        </nav>
-        <button id="toggleTheme">Modo Escuro</button>
-    </header>
 
-    <main id="app">
-        <!-- Conteúdo dinâmico será carregado aqui -->
-    </main>
+<header>
+  <h1>📚 Sexta-Feira Studies</h1>
+  <button onclick="toggleTheme()">🌙 Tema</button>
+</header>
 
-    <script src="script.js"></script>
+<main>
+
+  <!-- HOME -->
+  <section id="home">
+    <h2>Bem-vindo</h2>
+    <button onclick="mostrarMaterias()">📚 Ver matérias</button>
+    <button onclick="criarMateria()">➕ Criar matéria</button>
+  </section>
+
+  <!-- MATÉRIAS -->
+  <section id="materias" style="display:none;">
+    <h2>Matérias</h2>
+    <button onclick="voltarHome()">⬅️ Voltar</button>
+    <div id="listaMaterias"></div>
+  </section>
+
+  <!-- DETALHE -->
+  <section id="detalhe" style="display:none;">
+    <h2 id="tituloMateria"></h2>
+    <button onclick="voltarMaterias()">⬅️ Voltar</button>
+
+    <button onclick="criarTopico()">✏️ Criar tópico</button>
+    <button onclick="criarQuiz()">🧠 Criar quiz</button>
+
+    <div id="topicos"></div>
+    <div id="quizzes"></div>
+  </section>
+
+</main>
+
+<script src="script.js"></script>
 </body>
 </html>
