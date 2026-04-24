@@ -1,41 +1,517 @@
+:root {
+    --primary-color: #6200ee;
+    --secondary-color: #03dac6;
+    --background-light: #f4f4f4;
+    --text-light: #333;
+    --card-bg-light: #fff;
+    --border-light: #ddd;
+    --background-dark: #1e1e1e;
+    --text-dark: #e0e0e0;
+    --card-bg-dark: #2c2c2c;
+    --border-dark: #444;
+    --button-hover-light: #3700b3;
+    --button-hover-dark: #bb86fc;
+}
+
 body {
-  font-family: Arial;
-  background: #0f172a;
-  color: white;
-  margin: 0;
-  text-align: center;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-light);
+    color: var(--text-light);
+    transition: background-color 0.3s, color 0.3s;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-h1 {
-  padding: 20px;
+body.dark-mode {
+    background-color: var(--background-dark);
+    color: var(--text-dark);
 }
 
-.container {
-  padding: 20px;
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-button {
-  padding: 12px 20px;
-  border: none;
-  background: #3b82f6;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 20px;
+body.dark-mode header {
+    background-color: var(--button-hover-dark);
 }
 
-.materia {
-  background: #1e293b;
-  padding: 15px;
-  margin: 10px auto;
-  border-radius: 10px;
-  max-width: 300px;
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
 }
 
-.materia h3 {
-  margin: 0;
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
 }
 
-small {
-  color: #94a3b8;
+nav li {
+    margin-left: 20px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--secondary-color);
+}
+
+body.dark-mode nav a {
+    color: var(--text-dark);
+}
+
+body.dark-mode nav a:hover {
+    color: var(--secondary-color);
+}
+
+#toggleTheme {
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode #toggleTheme {
+    background-color: var(--button-hover-dark);
+    color: white;
+}
+
+#toggleTheme:hover {
+    background-color: var(--button-hover-light);
+}
+
+body.dark-mode #toggleTheme:hover {
+    background-color: var(--primary-color);
+}
+
+main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Estilos de Página */
+.page {
+    display: none;
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+.page.active {
+    display: block;
+    opacity: 1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Home Page */
+#home-page .welcome-message {
+    text-align: center;
+    margin-top: 50px;
+}
+
+#home-page h2 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+
+body.dark-mode #home-page h2 {
+    color: var(--secondary-color);
+}
+
+#home-page p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
+
+/* Matérias Page */
+.materias-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background-color: var(--card-bg-light);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+body.dark-mode .card {
+    background-color: var(--card-bg-dark);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+body.dark-mode .card h3 {
+    color: var(--secondary-color);
+}
+
+.card-author {
+    font-size: 0.9rem;
+    color: #777;
+    margin-top: 10px;
+}
+
+body.dark-mode .card-author {
+    color: #aaa;
+}
+
+/* Detalhe da Matéria Page */
+.materia-detail {
+    background-color: var(--card-bg-light);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .materia-detail {
+    background-color: var(--card-bg-dark);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.materia-detail h2 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+body.dark-mode .materia-detail h2 {
+    color: var(--secondary-color);
+    border-bottom-color: var(--secondary-color);
+}
+
+.materia-detail .creator-info {
+    font-style: italic;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+body.dark-mode .materia-detail .creator-info {
+    color: #bbb;
+}
+
+.topics-list h3 {
+    margin-top: 30px;
+    color: var(--primary-color);
+}
+
+body.dark-mode .topics-list h3 {
+    color: var(--secondary-color);
+}
+
+.topic-item {
+    background-color: var(--background-light);
+    border: 1px solid var(--border-light);
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+body.dark-mode .topic-item {
+    background-color: var(--card-bg-dark);
+    border-color: var(--border-dark);
+}
+
+.topic-item p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Formatação */
+.form-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: var(--card-bg-light);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+body.dark-mode .form-section {
+    background-color: var(--card-bg-dark);
+}
+
+.form-section h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+body.dark-mode .form-section h3 {
+    color: var(--secondary-color);
+}
+
+.form-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-section input[type="text"],
+.form-section textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+body.dark-mode .form-section input[type="text"],
+body.dark-mode .form-section textarea {
+    background-color: var(--background-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+.form-section button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+body.dark-mode .form-section button {
+    background-color: var(--button-hover-dark);
+}
+
+.form-section button:hover {
+    background-color: var(--button-hover-light);
+}
+
+body.dark-mode .form-section button:hover {
+    background-color: var(--primary-color);
+}
+
+/* Quiz Page */
+.quiz-container {
+    background-color: var(--card-bg-light);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 700px;
+    margin: 20px auto;
+}
+
+body.dark-mode .quiz-container {
+    background-color: var(--card-bg-dark);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.quiz-container h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 25px;
+}
+
+body.dark-mode .quiz-container h2 {
+    color: var(--secondary-color);
+}
+
+.question-area {
+    margin-bottom: 20px;
+}
+
+.question-area p {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.options-area div {
+    background-color: var(--background-light);
+    border: 1px solid var(--border-light);
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+    font-size: 1.1rem;
+}
+
+body.dark-mode .options-area div {
+    background-color: var(--card-bg-dark);
+    border-color: var(--border-dark);
+}
+
+.options-area div:hover {
+    background-color: var(--border-light);
+}
+
+body.dark-mode .options-area div:hover {
+    background-color: var(--border-dark);
+}
+
+.options-area div.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .options-area div.selected {
+    background-color: var(--button-hover-dark);
+    border-color: var(--button-hover-dark);
+}
+
+.quiz-feedback {
+    margin-top: 20px;
+    font-size: 1.1rem;
+    text-align: center;
+    font-weight: bold;
+}
+
+.quiz-feedback.correct {
+    color: green;
+}
+
+.quiz-feedback.incorrect {
+    color: red;
+}
+
+.score-display {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 30px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+body.dark-mode .score-display {
+    color: var(--secondary-color);
+}
+
+/* Botões de Navegação */
+.navigation-buttons {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.navigation-buttons button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 0 10px;
+    transition: background-color 0.3s ease;
+}
+
+body.dark-mode .navigation-buttons button {
+    background-color: var(--button-hover-dark);
+}
+
+.navigation-buttons button:hover {
+    background-color: var(--button-hover-light);
+}
+
+body.dark-mode .navigation-buttons button:hover {
+    background-color: var(--primary-color);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    header h1 {
+        margin-bottom: 10px;
+        font-size: 1.5rem;
+    }
+    nav ul {
+        flex-direction: column;
+        text-align: center;
+    }
+    nav li {
+        margin: 5px 0;
+    }
+    main {
+        padding: 1rem;
+    }
+    .card {
+        min-width: 250px;
+    }
+    .form-section input[type="text"],
+    .form-section textarea {
+        width: 100%;
+    }
+    .quiz-container {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.3rem;
+    }
+    #toggleTheme {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    .materias-list {
+        grid-template-columns: 1fr;
+    }
+    .card {
+        min-width: unset;
+    }
+    .form-section button,
+    .navigation-buttons button {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        margin: 5px;
+        display: block;
+        width: calc(100% - 20px);
+    }
 }
