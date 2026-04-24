@@ -1,1 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sexta-Feira Studies</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+</head>
+<body>
 
+  <!-- ── MODAL: Perfil ─────────────────────────────────── -->
+  <div id="profileModal" class="modal-overlay active">
+    <div class="modal-box profile-modal">
+      <div class="modal-logo">📚</div>
+      <h2>Bem-vindo(a)!</h2>
+      <p>Como você se chama?</p>
+      <input type="text" id="profileNameInput" placeholder="Seu nome aqui..." maxlength="30" />
+      <button class="btn-primary" onclick="saveProfile()">Entrar na plataforma</button>
+    </div>
+  </div>
+
+  <!-- ── NAVBAR ─────────────────────────────────────────── -->
+  <nav class="navbar">
+    <div class="nav-brand" onclick="showPage('home')">
+      <span class="brand-icon">📚</span>
+      <span class="brand-name">Sexta-Feira<br><small>Studies</small></span>
+    </div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="showPage('subjects')">Matérias</button>
+      <button class="nav-btn" onclick="showPage('myStudies')">Meus Estudos</button>
+      <button class="nav-btn active-nav" onclick="showPage('home')">Início</button>
+    </div>
+    <div class="nav-right">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+        <span id="themeIcon">☀️</span>
+      </button>
+      <div class="nav-profile" onclick="openProfileEdit()">
+        <div class="avatar" id="navAvatar">?</div>
+        <span id="navName">Aluno</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── PÁGINAS ─────────────────────────────────────────── -->
+  <main id="appRoot">
+
+    <!-- HOME -->
+    <section id="page-home" class="page active">
+      <div class="hero">
+        <div class="hero-bg-orbs">
+          <div class="orb orb1"></div>
+          <div class="orb orb2"></div>
+          <div class="orb orb3"></div>
+        </div>
+        <div class="hero-content">
+          <div class="hero-badge">🎓 Plataforma de estudos escolar</div>
+          <h1 class="hero-title">Sexta-Feira<br /><span class="gradient-text">Studies</span></h1>
+          <p class="hero-sub">Organize seus estudos, crie conteúdos e teste seus conhecimentos com quizzes personalizados.</p>
+          <div class="hero-actions">
+            <button class="btn-primary large" onclick="showPage('subjects')">📖 Ver matérias</button>
+            <button class="btn-secondary large" onclick="openCreateSubject()">✏️ Criar matéria</button>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-card"><span id="statSubjects">0</span><label>Matérias</label></div>
+          <div class="stat-card"><span id="statTopics">0</span><label>Tópicos</label></div>
+          <div class="stat-card"><span id="statQuizzes">0</span><label>Quizzes</label></div>
+        </div>
+      </div>
+
+      <div class="section-wrap">
+        <h2 class="section-title">Acesso rápido</h2>
+        <div class="quick-grid" id="quickGrid"></div>
+      </div>
+    </section>
+
+    <!-- MATÉRIAS -->
+    <section id="page-subjects" class="page">
+      <div class="page-header">
+        <div>
+          <h1>📚 Matérias</h1>
+          <p>Todas as suas matérias e conteúdos</p>
+        </div>
+        <button class="btn-primary" onclick="openCreateSubject()">+ Nova matéria</button>
+      </div>
+      <div class="subjects-grid" id="subjectsGrid"></div>
+    </section>
+
+    <!-- MATÉRIA DETALHE -->
+    <section id="page-subject-detail" class="page">
+      <div class="page-header">
+        <button class="btn-back" onclick="showPage('subjects')">← Voltar</button>
+        <div>
+          <h1 id="detailSubjectName"></h1>
+          <p id="detailSubjectDesc"></p>
+        </div>
+        <div class="header-actions">
+          <button class="btn-secondary" onclick="openCreateTopic()">+ Tópico</button>
+          <button class="btn-primary" onclick="openCreateQuiz()">+ Quiz</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="topics" onclick="switchTab('topics')">📝 Tópicos</button>
+        <button class="tab" data-tab="quizzes" onclick="switchTab('quizzes')">🧠 Quizzes</button>
+      </div>
+
+      <div id="tab-topics" class="tab-content active">
+        <div id="topicsList" class="topics-list"></div>
+      </div>
+      <div id="tab-quizzes" class="tab-content">
+        <div id="quizzesList" class="quizzes-list"></div>
+      </div>
+    </section>
+
+    <!-- MEUS ESTUDOS -->
+    <section id="page-myStudies" class="page">
+      <div class="page-header">
+        <div>
+          <h1>🎯 Meus Estudos</h1>
+          <p>Seu progresso e atividade recente</p>
+        </div>
+      </div>
+      <div id="myStudiesContent"></div>
+    </section>
+
+    <!-- QUIZ RESPONDENDO -->
+    <section id="page-quiz-play" class="page">
+      <div id="quizPlayContent"></div>
+    </section>
+
+    <!-- QUIZ RESULTADO -->
+    <section id="page-quiz-result" class="page">
+      <div id="quizResultContent"></div>
+    </section>
+
+  </main>
+
+  <!-- ── MODAIS GERAIS ──────────────────────────────────── -->
+
+  <!-- Modal Criar/Editar Matéria -->
+  <div id="modalSubject" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="modalSubjectTitle">Nova Matéria</h3>
+        <button class="modal-close" onclick="closeModal('modalSubject')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Emoji da matéria</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+      </div>
+      <div class="form-group">
+        <label>Nome da matéria *</label>
+        <input type="text" id="subjectName" placeholder="Ex: Matemática, OBA, Prova de História..." />
+      </div>
+      <div class="form-group">
+        <label>Descrição (opcional)</label>
+        <input type="text" id="subjectDesc" placeholder="Ex: Matéria do 9º ano..." />
+      </div>
+      <div class="form-group">
+        <label>Cor do card</label>
+        <div class="color-picker" id="colorPicker"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal('modalSubject')">Cancelar</button>
+        <button class="btn-primary" onclick="saveSubject()">Salvar matéria</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Tópico -->
+  <div id="modalTopic" class="modal-overlay">
+    <div class="modal-box large-modal">
+      <div class="modal-head">
+        <h3 id="modalTopicTitle">Novo Tópico</h3>
+        <button class="modal-close" onclick="closeModal('modalTopic')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Título do tópico *</label>
+        <input type="text" id="topicTitle" placeholder="Ex: Equações do 2º grau..." />
+      </div>
+      <div class="form-group">
+        <label>Conteúdo / Resumo *</label>
+        <div class="editor-toolbar">
+          <button type="button" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
+          <button type="button" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
+          <button type="button" onclick="formatText('underline')" title="Sublinhado"><u>U</u></button>
+          <button type="button" onclick="insertList()" title="Lista">≡</button>
+        </div>
+        <div class="editor" id="topicContent" contenteditable="true" placeholder="Digite o resumo, anotações, fórmulas..."></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal('modalTopic')">Cancelar</button>
+        <button class="btn-primary" onclick="saveTopic()">Salvar tópico</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Quiz -->
+  <div id="modalQuiz" class="modal-overlay">
+    <div class="modal-box large-modal">
+      <div class="modal-head">
+        <h3>Criar Quiz</h3>
+        <button class="modal-close" onclick="closeModal('modalQuiz')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Título do quiz *</label>
+        <input type="text" id="quizTitle" placeholder="Ex: Quiz de Equações..." />
+      </div>
+      <div id="quizQuestionsContainer"></div>
+      <button class="btn-ghost add-question-btn" onclick="addQuestion()">+ Adicionar pergunta</button>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal('modalQuiz')">Cancelar</button>
+        <button class="btn-primary" onclick="saveQuiz()">Salvar quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Visualizar Tópico -->
+  <div id="modalViewTopic" class="modal-overlay">
+    <div class="modal-box large-modal">
+      <div class="modal-head">
+        <h3 id="viewTopicTitle"></h3>
+        <button class="modal-close" onclick="closeModal('modalViewTopic')">✕</button>
+      </div>
+      <div id="viewTopicContent" class="topic-view-content"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="editCurrentTopic()">✏️ Editar</button>
+        <button class="btn-primary" onclick="closeModal('modalViewTopic')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
