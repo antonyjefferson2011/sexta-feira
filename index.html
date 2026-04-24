@@ -1,48 +1,141 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Sexta-Feira Studies</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sexta-Feira Studies</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header>
+        <div class="container">
+            <h1>Sexta-Feira Studies</h1>
+            <div class="user-info">
+                <span id="userNameDisplay"></span>
+                <button id="editUserButton">Editar Nome</button>
+            </div>
+        </div>
+    </header>
 
-<header>
-  <h1>📚 Sexta-Feira Studies</h1>
-  <button onclick="toggleTheme()">🌙 Tema</button>
-</header>
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#home" data-section="home">Home</a></li>
+                <li><a href="#materias" data-section="materias">Matérias</a></li>
+                <li><a href="#quiz" data-section="quiz">Quiz</a></li>
+            </ul>
+        </div>
+    </nav>
 
-<main>
+    <main class="container">
+        <section id="home" class="section active">
+            <h2>Bem-vindo(a) ao Sexta-Feira Studies!</h2>
+            <p>Sua plataforma completa para organizar seus estudos, criar matérias, tópicos e testar seus conhecimentos com quizzes interativos.</p>
+            <div class="quick-actions">
+                <a href="#materias" class="btn">Ver Matérias</a>
+                <a href="#quiz" class="btn">Fazer um Quiz</a>
+            </div>
+            <div class="app-info">
+                <h3>Sobre o App</h3>
+                <p>Este aplicativo foi desenvolvido para ser uma ferramenta de estudo completa e intuitiva, funcionando inteiramente no seu navegador. Use o LocalStorage para salvar seus dados e continue de onde parou.</p>
+                <p id="createdBy"></p>
+            </div>
+        </section>
 
-  <!-- HOME -->
-  <section id="home">
-    <h2>Bem-vindo</h2>
-    <button onclick="mostrarMaterias()">📚 Ver matérias</button>
-    <button onclick="criarMateria()">➕ Criar matéria</button>
-  </section>
+        <section id="materias" class="section">
+            <h2>Minhas Matérias</h2>
+            <button id="addMateriaBtn" class="btn btn-primary">+</button>
+            <div id="materiasContainer" class="card-container">
+                <!-- Cards de matérias serão carregados aqui -->
+            </div>
+        </section>
 
-  <!-- MATÉRIAS -->
-  <section id="materias" style="display:none;">
-    <h2>Matérias</h2>
-    <button onclick="voltarHome()">⬅️ Voltar</button>
-    <div id="listaMaterias"></div>
-  </section>
+        <section id="materia-detail" class="section">
+            <h2 id="currentMateriaTitle"></h2>
+            <p id="currentMateriaDescription"></p>
+            <button id="addTopicoBtn" class="btn btn-secondary">+</button>
+            <div id="topicosContainer" class="card-container">
+                <!-- Tópicos da matéria serão carregados aqui -->
+            </div>
+            <button id="backToMaterias" class="btn btn-outline">Voltar para Matérias</button>
+        </section>
 
-  <!-- DETALHE -->
-  <section id="detalhe" style="display:none;">
-    <h2 id="tituloMateria"></h2>
-    <button onclick="voltarMaterias()">⬅️ Voltar</button>
+        <section id="add-materia-form" class="section hidden">
+            <h2>Criar Nova Matéria</h2>
+            <form id="materiaForm">
+                <label for="materiaNome">Nome da Matéria:</label>
+                <input type="text" id="materiaNome" required>
+                <label for="materiaDescricao">Descrição:</label>
+                <textarea id="materiaDescricao" rows="3"></textarea>
+                <button type="submit" class="btn btn-primary">Salvar Matéria</button>
+                <button type="button" id="cancelAddMateria" class="btn btn-secondary">Cancelar</button>
+            </form>
+        </section>
 
-    <button onclick="criarTopico()">✏️ Criar tópico</button>
-    <button onclick="criarQuiz()">🧠 Criar quiz</button>
+        <section id="add-topico-form" class="section hidden">
+            <h2 id="formTopicoTitle"></h2>
+            <form id="topicoForm">
+                <label for="topicoTitulo">Título do Tópico:</label>
+                <input type="text" id="topicoTitulo" required>
+                <label for="topicoConteudo">Conteúdo:</label>
+                <textarea id="topicoConteudo" rows="5" required></textarea>
+                <button type="submit" class="btn btn-primary">Salvar Tópico</button>
+                <button type="button" id="cancelAddTopico" class="btn btn-secondary">Cancelar</button>
+            </form>
+        </section>
 
-    <div id="topicos"></div>
-    <div id="quizzes"></div>
-  </section>
+        <section id="quiz" class="section">
+            <h2>Quizzes Disponíveis</h2>
+            <button id="createQuizBtn" class="btn btn-primary">+</button>
+            <div id="quizListContainer" class="card-container">
+                <!-- Lista de quizzes -->
+            </div>
+        </section>
 
-</main>
+        <section id="quiz-creation-form" class="section hidden">
+            <h2>Criar Novo Quiz</h2>
+            <form id="quizCreationForm">
+                <label for="quizTitleInput">Título do Quiz:</label>
+                <input type="text" id="quizTitleInput" required>
+                <div id="questionsContainer">
+                    <!-- Perguntas serão adicionadas aqui -->
+                </div>
+                <button type="button" id="addQuestionBtn" class="btn btn-secondary">Adicionar Pergunta</button>
+                <button type="submit" class="btn btn-primary">Salvar Quiz</button>
+                <button type="button" id="cancelQuizCreation" class="btn btn-outline">Cancelar</button>
+            </form>
+        </section>
 
-<script src="script.js"></script>
+        <section id="quiz-execution" class="section hidden">
+            <h2 id="currentQuizTitle"></h2>
+            <div id="quizProgress"></div>
+            <div id="questionArea">
+                <!-- Pergunta atual será carregada aqui -->
+            </div>
+            <button id="nextQuestionBtn" class="btn btn-primary">Próxima</button>
+            <button id="finishQuizBtn" class="btn btn-secondary hidden">Finalizar Quiz</button>
+            <button id="backToQuizList" class="btn btn-outline hidden">Voltar para Lista de Quizzes</button>
+        </section>
+
+        <section id="quiz-result" class="section hidden">
+            <h2 id="resultTitle"></h2>
+            <p id="scoreSummary"></p>
+            <ul id="answerDetails"></ul>
+            <button id="retakeQuizBtn" class="btn btn-primary">Refazer Quiz</button>
+            <button id="backToQuizListFromResults" class="btn btn-outline">Voltar para Lista de Quizzes</button>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Sexta-Feira Studies. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <div id="dark-mode-toggle" class="dark-mode-toggle">
+        <span class="icon">🌙</span>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
