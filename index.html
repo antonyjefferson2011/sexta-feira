@@ -2,237 +2,163 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2563eb">
     <title>Sexta-Feira Studies</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- TELA DE AUTENTICAÇÃO -->
-    <div id="auth-container" class="auth-container">
-        <div class="auth-box">
-            <div class="auth-logo">📚</div>
-            <h1 class="auth-title">Sexta-Feira Studies</h1>
-            <p class="auth-subtitle">Aprenda estudando com diversão</p>
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">📚</div>
+                <h1>Sexta-Feira Studies</h1>
+                <p>Aprenda estudando com diversão</p>
+            </div>
 
             <!-- FORMULÁRIO DE LOGIN -->
-            <div id="login-form" class="auth-form active">
+            <form id="login-form" class="auth-form active">
                 <h2>Bem-vindo de volta</h2>
 
                 <div class="form-group">
-                    <label for="login-email" class="form-label">Email</label>
-                    <input 
-                        type="email" 
-                        id="login-email" 
-                        class="form-input" 
-                        placeholder="seu@email.com"
-                        autocomplete="email"
-                    >
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="seu@email.com" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="login-password" class="form-label">Senha</label>
-                    <input 
-                        type="password" 
-                        id="login-password" 
-                        class="form-input" 
-                        placeholder="••••••••"
-                        autocomplete="current-password"
-                    >
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
                 </div>
 
                 <div id="login-error" class="error-message"></div>
 
-                <button id="btn-login" class="btn btn-primary btn-large">
-                    Entrar
-                </button>
-
-                <button id="btn-google-login" class="btn btn-secondary btn-large">
-                    🔐 Entrar com Google
-                </button>
+                <button type="submit" class="btn btn-primary btn-large">Entrar</button>
+                <button type="button" id="btn-google-login" class="btn btn-secondary btn-large">🔐 Google</button>
 
                 <p class="auth-toggle">
-                    Não tem conta? 
-                    <a href="#" id="link-to-signup" class="auth-link">Cadastre-se</a>
+                    Não tem conta? <a href="#" id="toggle-signup">Cadastre-se</a>
                 </p>
-            </div>
+            </form>
 
             <!-- FORMULÁRIO DE CADASTRO -->
-            <div id="signup-form" class="auth-form">
+            <form id="signup-form" class="auth-form">
                 <h2>Crie sua conta</h2>
 
                 <div class="form-group">
-                    <label for="signup-name" class="form-label">Nome completo</label>
-                    <input 
-                        type="text" 
-                        id="signup-name" 
-                        class="form-input" 
-                        placeholder="Seu nome"
-                        autocomplete="name"
-                    >
+                    <label for="signup-name">Nome completo</label>
+                    <input type="text" id="signup-name" placeholder="Seu nome" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="signup-email" class="form-label">Email</label>
-                    <input 
-                        type="email" 
-                        id="signup-email" 
-                        class="form-input" 
-                        placeholder="seu@email.com"
-                        autocomplete="email"
-                    >
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="seu@email.com" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="signup-password" class="form-label">Senha</label>
-                    <input 
-                        type="password" 
-                        id="signup-password" 
-                        class="form-input" 
-                        placeholder="••••••••"
-                        autocomplete="new-password"
-                    >
+                    <label for="signup-password">Senha</label>
+                    <input type="password" id="signup-password" placeholder="••••••••" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="signup-class" class="form-label">Sala (ex: 9A)</label>
-                    <input 
-                        type="text" 
-                        id="signup-class" 
-                        class="form-input" 
-                        placeholder="9A"
-                        autocomplete="off"
-                    >
+                    <label for="signup-class">Sala (ex: 9A)</label>
+                    <input type="text" id="signup-class" placeholder="9A" required>
                 </div>
 
                 <div id="signup-error" class="error-message"></div>
                 <div id="signup-success" class="success-message"></div>
 
-                <button id="btn-signup" class="btn btn-primary btn-large">
-                    Criar Conta
-                </button>
-
-                <button id="btn-google-signup" class="btn btn-secondary btn-large">
-                    🔐 Cadastrar com Google
-                </button>
+                <button type="submit" class="btn btn-primary btn-large">Criar Conta</button>
+                <button type="button" id="btn-google-signup" class="btn btn-secondary btn-large">🔐 Google</button>
 
                 <p class="auth-toggle">
-                    Já tem conta? 
-                    <a href="#" id="link-to-login" class="auth-link">Faça login</a>
+                    Já tem conta? <a href="#" id="toggle-login">Faça login</a>
                 </p>
-            </div>
+            </form>
         </div>
     </div>
 
     <!-- APP PRINCIPAL -->
-    <div id="app-container" class="app-container" style="display: none;">
+    <div id="app-screen" class="app-screen" style="display: none;">
         <!-- HEADER -->
         <header class="app-header">
-            <div class="header-content">
-                <h1 class="app-title">📚 Sexta-Feira</h1>
-                <div class="header-user">
-                    <span id="user-name-display" class="user-name"></span>
-                    <button id="btn-logout" class="btn btn-danger btn-small">Sair</button>
-                </div>
+            <h1 class="app-title">📚 Sexta-Feira</h1>
+            <div class="header-actions">
+                <span id="user-display" class="user-display"></span>
+                <button id="btn-logout" class="btn btn-icon">🚪</button>
             </div>
         </header>
 
-        <!-- NAVEGAÇÃO -->
-        <nav class="app-nav">
-            <button class="nav-btn active" data-screen="home">🏠 Home</button>
-            <button class="nav-btn" data-screen="subjects">📚 Matérias</button>
-            <button class="nav-btn" data-screen="ranking">🏆 Ranking</button>
-            <button class="nav-btn" data-screen="history">📜 Histórico</button>
-        </nav>
-
         <!-- CONTEÚDO PRINCIPAL -->
-        <main class="app-content">
-            <!-- TELA HOME -->
+        <main class="app-main">
+            <!-- TELA HOME/ESTUDOS -->
             <section id="screen-home" class="screen active">
-                <div class="welcome-card">
-                    <h2>Bem-vindo, <span id="home-user-name"></span>! 👋</h2>
-                    <p class="welcome-info">Sala: <span id="home-user-class"></span></p>
-                    <p class="welcome-info">Pontos: <span id="home-user-points">0</span> ⭐</p>
+                <div class="welcome-banner">
+                    <h2>Bem-vindo, <span id="welcome-name"></span>! 👋</h2>
+                    <p>Sala: <span id="welcome-class"></span></p>
+                    <p>Pontos: <span id="welcome-points">0</span> ⭐</p>
                 </div>
 
-                <div class="cards-grid">
-                    <div class="card" data-screen="subjects">
-                        <div class="card-icon">📚</div>
-                        <h3>Matérias</h3>
-                        <p>Estude seus tópicos</p>
+                <div class="quick-access">
+                    <div class="quick-card" data-screen="subjects">
+                        <div class="quick-icon">📚</div>
+                        <div class="quick-text">
+                            <h3>Matérias</h3>
+                            <p>Estude agora</p>
+                        </div>
                     </div>
-                    <div class="card" data-screen="ranking">
-                        <div class="card-icon">🏆</div>
-                        <h3>Ranking</h3>
-                        <p>Veja sua posição</p>
-                    </div>
-                    <div class="card" data-screen="history">
-                        <div class="card-icon">📜</div>
-                        <h3>Histórico</h3>
-                        <p>Seus quizzes</p>
+                    <div class="quick-card" data-screen="ranking">
+                        <div class="quick-icon">🏆</div>
+                        <div class="quick-text">
+                            <h3>Ranking</h3>
+                            <p>Sua posição</p>
+                        </div>
                     </div>
                 </div>
+
+                <div class="section-title">Suas Matérias</div>
+                <div id="home-subjects" class="subjects-list"></div>
             </section>
 
             <!-- TELA MATÉRIAS -->
             <section id="screen-subjects" class="screen">
                 <div class="screen-header">
                     <h2>Matérias</h2>
-                    <button id="btn-new-subject" class="btn btn-primary">+ Nova Matéria</button>
+                    <button id="btn-new-subject" class="btn btn-primary btn-small">+ Nova</button>
                 </div>
 
                 <div id="create-subject-form" class="form-box" style="display: none;">
                     <h3>Criar Matéria</h3>
-                    <div class="form-group">
-                        <input 
-                            type="text" 
-                            id="subject-title" 
-                            class="form-input" 
-                            placeholder="Nome da matéria"
-                        >
-                    </div>
-                    <div class="form-group">
-                        <textarea 
-                            id="subject-desc" 
-                            class="form-input" 
-                            placeholder="Descrição"
-                            style="min-height: 80px; resize: vertical;"
-                        ></textarea>
-                    </div>
+                    <input type="text" id="subject-title" class="form-input" placeholder="Nome da matéria">
+                    <textarea id="subject-desc" class="form-input" placeholder="Descrição" style="min-height: 80px;"></textarea>
                     <div class="form-buttons">
                         <button id="btn-create-subject" class="btn btn-primary">Criar</button>
                         <button id="btn-cancel-subject" class="btn btn-secondary">Cancelar</button>
                     </div>
                 </div>
 
-                <div id="subjects-list" class="subjects-grid"></div>
+                <div id="subjects-container" class="subjects-grid"></div>
 
                 <div id="subject-detail" class="subject-detail" style="display: none;">
-                    <button id="btn-back-subjects" class="btn btn-back">← Voltar</button>
-                    <h3 id="detail-subject-title"></h3>
-                    <p id="detail-subject-desc"></p>
+                    <button id="btn-back-subject" class="btn btn-back">← Voltar</button>
+                    <h3 id="detail-title"></h3>
+                    <p id="detail-desc"></p>
 
                     <div class="detail-section">
                         <h4>Quizzes</h4>
-                        <button id="btn-new-quiz" class="btn btn-primary">+ Novo Quiz</button>
+                        <button id="btn-new-quiz" class="btn btn-primary btn-small">+ Novo Quiz</button>
                         <div id="quizzes-list" class="quizzes-grid"></div>
                     </div>
 
                     <div id="create-quiz-form" class="form-box" style="display: none;">
                         <h4>Criar Quiz</h4>
-                        <div class="form-group">
-                            <input 
-                                type="text" 
-                                id="quiz-title" 
-                                class="form-input" 
-                                placeholder="Nome do quiz"
-                            >
-                        </div>
+                        <input type="text" id="quiz-title" class="form-input" placeholder="Nome do quiz">
                         <div id="questions-container"></div>
-                        <button id="btn-add-question" class="btn btn-secondary">+ Adicionar Pergunta</button>
+                        <button id="btn-add-question" class="btn btn-secondary btn-small">+ Pergunta</button>
                         <div class="form-buttons">
-                            <button id="btn-save-quiz" class="btn btn-primary">Salvar Quiz</button>
+                            <button id="btn-save-quiz" class="btn btn-primary">Salvar</button>
                             <button id="btn-cancel-quiz" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
@@ -255,40 +181,150 @@
                         <div id="answers-container" class="answers-grid"></div>
                     </div>
 
-                    <div class="quiz-buttons">
-                        <button id="btn-next-question" class="btn btn-primary" style="display: none;">
-                            Próxima Pergunta
-                        </button>
-                    </div>
+                    <button id="btn-next-question" class="btn btn-primary" style="display: none;">Próxima</button>
                 </div>
             </section>
 
             <!-- TELA RESULTADO -->
             <section id="screen-result" class="screen">
                 <button id="btn-back-result" class="btn btn-back">← Voltar</button>
-                <div class="result-container">
+                <div class="result-box">
                     <h2>🎉 Quiz Finalizado!</h2>
                     <div class="result-score">
                         <div class="score-number" id="result-score">0</div>
-                        <p class="score-label">pontos</p>
+                        <p>pontos</p>
                     </div>
                     <p id="result-message"></p>
-                    <button id="btn-back-result-home" class="btn btn-primary">Voltar às Matérias</button>
+                    <button id="btn-back-home" class="btn btn-primary">Voltar</button>
                 </div>
             </section>
 
             <!-- TELA RANKING -->
             <section id="screen-ranking" class="screen">
                 <h2>🏆 Ranking Global</h2>
-                <div id="ranking-list" class="ranking-list"></div>
+                <div id="ranking-container" class="ranking-list"></div>
             </section>
 
-            <!-- TELA HISTÓRICO -->
-            <section id="screen-history" class="screen">
-                <h2>📜 Histórico de Quizzes</h2>
-                <div id="history-list" class="history-list"></div>
+            <!-- TELA CHAT -->
+            <section id="screen-chat" class="screen">
+                <div class="chat-header">
+                    <h2>💬 Chat</h2>
+                    <button id="btn-new-chat" class="btn btn-primary btn-small">+ Novo</button>
+                </div>
+
+                <div id="chat-list" class="chat-list"></div>
+
+                <div id="chat-window" class="chat-window" style="display: none;">
+                    <div class="chat-top">
+                        <button id="btn-back-chat" class="btn btn-back">← Voltar</button>
+                        <h3 id="chat-title"></h3>
+                    </div>
+                    <div id="messages-container" class="messages-container"></div>
+                    <div class="chat-input-box">
+                        <input type="text" id="message-input" class="form-input" placeholder="Digite uma mensagem...">
+                        <button id="btn-send-message" class="btn btn-primary btn-small">Enviar</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TELA AMIGOS -->
+            <section id="screen-friends" class="screen">
+                <div class="friends-header">
+                    <h2>👥 Amigos</h2>
+                    <button id="btn-add-friend" class="btn btn-primary btn-small">+ Adicionar</button>
+                </div>
+
+                <div id="add-friend-form" class="form-box" style="display: none;">
+                    <h3>Adicionar Amigo</h3>
+                    <input type="text" id="friend-search" class="form-input" placeholder="Nome ou ID do usuário">
+                    <div id="search-results" class="search-results"></div>
+                    <button id="btn-cancel-add-friend" class="btn btn-secondary">Cancelar</button>
+                </div>
+
+                <div id="friends-list" class="friends-list"></div>
+            </section>
+
+            <!-- TELA PERFIL -->
+            <section id="screen-profile" class="screen">
+                <div class="profile-header">
+                    <div class="profile-avatar">👤</div>
+                    <h2 id="profile-name"></h2>
+                    <p id="profile-class"></p>
+                    <p id="profile-points"></p>
+                </div>
+
+                <div class="profile-section">
+                    <h3>Informações</h3>
+                    <div class="profile-info">
+                        <p><strong>Email:</strong> <span id="profile-email"></span></p>
+                        <p><strong>Sala:</strong> <span id="profile-class-info"></span></p>
+                        <p><strong>Pontos:</strong> <span id="profile-points-info"></span></p>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h3>Configurações</h3>
+                    <button id="btn-edit-profile" class="btn btn-secondary btn-large">Editar Perfil</button>
+                    <button id="btn-change-password" class="btn btn-secondary btn-large">Alterar Senha</button>
+                </div>
+            </section>
+
+            <!-- TELA ADM -->
+            <section id="screen-adm" class="screen">
+                <div class="adm-header">
+                    <h2>⚙️ Painel Administrativo</h2>
+                </div>
+
+                <div id="adm-login" class="form-box">
+                    <h3>Acesso Restrito</h3>
+                    <input type="password" id="adm-password" class="form-input" placeholder="Senha de acesso">
+                    <button id="btn-adm-login" class="btn btn-primary btn-large">Entrar no Painel</button>
+                </div>
+
+                <div id="adm-panel" class="adm-panel" style="display: none;">
+                    <div class="adm-section">
+                        <h3>Gerenciar Matérias</h3>
+                        <div id="adm-subjects" class="adm-list"></div>
+                    </div>
+
+                    <div class="adm-section">
+                        <h3>Gerenciar Quizzes</h3>
+                        <div id="adm-quizzes" class="adm-list"></div>
+                    </div>
+
+                    <div class="adm-section">
+                        <h3>Gerenciar Usuários</h3>
+                        <div id="adm-users" class="adm-list"></div>
+                    </div>
+
+                    <button id="btn-adm-logout" class="btn btn-danger btn-large">Sair do Painel</button>
+                </div>
             </section>
         </main>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </button>
+            <button class="nav-item" data-screen="subjects">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Estudos</span>
+            </button>
+            <button class="nav-item" data-screen="chat">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">Chat</span>
+            </button>
+            <button class="nav-item" data-screen="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Perfil</span>
+            </button>
+            <button class="nav-item" data-screen="adm">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">ADM</span>
+            </button>
+        </nav>
     </div>
 
     <!-- SCRIPTS -->
@@ -298,4 +334,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
