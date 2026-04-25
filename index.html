@@ -26,10 +26,10 @@
                     <p class="form-subtitle">Faça login para continuar seus estudos</p>
 
                     <div class="form-group">
-                        <label for="login-email">Email</label>
+                        <label for="login-email">Nome de Usuário</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">✉️</span>
-                            <input type="email" id="login-email" placeholder="seu@email.com" required>
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="login-email" placeholder="Seu nome de usuário" required>
                         </div>
                     </div>
 
@@ -51,11 +51,6 @@
                         <span>ou</span>
                     </div>
 
-                    <button type="button" id="btn-google-login" class="btn btn-google btn-large">
-                        <span class="btn-icon">🔐</span>
-                        <span class="btn-text">Continuar com Google</span>
-                    </button>
-
                     <p class="auth-toggle">
                         Não tem conta? 
                         <a href="#" id="toggle-signup" class="toggle-link">Criar nova conta</a>
@@ -68,20 +63,12 @@
                     <p class="form-subtitle">Junte-se à comunidade de aprendizado</p>
 
                     <div class="form-group">
-                        <label for="signup-name">Nome completo</label>
+                        <label for="signup-name">Nome de Usuário</label>
                         <div class="input-wrapper">
                             <span class="input-icon">👤</span>
-                            <input type="text" id="signup-name" placeholder="Seu nome completo" required>
+                            <input type="text" id="signup-name" placeholder="Escolha um nome único" required>
                         </div>
                         <div id="signup-name-error" class="error-message" style="margin-top: 4px;"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="signup-email">Email</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">✉️</span>
-                            <input type="email" id="signup-email" placeholder="seu@email.com" required>
-                        </div>
                     </div>
 
                     <div class="form-group">
@@ -113,15 +100,6 @@
 
                     <button type="submit" class="btn btn-primary btn-large">
                         <span class="btn-text">Criar Conta</span>
-                    </button>
-
-                    <div class="divider">
-                        <span>ou</span>
-                    </div>
-
-                    <button type="button" id="btn-google-signup" class="btn btn-google btn-large">
-                        <span class="btn-icon">🔐</span>
-                        <span class="btn-text">Cadastrar com Google</span>
                     </button>
 
                     <p class="auth-toggle">
@@ -381,8 +359,8 @@
                     <h3>📊 Informações</h3>
                     <div class="profile-info">
                         <div class="info-item">
-                            <span class="info-label">Email:</span>
-                            <span class="info-value" id="profile-email"></span>
+                            <span class="info-label">Nome:</span>
+                            <span class="info-value" id="profile-username"></span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Sala:</span>
@@ -444,8 +422,14 @@
                     <div class="adm-section">
                         <h3>🎯 Criar Quiz com Código</h3>
                         <div class="form-group">
+                            <label for="adm-quiz-subject">Selecione a Matéria</label>
+                            <select id="adm-quiz-subject" class="form-input" required>
+                                <option value="">-- Escolha uma matéria --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="adm-quiz-code">Código do Quiz</label>
-                            <textarea id="adm-quiz-code" class="form-input" placeholder="/q1 Pergunta aqui&#10;/a1 Opção 1&#10;/a2 Opção 2&#10;/a3 Opção 3&#10;/a4 Opção 4&#10;/c 2" style="min-height: 150px;"></textarea>
+                            <textarea id="adm-quiz-code" class="form-input" placeholder="/q1 Pergunta aqui&#10;/a1 Opção 1&#10;/a2 Opção 2&#10;/a3 Opção 3&#10;/a4 Opção 4&#10;/c 1" style="min-height: 150px;"></textarea>
                         </div>
                         <button id="btn-create-quiz-code" class="btn btn-primary btn-large">Criar Quiz</button>
                     </div>
@@ -495,11 +479,6 @@
         </nav>
     </div>
 
-    <!-- SCRIPTS -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
