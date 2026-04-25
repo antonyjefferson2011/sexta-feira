@@ -225,7 +225,6 @@
             <p class="hint muted" id="subjectsEmpty" style="display:none;">Nenhuma matéria ainda. Crie a primeira acima.</p>
           </div>
 
-          <!-- Subject Detail (within same view) -->
           <div id="subjectDetailWrap" class="subjectDetailWrap hidden">
             <div class="subjectDetailTop">
               <button class="ghostBtn" type="button" id="backToSubjectsBtn">← Voltar</button>
@@ -276,7 +275,7 @@
                 </div>
 
                 <div class="actionsRow">
-                  <button id="startQuizBtn" class="primaryBtn" type="button">Iniciar quiz</button>
+                  <button id="startQuizBtn" class="primaryBtn" type="button" disabled>Iniciar quiz</button>
                 </div>
 
                 <div id="quizRunner" class="quizRunner hidden">
@@ -297,6 +296,7 @@
                   <div class="actionsRow">
                     <button id="nextQuestionBtn" class="primaryBtn" type="button" disabled>Próximo</button>
                   </div>
+
                   <div class="quizResult hidden" id="quizResult">
                     <div class="resultBig" id="quizResultPoints">0</div>
                     <div class="resultText">
@@ -306,7 +306,6 @@
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
@@ -353,7 +352,7 @@
   </div>
 
   <script>
-    // Firebase config (provided)
+    // FIREBASE CONFIG (provided)
     const firebaseConfig = {
       apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
       authDomain: "sexta-feira-fb01a.firebaseapp.com",
