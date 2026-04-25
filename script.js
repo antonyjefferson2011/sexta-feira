@@ -25,7 +25,7 @@ let currentQuestionIndex = 0;
 let currentScore = 0;
 let admLoggedIn = false;
 let questionCount = 0;
-let editingProfile = false;
+let currentTopic = null;
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -337,7 +337,8 @@ function showScreen(screenName) {
     document.getElementById('screen-' + screenName).classList.add('active');
 
     document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
+    const navBtn = document.querySelector(`[data-screen="${screenName}"]`);
+    if (navBtn) navBtn.classList.add('active');
 
     if (screenName === 'home') {
         loadHomeData();
@@ -362,6 +363,11 @@ function setupAppEventListeners() {
     document.getElementById('btn-create-subject')?.addEventListener('click', createSubject);
     document.getElementById('btn-back-subject')?.addEventListener('click', backToSubjects);
 
+    // Topics
+    document.getElementById('btn-new-topic')?.addEventListener('click', openCreateTopic);
+    document.getElementById('btn-cancel-topic')?.addEventListener('click', closeCreateTopic);
+    document.getElementById('btn-save-topic')?.addEventListener('click', saveTopic);
+
     // Quiz
     document.getElementById('btn-new-quiz')?.addEventListener('click', openCreateQuiz);
     document.getElementById('btn-cancel-quiz')?.addEventListener('click', closeCreateQuiz);
@@ -374,20 +380,22 @@ function setupAppEventListeners() {
 
     // Result
     document.getElementById('btn-back-result')?.addEventListener('click', backToSubjects);
-    document.getElementById('btn-back-home')?.addEventListener('click', backToSubjects);
+    document.getElementById('btn-back-home-result')?.addEventListener('click', () => showScreen('home'));
 
     // Chat
-    document.getElementById('btn-new-chat')?.addEventListener('click', openNewChat);
     document.getElementById('btn-back-chat')?.addEventListener('click', backToChats);
     document.getElementById('btn-send-message')?.addEventListener('click', sendMessage);
 
     // Profile
     document.getElementById('btn-edit-profile')?.addEventListener('click', openEditProfile);
     document.getElementById('btn-change-password')?.addEventListener('click', openChangePassword);
+    document.getElementById('btn-add-friend')?.addEventListener('click', openAddFriend);
+    document.getElementById('btn-access-adm')?.addEventListener('click', () => showScreen('adm'));
 
     // ADM
     document.getElementById('btn-adm-login')?.addEventListener('click', admLogin);
     document.getElementById('btn-adm-logout')?.addEventListener('click', admLogout);
+    document.getElementById('btn-exit-adm')?.addEventListener('click', () => showScreen('profile'));
 }
 
 function setupNavigationListeners() {
@@ -450,15 +458,15 @@ async function createSubject() {
     const title = document.getElementById('subject-title').value.trim();
     const desc = document.getElementById('subject-desc').value.trim();
 
-    if (!title || !desc) {
-        alert('Preencha todos os campos');
+    if (!title) {
+        alert('O nome da matéria é obrigatório');
         return;
     }
 
     try {
         await db.collection('subjects').add({
             title: title,
-            description: desc,
+            description: desc || '',
             createdAt: new Date(),
             createdBy: currentUser.uid
         });
@@ -507,7 +515,7 @@ function createSubjectCard(id, subject) {
     card.className = 'subject-card';
     card.innerHTML = `
         <h3>${subject.title}</h3>
-        <p>${subject.description}</p>
+        <p>${subject.description || 'Sem descrição'}</p>
     `;
     card.addEventListener('click', () => {
         currentSubject = { id, ...subject };
@@ -519,42 +527,101 @@ function createSubjectCard(id, subject) {
 async function loadSubjectDetail() {
     try {
         document.getElementById('detail-title').textContent = currentSubject.title;
-        document.getElementById('detail-desc').textContent = currentSubject.description;
+        document.getElementById('detail-desc').textContent = currentSubject.description || 'Sem descrição';
 
-        const quizzesSnapshot = await db.collection('quizzes')
-            .where('subjectId', '==', currentSubject.id)
-            .get();
+        // Carregar tópicos
+        await loadTopics();
 
-        const quizzesList = document.getElementById('quizzes-list');
-        quizzesList.innerHTML = '';
-
-        if (quizzesSnapshot.empty) {
-            quizzesList.innerHTML = '<p style="color: #64748b;">Nenhum quiz nesta matéria</p>';
-        } else {
-            quizzesSnapshot.forEach(doc => {
-                const quiz = doc.data();
-                const item = document.createElement('div');
-                item.className = 'quiz-item';
-                item.innerHTML = `
-                    <span class="quiz-item-name">${quiz.title}</span>
-                    <button class="btn btn-primary btn-small">Jogar</button>
-                `;
-                item.querySelector('button').addEventListener('click', () => startQuiz(doc.id));
-                quizzesList.appendChild(item);
-            });
-        }
+        // Carregar quizzes
+        await loadQuizzes();
     } catch (error) {
         console.error('❌ Erro ao carregar detalhes da matéria:', error);
     }
 }
 
-function backToSubjects() {
-    currentSubject = null;
-    document.getElementById('create-quiz-form').style.display = 'none';
-    loadSubjects();
+// ==================== TÓPICOS ====================
+function openCreateTopic() {
+    document.getElementById('create-topic-form').style.display = 'block';
 }
 
-// ==================== QUIZ ====================
+function closeCreateTopic() {
+    document.getElementById('create-topic-form').style.display = 'none';
+    document.getElementById('topic-title').value = '';
+    document.getElementById('topic-content').value = '';
+}
+
+async function saveTopic() {
+    const title = document.getElementById('topic-title').value.trim();
+    const content = document.getElementById('topic-content').value.trim();
+
+    if (!title || !content) {
+        alert('Preencha todos os campos');
+        return;
+    }
+
+    try {
+        await db.collection('topics').add({
+            title: title,
+            content: content,
+            subjectId: currentSubject.id,
+            createdAt: new Date(),
+            createdBy: currentUser.uid
+        });
+
+        console.log('✅ Tópico criado com sucesso');
+        closeCreateTopic();
+        loadTopics();
+    } catch (error) {
+        console.error('❌ Erro ao salvar tópico:', error);
+        alert('Erro ao salvar tópico');
+    }
+}
+
+async function loadTopics() {
+    try {
+        const topicsSnapshot = await db.collection('topics')
+            .where('subjectId', '==', currentSubject.id)
+            .get();
+
+        const topicsList = document.getElementById('topics-list');
+        topicsList.innerHTML = '';
+
+        if (topicsSnapshot.empty) {
+            topicsList.innerHTML = '<p style="color: #64748b;">Nenhum tópico nesta matéria</p>';
+        } else {
+            topicsSnapshot.forEach(doc => {
+                const topic = doc.data();
+                const item = document.createElement('div');
+                item.className = 'topic-item';
+                item.innerHTML = `
+                    <h5>${topic.title}</h5>
+                    <p>${topic.content.substring(0, 100)}...</p>
+                `;
+                item.addEventListener('click', () => {
+                    currentTopic = { id: doc.id, ...topic };
+                    showTopicDetail();
+                });
+                topicsList.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar tópicos:', error);
+    }
+}
+
+function showTopicDetail() {
+    const detail = document.createElement('div');
+    detail.className = 'topic-detail';
+    detail.innerHTML = `
+        <h5>${currentTopic.title}</h5>
+        <p>${currentTopic.content}</p>
+    `;
+
+    const container = document.getElementById('topics-list');
+    container.insertBefore(detail, container.firstChild);
+}
+
+// ==================== QUIZZES ====================
 function openCreateQuiz() {
     document.getElementById('create-quiz-form').style.display = 'block';
     document.getElementById('questions-container').innerHTML = '';
@@ -642,10 +709,39 @@ async function saveQuiz() {
 
         console.log('✅ Quiz criado com sucesso');
         closeCreateQuiz();
-        loadSubjectDetail();
+        loadQuizzes();
     } catch (error) {
         console.error('❌ Erro ao salvar quiz:', error);
         alert('Erro ao salvar quiz');
+    }
+}
+
+async function loadQuizzes() {
+    try {
+        const quizzesSnapshot = await db.collection('quizzes')
+            .where('subjectId', '==', currentSubject.id)
+            .get();
+
+        const quizzesList = document.getElementById('quizzes-list');
+        quizzesList.innerHTML = '';
+
+        if (quizzesSnapshot.empty) {
+            quizzesList.innerHTML = '<p style="color: #64748b;">Nenhum quiz nesta matéria</p>';
+        } else {
+            quizzesSnapshot.forEach(doc => {
+                const quiz = doc.data();
+                const item = document.createElement('div');
+                item.className = 'quiz-item';
+                item.innerHTML = `
+                    <span class="quiz-item-name">${quiz.title}</span>
+                    <button class="btn btn-primary btn-small">Jogar</button>
+                `;
+                item.querySelector('button').addEventListener('click', () => startQuiz(doc.id));
+                quizzesList.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar quizzes:', error);
     }
 }
 
@@ -685,14 +781,14 @@ function showQuestion() {
         const btn = document.createElement('button');
         btn.className = 'answer-btn';
         btn.textContent = alt;
-        btn.addEventListener('click', () => selectAnswer(index));
+        btn.addEventListener('click', () => selectAnswer(index, btn));
         answersContainer.appendChild(btn);
     });
 
     document.getElementById('btn-next-question').style.display = 'none';
 }
 
-function selectAnswer(index) {
+function selectAnswer(index, clickedBtn) {
     const question = currentQuestions[currentQuestionIndex];
     const buttons = document.querySelectorAll('.answer-btn');
 
@@ -757,6 +853,14 @@ async function finishQuiz() {
     } catch (error) {
         console.error('❌ Erro ao finalizar quiz:', error);
     }
+}
+
+function backToSubjects() {
+    currentSubject = null;
+    currentTopic = null;
+    document.getElementById('create-quiz-form').style.display = 'none';
+    document.getElementById('create-topic-form').style.display = 'none';
+    loadSubjects();
 }
 
 // ==================== RANKING ====================
@@ -825,7 +929,7 @@ async function loadChats() {
             chatList.innerHTML = '';
 
             if (friends.length === 0) {
-                chatList.innerHTML = '<p style="text-align: center; color: #64748b;">Nenhum amigo para conversar. Adicione amigos na seção de Perfil!</p>';
+                chatList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhum amigo para conversar. Adicione amigos na seção de Perfil!</p>';
             } else {
                 for (const friendId of friends) {
                     const friendDoc = await db.collection('users').doc(friendId).get();
@@ -861,16 +965,10 @@ async function loadChatMessages() {
         messagesContainer.innerHTML = '';
 
         // Aqui você pode carregar mensagens do Realtime Database
-        // Por enquanto, deixamos vazio
         messagesContainer.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma mensagem ainda. Comece a conversa!</p>';
     } catch (error) {
         console.error('❌ Erro ao carregar mensagens:', error);
     }
-}
-
-function openNewChat() {
-    // Redirecionar para perfil para adicionar amigos
-    showScreen('profile');
 }
 
 function backToChats() {
@@ -923,7 +1021,36 @@ async function loadProfile() {
 }
 
 async function loadFriends(friendIds) {
-    // Esta função será implementada na seção de amigos
+    try {
+        const friendsList = document.getElementById('friends-list');
+        friendsList.innerHTML = '';
+
+        if (friendIds.length === 0) {
+            friendsList.innerHTML = '<p style="color: #64748b;">Você ainda não tem amigos</p>';
+            return;
+        }
+
+        for (const friendId of friendIds) {
+            const friendDoc = await db.collection('users').doc(friendId).get();
+            if (friendDoc.exists) {
+                const friend = friendDoc.data();
+                const item = document.createElement('div');
+                item.className = 'friend-item';
+                item.innerHTML = `
+                    <div class="friend-info">
+                        <h4>${friend.name}</h4>
+                        <p>${friend.class}</p>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="btn btn-primary btn-small" onclick="removeFriend('${friendId}')">Remover</button>
+                    </div>
+                `;
+                friendsList.appendChild(item);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar amigos:', error);
+    }
 }
 
 async function openEditProfile() {
@@ -971,8 +1098,7 @@ async function openChangePassword() {
     }
 }
 
-// ==================== AMIGOS ====================
-async function addFriend() {
+async function openAddFriend() {
     const friendEmail = prompt('Digite o email do amigo que deseja adicionar:');
     
     if (friendEmail !== null && friendEmail.trim() !== '') {
@@ -1018,6 +1144,25 @@ async function addFriend() {
     }
 }
 
+async function removeFriend(friendId) {
+    if (confirm('Tem certeza que deseja remover este amigo?')) {
+        try {
+            const userRef = db.collection('users').doc(currentUser.uid);
+            const userDoc = await userRef.get();
+            let friends = userDoc.data().friends || [];
+
+            friends = friends.filter(id => id !== friendId);
+            await userRef.update({ friends: friends });
+
+            console.log('✅ Amigo removido com sucesso');
+            loadProfile();
+        } catch (error) {
+            console.error('❌ Erro ao remover amigo:', error);
+            alert('Erro ao remover amigo');
+        }
+    }
+}
+
 // ==================== ADM ====================
 function loadAdmPanel() {
     if (!admLoggedIn) {
@@ -1025,7 +1170,7 @@ function loadAdmPanel() {
         document.getElementById('adm-panel').style.display = 'none';
     } else {
         document.getElementById('adm-login').style.display = 'none';
-        document.getElementById('adm-panel').style.display = 'block';
+        document.getElementById('adm-panel').style.display = 'grid';
         loadAdmData();
     }
 }
@@ -1063,7 +1208,7 @@ async function loadAdmData() {
             item.innerHTML = `
                 <div class="adm-item-info">
                     <h4>${subject.title}</h4>
-                    <p>${subject.description}</p>
+                    <p>${subject.description || 'Sem descrição'}</p>
                 </div>
                 <div class="adm-item-actions">
                     <button class="btn btn-danger btn-small" onclick="deleteSubject('${doc.id}')">Deletar</button>
@@ -1154,11 +1299,4 @@ async function deleteUser(id) {
     }
 }
 
-// ==================== ADICIONAR BOTÃO DE AMIGOS NO HTML ====================
-// Adicione este botão na seção de perfil no HTML:
-// <button id="btn-add-friend" class="btn btn-secondary btn-large">👥 Adicionar Amigo</button>
-
-// E adicione este listener no setupAppEventListeners:
-// document.getElementById('btn-add-friend')?.addEventListener('click', addFriend);
-
-console.log('✅ Script carregado com sucesso');
+console.log('✅ Script carregado com sucesso - Todas as funções ativas!');
