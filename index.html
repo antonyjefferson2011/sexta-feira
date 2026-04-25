@@ -4,35 +4,1512 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sexta-Feira Studies</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #22c55e;
+            --success-dark: #16a34a;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --bg: #ffffff;
+            --text: #334155;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --border-dark: #cbd5e1;
+            --gray-light: #f8fafc;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* ==================== AUTH CONTAINER ==================== */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            padding: 20px;
+            width: 100%;
+        }
+
+        .auth-box {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .auth-logo {
+            font-size: 32px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary);
+            letter-spacing: -1px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .auth-form {
+            width: 100%;
+        }
+
+        .auth-form h2 {
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .auth-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 14px 20px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 0 var(--primary-dark);
+            position: relative;
+            top: 0;
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 var(--primary-dark);
+        }
+
+        .auth-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 var(--primary-dark);
+        }
+
+        .auth-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-button.google-btn {
+            background: #ffffff;
+            color: var(--text);
+            border: 2px solid var(--border);
+            box-shadow: 0 4px 0 var(--border-dark);
+        }
+
+        .auth-button.google-btn:hover {
+            background: var(--gray-light);
+            box-shadow: 0 6px 0 var(--border-dark);
+        }
+
+        .auth-button.success {
+            background: var(--success);
+            box-shadow: 0 4px 0 var(--success-dark);
+        }
+
+        .auth-button.success:hover {
+            box-shadow: 0 6px 0 var(--success-dark);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .auth-toggle a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .auth-toggle a:hover {
+            color: var(--primary-dark);
+        }
+
+        .auth-error {
+            color: var(--danger);
+            background: #fee2e2;
+            border: 2px solid var(--danger);
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            font-weight: 600;
+            animation: slideDown 0.3s ease;
+        }
+
+        .auth-error.show {
+            display: block;
+        }
+
+        .auth-success {
+            color: var(--success);
+            background: #dcfce7;
+            border: 2px solid var(--success);
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            font-weight: 600;
+            animation: slideDown 0.3s ease;
+        }
+
+        .auth-success.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==================== APP CONTAINER ==================== */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--gray-light);
+            width: 100%;
+        }
+
+        .app-header {
+            background: var(--bg);
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .logout-btn {
+            padding: 10px 18px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            white-space: nowrap;
+            -webkit-appearance: none;
+            appearance: none;
+            box-shadow: 0 4px 0 var(--danger-dark);
+            position: relative;
+            top: 0;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 var(--danger-dark);
+        }
+
+        .logout-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 var(--danger-dark);
+        }
+
+        .app-nav {
+            display: flex;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 10px 18px;
+            border: none;
+            background: var(--gray-light);
+            color: var(--text);
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            -webkit-appearance: none;
+            appearance: none;
+            flex-shrink: 0;
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 0 var(--primary-dark);
+        }
+
+        .app-content {
+            flex: 1;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==================== HOME SCREEN ==================== */
+        .home-welcome {
+            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        .home-welcome h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .home-welcome p {
+            font-size: 15px;
+            opacity: 0.95;
+            margin: 6px 0;
+            font-weight: 500;
+        }
+
+        .home-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        .home-card {
+            background: var(--bg);
+            padding: 24px 20px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+        }
+
+        .home-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary);
+        }
+
+        .home-card:active {
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* ==================== SUBJECTS SCREEN ==================== */
+        .screen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .screen-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            -webkit-appearance: none;
+            appearance: none;
+            white-space: nowrap;
+            box-shadow: 0 4px 0 var(--primary-dark);
+            position: relative;
+            top: 0;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 var(--primary-dark);
+        }
+
+        .btn-primary:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 var(--primary-dark);
+        }
+
+        .btn-secondary {
+            padding: 12px 24px;
+            background: var(--gray-light);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            -webkit-appearance: none;
+            appearance: none;
+            box-shadow: 0 4px 0 var(--border-dark);
+            position: relative;
+            top: 0;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 var(--border-dark);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 var(--border-dark);
+        }
+
+        .btn-back {
+            padding: 10px 18px;
+            background: var(--gray-light);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .btn-back:hover {
+            background: var(--border);
+            transform: translateY(-2px);
+        }
+
+        .form-box {
+            background: var(--bg);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border);
+        }
+
+        .form-box h3,
+        .form-box h4 {
+            margin-bottom: 18px;
+            color: var(--text);
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .form-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .subject-card {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid var(--primary);
+            border: 2px solid var(--border);
+            border-left: 5px solid var(--primary);
+        }
+
+        .subject-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .subject-card:active {
+            transform: translateY(-2px);
+        }
+
+        .subject-card h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .subject-card p {
+            color: var(--text-light);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .subject-detail {
+            background: var(--bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .subject-detail h3 {
+            color: var(--primary);
+            margin: 16px 0;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .subject-detail p {
+            color: var(--text-light);
+            margin-bottom: 20px;
+            font-size: 15px;
+        }
+
+        .subject-detail-section {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border);
+        }
+
+        .subject-detail-section h4 {
+            margin-bottom: 16px;
+            color: var(--text);
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .quizzes-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .quiz-item {
+            background: var(--gray-light);
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 12px;
+            flex-wrap: wrap;
+            border: 2px solid var(--border);
+        }
+
+        .quiz-item:hover {
+            background: var(--border);
+            transform: translateX(4px);
+        }
+
+        .quiz-item-name {
+            font-weight: 700;
+            color: var(--text);
+            flex: 1;
+            min-width: 150px;
+            font-size: 15px;
+        }
+
+        .quiz-item-btn {
+            padding: 10px 18px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            -webkit-appearance: none;
+            appearance: none;
+            white-space: nowrap;
+            box-shadow: 0 4px 0 var(--primary-dark);
+            position: relative;
+            top: 0;
+        }
+
+        .quiz-item-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 var(--primary-dark);
+        }
+
+        .quiz-item-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 var(--primary-dark);
+        }
+
+        /* ==================== QUESTION FORM ==================== */
+        .question-box {
+            background: var(--gray-light);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--warning);
+            border: 2px solid var(--border);
+            border-left: 4px solid var(--warning);
+        }
+
+        .question-box h5 {
+            margin-bottom: 12px;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .question-box input,
+        .question-box textarea,
+        .question-box select {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .question-box input:focus,
+        .question-box textarea:focus,
+        .question-box select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .question-box select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+
+        .question-box button {
+            padding: 10px 14px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 var(--danger-dark);
+            position: relative;
+            top: 0;
+        }
+
+        .question-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 var(--danger-dark);
+        }
+
+        .question-box button:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 var(--danger-dark);
+        }
+
+        /* ==================== QUIZ PLAYER ==================== */
+        .quiz-container {
+            background: var(--bg);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .quiz-progress {
+            margin-bottom: 28px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border: 2px solid var(--border);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, #1e40af 100%);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: var(--text-light);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .quiz-question {
+            margin-bottom: 28px;
+        }
+
+        .quiz-question h3 {
+            font-size: 20px;
+            margin-bottom: 24px;
+            color: var(--text);
+            line-height: 1.6;
+            font-weight: 700;
+        }
+
+        .answers-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .answer-btn {
+            padding: 16px;
+            background: var(--gray-light);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            -webkit-appearance: none;
+            appearance: none;
+            color: var(--text);
+        }
+
+        .answer-btn:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+            transform: translateX(4px);
+        }
+
+        .answer-btn:active {
+            transform: translateX(2px);
+        }
+
+        .answer-btn.selected {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .answer-btn.correct {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            font-weight: 800;
+        }
+
+        .answer-btn.incorrect {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            font-weight: 800;
+        }
+
+        .quiz-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ==================== RESULTADO ==================== */
+        .result-container {
+            background: var(--bg);
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .result-container h2 {
+            font-size: 28px;
+            margin-bottom: 28px;
+            color: var(--text);
+            font-weight: 800;
+        }
+
+        .result-score {
+            margin-bottom: 28px;
+        }
+
+        .score-number {
+            font-size: 56px;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .score-text {
+            font-size: 16px;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .result-container p {
+            font-size: 16px;
+            color: var(--text-light);
+            margin-bottom: 28px;
+            font-weight: 500;
+        }
+
+        /* ==================== RANKING ==================== */
+        .ranking-list {
+            background: var(--bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border);
+        }
+
+        .ranking-item {
+            padding: 18px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s ease;
+            flex-wrap: wrap;
+        }
+
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-item:hover {
+            background: var(--gray-light);
+        }
+
+        .ranking-position {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .ranking-position.gold {
+            color: #f59e0b;
+        }
+
+        .ranking-position.silver {
+            color: #9ca3af;
+        }
+
+        .ranking-position.bronze {
+            color: #d97706;
+        }
+
+        .ranking-info {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .ranking-name {
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        .ranking-class {
+            font-size: 13px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .ranking-points {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        /* ==================== HISTÓRICO ==================== */
+        .history-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: var(--bg);
+            padding: 18px;
+            border-radius: 12px;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border);
+            border-left: 5px solid var(--primary);
+        }
+
+        .history-item-title {
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .history-item-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-light);
+            flex-wrap: wrap;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .history-item-score {
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .auth-box {
+                padding: 28px 20px;
+            }
+
+            .auth-logo {
+                font-size: 28px;
+            }
+
+            .app-header {
+                padding: 14px 16px;
+            }
+
+            .app-header h1 {
+                font-size: 20px;
+            }
+
+            .app-nav {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+
+            .nav-btn {
+                padding: 9px 14px;
+                font-size: 12px;
+            }
+
+            .app-content {
+                padding: 16px;
+            }
+
+            .home-welcome {
+                padding: 24px;
+            }
+
+            .home-welcome h2 {
+                font-size: 24px;
+            }
+
+            .home-cards {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 12px;
+            }
+
+            .home-card {
+                padding: 18px 14px;
+            }
+
+            .card-icon {
+                font-size: 32px;
+            }
+
+            .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quiz-container {
+                padding: 20px;
+            }
+
+            .result-container {
+                padding: 24px;
+            }
+
+            .screen-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .screen-header button {
+                width: 100%;
+            }
+
+            .ranking-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .ranking-info {
+                width: 100%;
+            }
+
+            .form-buttons {
+                flex-direction: column;
+            }
+
+            .form-buttons button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-box {
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+
+            .auth-logo {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .auth-subtitle {
+                margin-bottom: 20px;
+                font-size: 13px;
+            }
+
+            .auth-form h2 {
+                font-size: 20px;
+                margin-bottom: 18px;
+            }
+
+            .form-group {
+                margin-bottom: 14px;
+            }
+
+            .form-label {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            .auth-input {
+                padding: 12px 14px;
+                font-size: 16px;
+                border-radius: 10px;
+            }
+
+            .auth-button {
+                padding: 12px 16px;
+                font-size: 15px;
+                border-radius: 12px;
+                margin-bottom: 10px;
+            }
+
+            .app-header {
+                padding: 12px 14px;
+            }
+
+            .app-header h1 {
+                font-size: 18px;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .user-name {
+                font-size: 12px;
+            }
+
+            .logout-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                border-radius: 10px;
+            }
+
+            .app-nav {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 11px;
+                border-radius: 12px;
+            }
+
+            .app-content {
+                padding: 12px;
+            }
+
+            .home-welcome {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            .home-welcome h2 {
+                font-size: 22px;
+            }
+
+            .home-welcome p {
+                font-size: 13px;
+            }
+
+            .home-cards {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .home-card {
+                padding: 16px 12px;
+                border-radius: 14px;
+            }
+
+            .card-icon {
+                font-size: 28px;
+            }
+
+            .card-title {
+                font-size: 14px;
+            }
+
+            .card-desc {
+                font-size: 12px;
+            }
+
+            .screen-header h2 {
+                font-size: 22px;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                padding: 11px 16px;
+                font-size: 13px;
+                border-radius: 12px;
+            }
+
+            .form-box {
+                padding: 18px;
+                border-radius: 14px;
+            }
+
+            .form-box h3,
+            .form-box h4 {
+                font-size: 18px;
+                margin-bottom: 14px;
+            }
+
+            .form-input {
+                padding: 12px 14px;
+                font-size: 16px;
+                border-radius: 10px;
+                margin-bottom: 12px;
+            }
+
+            .quiz-container {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .quiz-question h3 {
+                font-size: 18px;
+                margin-bottom: 18px;
+            }
+
+            .answer-btn {
+                padding: 14px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+
+            .result-container {
+                padding: 20px;
+                border-radius: 14px;
+            }
+
+            .result-container h2 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+
+            .score-number {
+                font-size: 48px;
+            }
+
+            .score-text {
+                font-size: 14px;
+            }
+
+            .result-container p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .subject-card {
+                border-radius: 14px;
+            }
+
+            .subject-card h3 {
+                font-size: 16px;
+            }
+
+            .subject-card p {
+                font-size: 13px;
+            }
+
+            .subject-detail {
+                padding: 18px;
+                border-radius: 14px;
+            }
+
+            .subject-detail h3 {
+                font-size: 20px;
+            }
+
+            .quiz-item {
+                padding: 14px;
+                border-radius: 10px;
+                gap: 10px;
+            }
+
+            .quiz-item-name {
+                font-size: 14px;
+            }
+
+            .quiz-item-btn {
+                padding: 9px 14px;
+                font-size: 12px;
+                border-radius: 10px;
+            }
+
+            .ranking-list {
+                border-radius: 14px;
+            }
+
+            .ranking-item {
+                padding: 14px;
+            }
+
+            .ranking-position {
+                font-size: 18px;
+            }
+
+            .ranking-name {
+                font-size: 14px;
+            }
+
+            .ranking-points {
+                font-size: 18px;
+            }
+
+            .history-item {
+                padding: 14px;
+                border-radius: 10px;
+            }
+
+            .history-item-title {
+                font-size: 14px;
+            }
+
+            .history-item-info {
+                font-size: 12px;
+            }
+        }
+
+        /* ==================== LOADING STATE ==================== */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(37, 99, 235, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==================== EMPTY STATE ==================== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <!-- TELA DE LOGIN -->
     <div id="authContainer" class="auth-container">
         <div class="auth-box">
-            <div class="auth-logo">📚 Sexta-Feira Studies</div>
+            <div class="auth-logo">📚 Sexta-Feira</div>
+            <p class="auth-subtitle">Aprenda estudando com diversão</p>
             
+            <div id="authError" class="auth-error"></div>
+            <div id="authSuccess" class="auth-success"></div>
+
             <div id="loginForm" class="auth-form">
-                <h2>Login</h2>
-                <input type="email" id="loginEmail" placeholder="Email" class="auth-input">
-                <input type="password" id="loginPassword" placeholder="Senha" class="auth-input">
+                <h2>Bem-vindo de volta</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="loginEmail" placeholder="seu@email.com" class="auth-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" class="auth-input">
+                </div>
+
                 <button id="loginBtn" class="auth-button">Entrar</button>
                 <button id="googleLoginBtn" class="auth-button google-btn">🔐 Entrar com Google</button>
-                <p class="auth-toggle">Não tem conta? <a href="#" onclick="toggleAuthForm(event)">Cadastre-se</a></p>
+
+                <p class="auth-toggle">Não tem conta? <a href="#" onclick="toggleAuthForm(event)">Cadastre-se agora</a></p>
             </div>
 
             <div id="signupForm" class="auth-form" style="display:none;">
-                <h2>Cadastro</h2>
-                <input type="text" id="signupName" placeholder="Nome completo" class="auth-input">
-                <input type="email" id="signupEmail" placeholder="Email" class="auth-input">
-                <input type="password" id="signupPassword" placeholder="Senha" class="auth-input">
-                <input type="text" id="signupClass" placeholder="Sala (ex: 9A)" class="auth-input">
-                <button id="signupBtn" class="auth-button">Criar Conta</button>
+                <h2>Crie sua conta</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Nome completo</label>
+                    <input type="text" id="signupName" placeholder="Seu nome" class="auth-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="signupEmail" placeholder="seu@email.com" class="auth-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" id="signupPassword" placeholder="••••••••" class="auth-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Sala (ex: 9A)</label>
+                    <input type="text" id="signupClass" placeholder="9A" class="auth-input">
+                </div>
+
+                <button id="signupBtn" class="auth-button success">Criar Conta</button>
                 <button id="googleSignupBtn" class="auth-button google-btn">🔐 Cadastrar com Google</button>
+
                 <p class="auth-toggle">Já tem conta? <a href="#" onclick="toggleAuthForm(event)">Faça login</a></p>
             </div>
-
-            <div id="authError" class="auth-error"></div>
         </div>
     </div>
 
@@ -62,9 +1539,9 @@
             <!-- HOME -->
             <section id="homeScreen" class="screen active">
                 <div class="home-welcome">
-                    <h2>Bem-vindo, <span id="homeName"></span>!</h2>
+                    <h2>Bem-vindo, <span id="homeName"></span>! 👋</h2>
                     <p>Sala: <span id="homeClass"></span></p>
-                    <p>Pontos: <span id="homePoints">0</span></p>
+                    <p>Pontos: <span id="homePoints">0</span> ⭐</p>
                 </div>
                 <div class="home-cards">
                     <div class="home-card" onclick="showScreen('subjects', event)">
@@ -95,7 +1572,7 @@
                 <div id="createSubjectForm" class="form-box" style="display:none;">
                     <h3>Criar Matéria</h3>
                     <input type="text" id="subjectTitle" placeholder="Nome da matéria" class="form-input">
-                    <textarea id="subjectDesc" placeholder="Descrição" class="form-input"></textarea>
+                    <textarea id="subjectDesc" placeholder="Descrição" class="form-input" style="min-height: 80px; resize: vertical;"></textarea>
                     <div class="form-buttons">
                         <button class="btn-primary" onclick="createSubject()">Criar</button>
                         <button class="btn-secondary" onclick="closeCreateSubject()">Cancelar</button>
@@ -145,7 +1622,7 @@
                     </div>
 
                     <div class="quiz-buttons">
-                        <button id="nextQuestionBtn" class="btn-primary" onclick="nextQuestion()" style="display:none;">Próxima</button>
+                        <button id="nextQuestionBtn" class="btn-primary" onclick="nextQuestion()" style="display:none;">Próxima Pergunta</button>
                     </div>
                 </div>
             </section>
@@ -154,7 +1631,7 @@
             <section id="quizResultScreen" class="screen">
                 <button class="btn-back" onclick="backToSubjects()">← Voltar</button>
                 <div class="result-container">
-                    <h2>Quiz Finalizado!</h2>
+                    <h2>🎉 Quiz Finalizado!</h2>
                     <div class="result-score">
                         <div class="score-number" id="resultScore">0</div>
                         <div class="score-text">pontos</div>
@@ -181,6 +1658,263 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+    <script>
+        // ==================== FIREBASE CONFIG ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+            authDomain: "sexta-feira-fb01a.firebaseapp.com",
+            projectId: "sexta-feira-fb01a",
+            storageBucket: "sexta-feira-fb01a.firebasestorage.app",
+            messagingSenderId: "82809140147",
+            appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ==================== GLOBAL STATE ====================
+        let currentUser = null;
+        let currentSubject = null;
+        let currentQuiz = null;
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let currentScore = 0;
+        let selectedAnswers = [];
+
+        // ==================== AUTH STATE ====================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    
+                    if (!userDoc.exists) {
+                        const displayName = user.displayName || 'Usuário';
+                        const email = user.email || '';
+                        await db.collection('users').doc(user.uid).set({
+                            name: displayName,
+                            email: email,
+                            class: 'Não definida',
+                            points: 0,
+                            createdAt: new Date()
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar usuário:', error);
+                }
+                
+                showApp();
+                updateUserInfo();
+            } else {
+                currentUser = null;
+                showAuth();
+            }
+        });
+
+        // ==================== UI FUNCTIONS ====================
+        function showAuth() {
+            document.getElementById('authContainer').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+        }
+
+        function showApp() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'flex';
+            showScreen('home');
+        }
+
+        function toggleAuthForm(event) {
+            event.preventDefault();
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                signupForm.style.display = 'block';
+            }
+            
+            clearMessages();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+            setTimeout(() => errorDiv.classList.remove('show'), 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('authSuccess');
+            successDiv.textContent = '✅ ' + message;
+            successDiv.classList.add('show');
+            setTimeout(() => successDiv.classList.remove('show'), 3000);
+        }
+
+        function clearMessages() {
+            document.getElementById('authError').classList.remove('show');
+            document.getElementById('authSuccess').classList.remove('show');
+        }
+
+        function showScreen(screenName, event) {
+            if (event) {
+                event.preventDefault();
+            }
+            
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenName + 'Screen').classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
+            
+            if (screenName === 'home') {
+                updateHomeScreen();
+            } else if (screenName === 'subjects') {
+                loadSubjects();
+            } else if (screenName === 'ranking') {
+                loadRanking();
+            } else if (screenName === 'history') {
+                loadHistory();
+            }
+        }
+
+        async function updateUserInfo() {
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                const userData = userDoc.data();
+                
+                document.getElementById('userNameHeader').textContent = userData.name || 'Usuário';
+                document.getElementById('homeName').textContent = userData.name || 'Usuário';
+                document.getElementById('homeClass').textContent = userData.class || 'Não definida';
+                document.getElementById('homePoints').textContent = userData.points || 0;
+            } catch (error) {
+                console.error('Erro ao atualizar info:', error);
+            }
+        }
+
+        async function updateHomeScreen() {
+            await updateUserInfo();
+        }
+
+        // ==================== AUTH FUNCTIONS ====================
+        document.getElementById('loginBtn')?.addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            
+            if (!email || !password) {
+                showError('Preencha todos os campos');
+                return;
+            }
+            
+            try {
+                const btn = document.getElementById('loginBtn');
+                btn.disabled = true;
+                btn.textContent = 'Entrando...';
+                
+                await auth.signInWithEmailAndPassword(email, password);
+                
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+            } catch (error) {
+                const btn = document.getElementById('loginBtn');
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
+                
+                if (error.code === 'auth/user-not-found') {
+                    showError('Usuário não encontrado');
+                } else if (error.code === 'auth/wrong-password') {
+                    showError('Senha incorreta');
+                } else if (error.code === 'auth/invalid-email') {
+                    showError('Email inválido');
+                } else if (error.code === 'auth/too-many-requests') {
+                    showError('Muitas tentativas. Tente novamente mais tarde');
+                } else {
+                    showError(error.message);
+                }
+            }
+        });
+
+        document.getElementById('signupBtn')?.addEventListener('click', async () => {
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+            const classroom = document.getElementById('signupClass').value.trim();
+            
+            if (!name || !email || !password || !classroom) {
+                showError('Preencha todos os campos');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Senha deve ter pelo menos 6 caracteres');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                showError('Email inválido');
+                return;
+            }
+            
+            try {
+                const btn = document.getElementById('signupBtn');
+                btn.disabled = true;
+                btn.textContent = 'Criando...';
+                
+                const result = await auth.createUserWithEmailAndPassword(email, password);
+                await result.user.updateProfile({ displayName: name });
+                
+                await db.collection('users').doc(result.user.uid).set({
+                    name: name,
+                    email: email,
+                    class: classroom,
+                    points: 0,
+                    createdAt: new Date()
+                });
+                
+                showSuccess('Conta criada com sucesso!');
+                setTimeout(() => {
+                    document.getElementById('signupName').value = '';
+                    document.getElementById('signupEmail').value = '';
+                    document.getElementById('signupPassword').value = '';
+                    document.getElementById('signupClass').value = '';
+                    toggleAuthForm({ preventDefault: () => {} });
+                }, 1500);
+                
+                btn.disabled = false;
+                btn.textContent = 'Criar Conta';
+            } catch (error) {
+                const btn = document.getElementById('signupBtn');
+                btn.disabled = false;
+                btn.textContent = 'Criar Conta';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    showError('Email já cadastrado');
+                } else if (error.code === 'auth/weak-password') {
+                    showError('Senha muito fraca');
+                } else if (error.code === 'auth/invalid-email') {
+                    showError('Email inválido');
+                } else {
+                    showError(error.message);
+                }
+            }
+        });
+
+        document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                const btn = document.getElementById('googleLoginBtn');
+                btn.disabled = true;
+                await auth.signInWithPopup(provider);
+                btn.disabled = false;
+            } catch (error) {
+                document.getElementById('googleLoginBtn').disabled = false;
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    showError('Erro ao fazer login com Google');
+                }
+            }
+        });
+
+        document.getElementById('googleSignupBtn')?.addEventListener
