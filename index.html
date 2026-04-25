@@ -73,6 +73,7 @@
                             <span class="input-icon">👤</span>
                             <input type="text" id="signup-name" placeholder="Seu nome completo" required>
                         </div>
+                        <div id="signup-name-error" class="error-message" style="margin-top: 4px;"></div>
                     </div>
 
                     <div class="form-group">
@@ -176,10 +177,10 @@
                         <h3>Ranking</h3>
                         <p>Veja sua posição</p>
                     </div>
-                    <div class="quick-card" data-screen="chat">
-                        <div class="quick-icon">💬</div>
-                        <h3>Chat</h3>
-                        <p>Converse com amigos</p>
+                    <div class="quick-card" data-screen="discover">
+                        <div class="quick-icon">🔍</div>
+                        <h3>Descobrir</h3>
+                        <p>Encontre pessoas</p>
                     </div>
                 </div>
 
@@ -283,17 +284,37 @@
                 </div>
             </section>
 
-            <!-- TELA RESULTADO -->
+            <!-- TELA RESULTADO DO QUIZ -->
             <section id="screen-result" class="screen">
-                <button id="btn-back-result" class="btn btn-back">← Voltar</button>
-                <div class="result-box">
-                    <h2>🎉 Quiz Finalizado!</h2>
-                    <div class="result-score">
-                        <div class="score-number" id="result-score">0</div>
-                        <p class="score-label">pontos</p>
+                <div class="result-container">
+                    <div class="result-box">
+                        <div class="result-header">
+                            <h2>🎉 Quiz Finalizado!</h2>
+                        </div>
+                        
+                        <div class="result-score-section">
+                            <div class="result-score-circle">
+                                <div class="score-number" id="result-score">0</div>
+                                <p class="score-label">pontos</p>
+                            </div>
+                        </div>
+
+                        <div class="result-details">
+                            <p id="result-message" class="result-message"></p>
+                            <div class="result-stats">
+                                <div class="stat">
+                                    <span class="stat-icon">✅</span>
+                                    <span class="stat-text">Acertos: <strong id="result-correct">0</strong></span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-icon">❌</span>
+                                    <span class="stat-text">Erros: <strong id="result-incorrect">0</strong></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="btn-back-home-result" class="btn btn-primary btn-large">🏠 Voltar ao Início</button>
                     </div>
-                    <p id="result-message" class="result-message"></p>
-                    <button id="btn-back-home-result" class="btn btn-primary btn-large">Voltar</button>
                 </div>
             </section>
 
@@ -301,6 +322,29 @@
             <section id="screen-ranking" class="screen">
                 <h2>🏆 Ranking Global</h2>
                 <div id="ranking-container" class="ranking-list"></div>
+            </section>
+
+            <!-- TELA DESCOBRIR -->
+            <section id="screen-discover" class="screen">
+                <div class="discover-header">
+                    <h2>🔍 Descobrir</h2>
+                    <div class="discover-search">
+                        <input type="text" id="discover-search-input" class="form-input" placeholder="Pesquise matérias ou pessoas...">
+                    </div>
+                </div>
+
+                <div class="discover-tabs">
+                    <button class="discover-tab active" data-tab="subjects">📚 Matérias</button>
+                    <button class="discover-tab" data-tab="people">👥 Pessoas</button>
+                </div>
+
+                <div id="discover-subjects-tab" class="discover-tab-content active">
+                    <div id="discover-subjects-list" class="discover-list"></div>
+                </div>
+
+                <div id="discover-people-tab" class="discover-tab-content">
+                    <div id="discover-people-list" class="discover-list"></div>
+                </div>
             </section>
 
             <!-- TELA CHAT -->
@@ -383,10 +427,29 @@
                         <label for="adm-password">Senha de Acesso</label>
                         <input type="password" id="adm-password" class="form-input" placeholder="Digite a senha">
                     </div>
+                    <div id="adm-login-error" class="error-message"></div>
                     <button id="btn-adm-login" class="btn btn-primary btn-large">Entrar</button>
                 </div>
 
                 <div id="adm-panel" class="adm-panel">
+                    <div class="adm-section">
+                        <h3>💰 Depositar Pontos</h3>
+                        <div class="form-group">
+                            <label for="adm-points-amount">Quantidade de Pontos</label>
+                            <input type="number" id="adm-points-amount" class="form-input" placeholder="Digite a quantidade" min="1">
+                        </div>
+                        <button id="btn-deposit-points" class="btn btn-success btn-large">Depositar Pontos</button>
+                    </div>
+
+                    <div class="adm-section">
+                        <h3>🎯 Criar Quiz com Código</h3>
+                        <div class="form-group">
+                            <label for="adm-quiz-code">Código do Quiz</label>
+                            <textarea id="adm-quiz-code" class="form-input" placeholder="/q1 Pergunta aqui&#10;/a1 Opção 1&#10;/a2 Opção 2&#10;/a3 Opção 3&#10;/a4 Opção 4&#10;/c 2" style="min-height: 150px;"></textarea>
+                        </div>
+                        <button id="btn-create-quiz-code" class="btn btn-primary btn-large">Criar Quiz</button>
+                    </div>
+
                     <div class="adm-section">
                         <h3>📚 Gerenciar Matérias</h3>
                         <div id="adm-subjects" class="adm-list"></div>
@@ -417,9 +480,9 @@
                 <span class="nav-icon">📚</span>
                 <span class="nav-label">Estudos</span>
             </button>
-            <button class="nav-item" data-screen="ranking" title="Ranking">
-                <span class="nav-icon">🏆</span>
-                <span class="nav-label">Ranking</span>
+            <button class="nav-item" data-screen="discover" title="Descobrir">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-label">Descobrir</span>
             </button>
             <button class="nav-item" data-screen="chat" title="Chat">
                 <span class="nav-icon">💬</span>
