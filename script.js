@@ -18,6 +18,7 @@ let quizQuestions = [];
 let currentQuestionIndex = 0;
 let score = 0;
 let isAdmin = false;
+const adminPassword = 'admin123'; // Senha para painel admin
 
 auth.onAuthStateChanged(user => {
     if (user) {
@@ -82,7 +83,19 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 });
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => showScreen(btn.dataset.screen));
+    btn.addEventListener('click', (e) => {
+        const screen = btn.dataset.screen;
+        if (screen === 'admin') {
+            const password = prompt('Digite a senha do painel admin:');
+            if (password === adminPassword) {
+                showScreen(screen);
+            } else {
+                alert('Senha incorreta.');
+            }
+        } else {
+            showScreen(screen);
+        }
+    });
 });
 
 function showScreen(screen) {
@@ -395,6 +408,9 @@ function loadChat() {
             messages.appendChild(msgDiv);
         });
         messages.scrollTop = messages.scrollHeight;
+    }, error => {
+        console.error('Erro no chat:', error);
+        alert('Erro ao carregar chat: ' + error.message);
     });
 }
 
@@ -403,11 +419,14 @@ document.getElementById('send-message-btn').addEventListener('click', () => {
     const message = input.value.trim();
     if (message) {
         db.collection('chat').add({
-            user: currentUser.displayName || currentUser.email,
+            user: currentUser.displayName || currentUser.email.split('@')[0],
             message,
             timestamp: new Date()
+        }).then(() => {
+            input.value = '';
+        }).catch(error => {
+            alert('Erro ao enviar mensagem: ' + error.message);
         });
-        input.value = '';
     }
 });
 
