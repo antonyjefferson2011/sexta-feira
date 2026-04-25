@@ -500,31 +500,70 @@
       <div id="descobrir-feed"></div>
     </div>
 
-    <!-- CHAT -->
+     <!-- CHAT -->
     <div id="screen-chat" style="display:none;">
-      <h2 style="font-size:22px; margin-bottom:20px; color:var(--text);">💬 Chat</h2>
-      <div style="display:flex; gap:0; height:calc(100vh - 200px); min-height:400px;">
-        <div class="card-bg" style="width:180px; border-radius:15px 0 0 15px; border:2px solid var(--border); overflow-y:auto;">
-          <div style="padding:12px; border-bottom:2px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:14px; color:var(--text);">
-            <span>Salas</span>
-            <button onclick="showModal('modal-sala')" style="background:#6C5CE7; color:white; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:16px;">+</button>
+      <h2 style="font-size:22px; margin-bottom:15px; color:var(--text);">💬 Chat</h2>
+      
+      <div style="display:flex; gap:10px; height:calc(100vh - 200px); min-height:450px;">
+        
+        <!-- LADO ESQUERDO: LISTA DE SALAS E PVs -->
+        <div class="card-bg" style="width:200px; border-radius:15px; border:2px solid var(--border); overflow-y:auto; display:flex; flex-direction:column; flex-shrink:0;">
+          
+          <div style="padding:12px; border-bottom:2px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:13px; color:var(--text);">
+            <span>💬 Salas</span>
+            <button onclick="showModal('modal-sala')" style="background:#6C5CE7; color:white; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:14px;">+</button>
           </div>
-          <div id="rooms-list"></div>
+          
+          <div id="rooms-list" style="flex:1; overflow-y:auto;"></div>
+          
+          <div style="padding:8px 12px; border-top:2px solid var(--border); border-bottom:2px solid var(--border); font-weight:700; font-size:12px; color:var(--text3);">📩 Conversas</div>
+          
+          <div id="pv-list" style="flex:1; overflow-y:auto; max-height:200px;"></div>
         </div>
-        <div class="card-bg" style="flex:1; border-radius:0 15px 15px 0; border:2px solid var(--border); border-left:none; display:flex; flex-direction:column;">
-          <div id="chat-no-room" style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text3);">Selecione uma sala</div>
+        
+        <!-- LADO DIREITO: JANELA DE CHAT -->
+        <div class="card-bg" style="flex:1; border-radius:15px; border:2px solid var(--border); display:flex; flex-direction:column; overflow:hidden;">
+          
+          <div id="chat-no-room" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text3); gap:10px;">
+            <div style="font-size:50px;">💬</div>
+            <div style="font-weight:700; font-size:16px;">Selecione uma sala ou conversa</div>
+          </div>
+          
+          <!-- SALA -->
           <div id="chat-room-view" style="display:none; flex-direction:column; height:100%;">
-            <div style="padding:12px; border-bottom:2px solid var(--border); font-weight:700; color:var(--text);" id="chat-room-name">Sala</div>
-            <div id="chat-messages" style="flex:1; overflow-y:auto; padding:15px;"></div>
-            <div style="display:flex; gap:8px; padding:12px; border-top:2px solid var(--border);">
-              <input type="text" id="chat-msg-input" placeholder="Mensagem..." style="flex:1; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:20px; outline:none;" />
-              <button onclick="sendChatMsg()" style="background:#6C5CE7; color:white; border:none; padding:10px 18px; border-radius:20px; font-weight:700; cursor:pointer;">Enviar</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px; border-bottom:2px solid var(--border);">
+              <strong id="chat-room-name" style="color:var(--text);">Sala</strong>
+              <div style="display:flex; gap:6px;">
+                <button onclick="showInviteModal()" style="background:#6C5CE7; color:white; border:none; padding:5px 10px; border-radius:12px; cursor:pointer; font-weight:600; font-size:11px;">+ Convidar</button>
+                <button onclick="leaveRoom()" style="background:var(--border); border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:12px;">✕</button>
+              </div>
+            </div>
+            <div id="chat-messages" style="flex:1; overflow-y:auto; padding:12px;"></div>
+            <div style="display:flex; gap:6px; padding:10px; border-top:2px solid var(--border);">
+              <input type="text" id="chat-msg-input" placeholder="Mensagem..." style="flex:1; padding:8px 12px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:20px; outline:none; font-size:13px;" />
+              <button onclick="sendChatMsg()" style="background:#6C5CE7; color:white; border:none; padding:8px 14px; border-radius:20px; font-weight:700; cursor:pointer;">Enviar</button>
             </div>
           </div>
+          
+          <!-- PV -->
+          <div id="pv-chat-view" style="display:none; flex-direction:column; height:100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px; border-bottom:2px solid var(--border);">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div id="pv-chat-avatar" style="width:28px; height:28px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">?</div>
+                <strong id="pv-chat-name" style="color:var(--text); font-size:14px;">Usuário</strong>
+              </div>
+              <button onclick="closePrivateChatInRoom(true)" style="background:var(--border); border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:12px;">✕</button>
+            </div>
+            <div id="pv-chat-messages" style="flex:1; overflow-y:auto; padding:12px;"></div>
+            <div style="display:flex; gap:6px; padding:10px; border-top:2px solid var(--border);">
+              <input type="text" id="pv-chat-input" placeholder="Mensagem privada..." style="flex:1; padding:8px 12px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:20px; outline:none; font-size:13px;" />
+              <button onclick="sendPvChatMsg()" style="background:#6C5CE7; color:white; border:none; padding:8px 14px; border-radius:20px; font-weight:700; cursor:pointer;">Enviar</button>
+            </div>
+          </div>
+          
         </div>
       </div>
     </div>
-
     <!-- PERFIL -->
     <div id="screen-perfil" style="display:none;">
       <div style="text-align:center; padding:30px 20px; background:linear-gradient(135deg, var(--hover), #e0e7ff); border-radius:20px; margin-bottom:20px;">
