@@ -44,10 +44,10 @@ auth.onAuthStateChanged(async (user) => {
                     points: 0,
                     createdAt: new Date()
                 });
-                console.log('Novo usuário criado:', user.uid);
+                console.log('✅ Novo usuário criado:', user.uid);
             }
         } catch (error) {
-            console.error('Erro ao carregar usuário:', error);
+            console.error('❌ Erro ao carregar usuário:', error);
         }
         
         showApp();
@@ -140,11 +140,11 @@ async function handleLogin() {
 
     try {
         await auth.signInWithEmailAndPassword(email, password);
-        console.log('Login realizado com sucesso');
+        console.log('✅ Login realizado com sucesso');
         document.getElementById('login-email').value = '';
         document.getElementById('login-password').value = '';
     } catch (error) {
-        console.error('Erro de login:', error.code);
+        console.error('❌ Erro de login:', error.code);
         
         if (error.code === 'auth/user-not-found') {
             showAuthError('Usuário não encontrado');
@@ -200,15 +200,15 @@ async function handleSignup() {
             createdAt: new Date()
         });
 
-        console.log('Dados enviados com sucesso');
-        console.log('Usuário criado:', {
+        console.log('✅ Dados enviados com sucesso');
+        console.log('📊 Usuário criado:', {
             uid: result.user.uid,
             name: name,
             email: email,
             class: classroom
         });
 
-        showAuthSuccess('Conta criada com sucesso! Redirecionando...');
+        showAuthSuccess('Conta criada com sucesso!');
 
         setTimeout(() => {
             document.getElementById('signup-name').value = '';
@@ -218,7 +218,7 @@ async function handleSignup() {
             toggleAuthForm();
         }, 1500);
     } catch (error) {
-        console.error('Erro de cadastro:', error.code);
+        console.error('❌ Erro de cadastro:', error.code);
 
         if (error.code === 'auth/email-already-in-use') {
             showAuthError('Email já cadastrado', true);
@@ -242,11 +242,11 @@ async function handleGoogleLogin() {
 
     try {
         await auth.signInWithPopup(provider);
-        console.log('Login com Google realizado com sucesso');
+        console.log('✅ Login com Google realizado com sucesso');
     } catch (error) {
         if (error.code !== 'auth/popup-closed-by-user') {
             showAuthError('Erro ao fazer login com Google');
-            console.error('Erro Google Login:', error);
+            console.error('❌ Erro Google Login:', error);
         }
     } finally {
         btn.disabled = false;
@@ -260,11 +260,11 @@ async function handleGoogleSignup() {
 
     try {
         await auth.signInWithPopup(provider);
-        console.log('Cadastro com Google realizado com sucesso');
+        console.log('✅ Cadastro com Google realizado com sucesso');
     } catch (error) {
         if (error.code !== 'auth/popup-closed-by-user') {
             showAuthError('Erro ao cadastrar com Google', true);
-            console.error('Erro Google Signup:', error);
+            console.error('❌ Erro Google Signup:', error);
         }
     } finally {
         btn.disabled = false;
@@ -274,9 +274,9 @@ async function handleGoogleSignup() {
 async function handleLogout() {
     try {
         await auth.signOut();
-        console.log('Logout realizado com sucesso');
+        console.log('✅ Logout realizado com sucesso');
     } catch (error) {
-        console.error('Erro ao fazer logout:', error);
+        console.error('❌ Erro ao fazer logout:', error);
     }
 }
 
@@ -302,7 +302,7 @@ async function updateUserInfo() {
         document.getElementById('home-user-class').textContent = userData.class || 'Não definida';
         document.getElementById('home-user-points').textContent = userData.points || 0;
     } catch (error) {
-        console.error('Erro ao atualizar info do usuário:', error);
+        console.error('❌ Erro ao atualizar info do usuário:', error);
     }
 }
 
@@ -349,12 +349,4 @@ function setupAppEventListeners() {
 
     // Quiz
     document.getElementById('btn-new-quiz')?.addEventListener('click', openCreateQuiz);
-    document.getElementById('btn-cancel-quiz')?.addEventListener('click', closeCreateQuiz);
-    document.getElementById('btn-save-quiz')?.addEventListener('click', saveQuiz);
-    document.getElementById('btn-add-question')?.addEventListener('click', addQuestion);
-
-    // Back buttons
-    document.getElementById('btn-back-subjects')?.addEventListener('click', backToSubjects);
-    document.getElementById('btn-back-quiz')?.addEventListener('click', backToSubjects);
-    document.getElementById('btn-back-result')?.addEventListener('click', backToSubjects);
-    document.getElementById('btn-back-result-home')?.addEventListener('click', backToSubjects
+    document.
