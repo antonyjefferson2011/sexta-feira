@@ -34,7 +34,7 @@ auth.onAuthStateChanged(user => {
 document.getElementById('login-btn').addEventListener('click', () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    auth.signInWithEmailAndPassword(email, password).catch(alert);
+    auth.signInWithEmailAndPassword(email, password).catch(error => alert(error.message));
 });
 
 document.getElementById('register-btn').addEventListener('click', () => {
@@ -44,7 +44,7 @@ document.getElementById('register-btn').addEventListener('click', () => {
     const cls = document.getElementById('class').value;
     auth.createUserWithEmailAndPassword(email, password).then(cred => {
         db.collection('users').doc(cred.user.uid).set({ name, email, class: cls, points: 0 });
-    }).catch(alert);
+    }).catch(error => alert(error.message));
 });
 
 document.getElementById('google-login-btn').addEventListener('click', () => {
@@ -61,7 +61,7 @@ document.getElementById('google-login-btn').addEventListener('click', () => {
                 });
             }
         });
-    }).catch(alert);
+    }).catch(error => alert(error.message));
 });
 
 document.getElementById('show-register').addEventListener('click', () => {
@@ -123,10 +123,13 @@ function openSubject(id, data) {
     currentSubjectId = id;
     document.getElementById('subject-title').textContent = data.title;
     document.getElementById('subject-description').textContent = data.description;
-    document.getElementById('subjects-screen').style.display = 'none';
-    document.getElementById('subject-details').style.display = 'block';
+    showScreen('subject');
     loadQuizzes();
 }
+
+document.getElementById('back-to-subjects-btn').addEventListener('click', () => {
+    showScreen('subjects');
+});
 
 document.getElementById('create-quiz-btn').addEventListener('click', () => {
     showScreen('quiz-create');
@@ -166,15 +169,13 @@ document.getElementById('save-quiz-btn').addEventListener('click', () => {
         questions.push({ text, options: { A: a, B: b, C: c, D: d }, correct });
     });
     db.collection('quizzes').add({ title, subjectId: currentSubjectId, questions }).then(() => {
-        showScreen('subjects');
-        document.getElementById('subject-details').style.display = 'block';
+        showScreen('subject');
         loadQuizzes();
     });
 });
 
 document.getElementById('back-to-subject-btn').addEventListener('click', () => {
-    showScreen('subjects');
-    document.getElementById('subject-details').style.display = 'block';
+    showScreen('subject');
 });
 
 function loadQuizzes() {
@@ -211,7 +212,7 @@ function showQuestion() {
         btn.dataset.answer = letters[i];
         btn.classList.remove('correct', 'incorrect');
         btn.disabled = false;
-        btn.addEventListener('click', selectAnswer);
+        btn.onclick = selectAnswer;
     });
     document.getElementById('next-question-btn').style.display = 'none';
     updateProgress();
@@ -255,8 +256,7 @@ function showResult() {
 }
 
 document.getElementById('back-to-subject-from-quiz').addEventListener('click', () => {
-    showScreen('subjects');
-    document.getElementById('subject-details').style.display = 'block';
+    showScreen('subject');
     document.getElementById('question-display').style.display = 'block';
     document.getElementById('quiz-result').style.display = 'none';
 });
