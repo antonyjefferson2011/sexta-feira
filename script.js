@@ -571,8 +571,235 @@ function setPostType(t, btn){
   if(btn){ btn.style.background='#6C5CE7'; btn.style.color='white'; btn.style.borderColor='#6C5CE7'; }
 }
 
+// ========== FEED FILTER (ATUALIZADO COM USUÁRIOS) ==========
 function setFeedFilter(f, btn){
-  STATE.feedFilter=f;
+  STATE.feedFilter = f;
+  
+  // Atualizar botões
+  document.querySelectorAll('.feed-filter-btn').forEach(b => {
+    b.style.background = 'white';
+    b.style.color = '#555';
+    b.style.borderColor = '#eee';
+  });
+  if(btn){ 
+    btn.style.background = '#6C5CE7'; 
+    btn.style.color = 'white'; 
+    btn.style.borderColor = '#6C5CE7'; 
+  }
+  
+  // Mostrar/esconder barra de pesquisa
+  const searchBar = $('search-users-bar');
+  const feedContainer = $('descobrir-feed');
+  
+  if (f === 'usuarios') {
+    // Mostrar barra de pesquisa e carregar usuários
+    if (searchBar) searchBar.style.display = '';
+    if (feedContainer) feedContainer.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">⏳ Carregando usuários...</div>';
+    loadAllUsers();
+  } else {
+    // Esconder barra e carregar feed normal
+    if (searchBar) searchBar.style.display = 'none';
+    loadFeed();
+  }
+}
+
+// ========== CARREGAR TODOS OS USUÁRIOS ==========
+async function loadAllUsers() {
+  const container = $('descobrir-feed');
+  if (!container) return;
+  
+  const snap = await db.ref('usuarios').once('value');
+  const users = snap.val();
+  
+  if (!users) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">👥 Nenhum usuário encontrado</div>';
+    return;
+  }
+  
+  renderUserList(users);
+}
+
+// ========== PESQUISAR USUÁRIOS ==========
+async function searchUsers() {
+  const term = ($('search-users-input')?.value || '').toLowerCase().trim();
+  const container = $('descobrir-feed');
+  if (!container) return;
+  
+  const snap = await db.ref('usuarios').once('value');
+  const users = snap.val();
+  
+  if (!users) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">👥 Nenhum usuário encontrado</div>';
+    return;
+  }
+  
+  if (!term) {
+    renderUserList(users);
+    return;
+  }
+  
+  // Filtrar usuários pelo termo
+  const filtered = {};
+  Object.entries(users).forEach(([uid, u]) => {
+    if (
+      (u.username || '').toLowerCase().includes(term) ||
+      (u.email || '').toLowerCase().includes(term) ||
+      (u.bio || '').toLowerCase().includes(term)
+    ) {
+      filtered[uid] = u;
+    }
+  });
+  
+  renderUserList(filtered);
+}
+
+// ========== RENDERIZAR LISTA DE USUÁRIOS ==========
+function renderUserList(users) {
+  const container = $('descobrir-feed');
+  if (!container) return;
+  
+  const arr = Object.entries(users).map(([uid, u]) => ({ uid, ...u }));
+  
+  // Ordenar por pontos (mais pontos primeiro)
+  arr.sort((a, b) => (b.points || 0) - (a.points || 0));
+  
+  if (!arr.length) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">🔍 Nenhum usuário encontrado</div>';
+    return;
+  }
+  
+  container.innerHTML = arr.map(u => {
+    const isMe = u.uid === STATE.user?.uid;
+    const level = getLevelName(u.points || 0);
+    
+    return `
+      <div onclick="${isMe ? "showScreen('perfil')" : "verPerfil('" + u.uid + "')"}" 
+           style="background:white; border-radius:15px; padding:15px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:0.2s;"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)';"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)';">
+        
+        <!-- Avatar -->
+        <div style="width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg, #6C5CE7, #a855f7); color:white; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; flex-shrink:0; position:relative;">
+          ${u.avatar || '🎓'}
+          ${u.isAdmin ? '<span style="position:absolute; bottom:-2px; right:-2px; font-size:14px;">⚙️</span>' : ''}
+        </div>
+        
+        <!-- Info -->
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:700; font-size:15px; display:flex; align-items:center; gap:5px;">
+            ${esc(u.username || 'Usuário')}
+            ${isMe ? '<span style="background:#6C5CE7; color:white; padding:2px 8px; border-radius:10px; font-size:10px;">Você</span>' : ''}
+            ${u.isAdmin ? '<span style="color:#f59e0b; font-size:12px;">⚙️</span>' : ''}
+          </div>
+          <div style="font-size:12px; color:#888; margin-top:3px;">
+            ${esc(u.bio || 'Sem bio')}
+          </div>
+          <div style="display:flex; gap:10px; margin-top:5px; font-size:11px; color:#888;">
+            <span>⭐ ${fmt(u.points || 0)} pts</span>
+            <span>🏆 ${level}</span>
+            <span>👥 ${u.seguidores || 0} seguidores</span>
+          </div>
+        </div>
+        
+        <!-- Botão Seguir -->
+        ${!isMe ? `
+          <button onclick="event.stopPropagation(); toggleFollowFromList('${u.uid}', this)" 
+                  class="btn-follow-list"
+                  data-uid="${u.uid}"
+                  style="background:#6C5CE7; color:white; border:none; padding:8px 16px; border-radius:20px; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap; flex-shrink:0;">
+            👥 Seguir
+          </button>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+  
+  // Verificar quem já está seguindo
+  updateFollowButtons();
+}
+
+// ========== ATUALIZAR BOTÕES DE SEGUIR NA LISTA ==========
+async function updateFollowButtons() {
+  if (!STATE.user) return;
+  
+  const buttons = document.querySelectorAll('.btn-follow-list');
+  
+  for (const btn of buttons) {
+    const uid = btn.getAttribute('data-uid');
+    if (!uid) continue;
+    
+    const snap = await db.ref('seguidores/' + STATE.user.uid + '/' + uid).once('value');
+    
+    if (snap.val()) {
+      btn.textContent = '✅ Seguindo';
+      btn.style.background = '#10b981';
+    } else {
+      btn.textContent = '👥 Seguir';
+      btn.style.background = '#6C5CE7';
+    }
+  }
+}
+
+// ========== SEGUIR/DESSEGUIR DA LISTA ==========
+async function toggleFollowFromList(uid, btn) {
+  if (!STATE.user) return toast('Faça login primeiro!', 'error');
+  if (uid === STATE.user.uid) return;
+  
+  const ref = db.ref('seguidores/' + STATE.user.uid + '/' + uid);
+  const snap = await ref.once('value');
+  
+  if (snap.val()) {
+    // Deixar de seguir
+    await ref.remove();
+    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).remove();
+    
+    // Atualizar contagem
+    const uSnap = await db.ref('usuarios/' + uid).once('value');
+    const u = uSnap.val();
+    if (u) await db.ref('usuarios/' + uid).update({ seguidores: Math.max((u.seguidores || 1) - 1, 0) });
+    
+    if (btn) {
+      btn.textContent = '👥 Seguir';
+      btn.style.background = '#6C5CE7';
+    }
+    toast('Deixou de seguir', 'info');
+  } else {
+    // Seguir
+    await ref.set(true);
+    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).set(true);
+    
+    // Atualizar contagem
+    const uSnap = await db.ref('usuarios/' + uid).once('value');
+    const u = uSnap.val();
+    if (u) await db.ref('usuarios/' + uid).update({ seguidores: (u.seguidores || 0) + 1 });
+    
+    // Notificar
+    await db.ref('notificacoes/' + uid).push({
+      mensagem: '👥 ' + STATE.userData.username + ' começou a te seguir!',
+      tipo: 'follow',
+      lida: false,
+      createdAt: Date.now()
+    });
+    
+    if (btn) {
+      btn.textContent = '✅ Seguindo';
+      btn.style.background = '#10b981';
+    }
+    toast('Seguindo! 👥', 'success');
+  }
+}
+
+// ========== PEGAR NOME DO NÍVEL ==========
+function getLevelName(pts) {
+  const levels = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
+  const names = ['🌱 Iniciante', '📚 Aprendiz', '📖 Estudante', '🎓 Dedicado', '🏅 Scholar', 
+                 '⭐ Mestre', '🌟 Especialista', '👨‍🏫 Professor', '🧙 Guru', '💎 Sábio', '👑 Lenda'];
+  let lvl = 0;
+  for (let i = 0; i < levels.length; i++) {
+    if (pts >= levels[i]) lvl = i;
+  }
+  return names[lvl];
+}
   document.querySelectorAll('.feed-filter-btn').forEach(b=>{b.style.background='white'; b.style.color='#555';});
   if(btn){ btn.style.background='#6C5CE7'; btn.style.color='white'; }
   loadFeed();
