@@ -1,839 +1,618 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EduConnect — Aprenda. Conecte. Evolua.</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
-      authDomain: "sexta-feira-fb01a.firebaseapp.com",
-      databaseURL: "https://sexta-feira-fb01a-default-rtdb.firebaseio.com",
-      projectId: "sexta-feira-fb01a",
-      storageBucket: "sexta-feira-fb01a.firebasestorage.app",
-      messagingSenderId: "82809140147",
-      appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6",
-      measurementId: "G-DEZ5ZESQH7"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    window._firebase = { auth, db, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile };
-  </script>
-</head>
-<body>
-
-<!-- ==================== SPLASH SCREEN ==================== -->
-<div id="splash-screen" class="splash">
-  <div class="splash-logo">
-    <div class="splash-icon">⚡</div>
-    <h1>EduConnect</h1>
-    <p>Carregando plataforma...</p>
-    <div class="splash-bar"><div class="splash-bar-fill"></div></div>
-  </div>
-</div>
-
-<!-- ==================== AUTH SCREEN ==================== -->
-<div id="auth-screen" class="screen hidden">
-  <div class="auth-bg">
-    <div class="auth-blob b1"></div>
-    <div class="auth-blob b2"></div>
-    <div class="auth-blob b3"></div>
-  </div>
-  <div class="auth-container">
-    <div class="auth-brand">
-      <span class="brand-icon">⚡</span>
-      <h1>EduConnect</h1>
-      <p>Aprenda. Conecte. Evolua.</p>
-    </div>
-
-    <!-- Tabs -->
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login">Entrar</button>
-      <button class="auth-tab" data-tab="register">Cadastrar</button>
-    </div>
-
-    <!-- Login Form -->
-    <div id="login-form" class="auth-form">
-      <div class="field-group">
-        <label>E-mail</label>
-        <div class="input-wrap">
-          <span class="input-icon">✉</span>
-          <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" />
-        </div>
-      </div>
-      <div class="field-group">
-        <label>Senha</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
-          <button class="toggle-pw" onclick="togglePw('login-password', this)">👁</button>
-        </div>
-      </div>
-      <div id="login-error" class="auth-error hidden"></div>
-      <button class="btn-primary btn-full" id="btn-login" onclick="doLogin()">
-        <span>Entrar na plataforma</span>
-        <div class="btn-loader hidden"></div>
-      </button>
-      <p class="auth-hint">Novo aqui? <a href="#" onclick="switchTab('register')">Crie sua conta grátis →</a></p>
-    </div>
-
-    <!-- Register Form -->
-    <div id="register-form" class="auth-form hidden">
-      <div class="field-group">
-        <label>Nome completo</label>
-        <div class="input-wrap">
-          <span class="input-icon">👤</span>
-          <input type="text" id="reg-name" placeholder="Seu nome" autocomplete="name" />
-        </div>
-      </div>
-      <div class="field-group">
-        <label>E-mail</label>
-        <div class="input-wrap">
-          <span class="input-icon">✉</span>
-          <input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email" />
-        </div>
-      </div>
-      <div class="field-group">
-        <label>Senha</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-          <button class="toggle-pw" onclick="togglePw('reg-password', this)">👁</button>
-        </div>
-      </div>
-      <div class="field-group">
-        <label>Confirmar senha</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" id="reg-confirm" placeholder="Repita a senha" autocomplete="new-password" />
-        </div>
-      </div>
-      <div id="reg-error" class="auth-error hidden"></div>
-      <button class="btn-primary btn-full" id="btn-register" onclick="doRegister()">
-        <span>Criar minha conta</span>
-        <div class="btn-loader hidden"></div>
-      </button>
-      <p class="auth-hint">Já tem conta? <a href="#" onclick="switchTab('login')">Fazer login →</a></p>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== MAIN APP ==================== -->
-<div id="app" class="hidden">
-
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <div class="topbar-left">
-      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-      <span class="topbar-brand">⚡ EduConnect</span>
-    </div>
-    <div class="topbar-right">
-      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn">
-        🔔 <span class="notif-badge hidden" id="notif-count">0</span>
-      </button>
-      <div class="topbar-avatar" onclick="showScreen('perfil')" id="topbar-avatar">?</div>
-    </div>
-  </header>
-
-  <!-- SIDEBAR -->
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-user" id="sidebar-user">
-      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
-      <div>
-        <div class="sidebar-name" id="sidebar-name">Carregando...</div>
-        <div class="sidebar-pts" id="sidebar-pts">0 pts</div>
-      </div>
-    </div>
-    <div class="sidebar-menu">
-      <a class="nav-item active" data-screen="home" onclick="showScreen('home')">🏠 <span>Home</span></a>
-      <a class="nav-item" data-screen="materias" onclick="showScreen('materias')">📚 <span>Matérias</span></a>
-      <a class="nav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍 <span>Descobrir</span></a>
-      <a class="nav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆 <span>Ranking</span></a>
-      <a class="nav-item" data-screen="chat" onclick="showScreen('chat')">💬 <span>Chat</span></a>
-      <a class="nav-item" data-screen="perfil" onclick="showScreen('perfil')">👤 <span>Perfil</span></a>
-      <a class="nav-item" data-screen="adm" id="nav-adm" onclick="showScreen('adm')" style="display:none">⚙️ <span>ADM</span></a>
-    </div>
-    <div class="sidebar-bottom">
-      <button class="btn-logout" onclick="doLogout()">🚪 Sair</button>
-    </div>
-  </nav>
-  <div class="sidebar-overlay hidden" id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-  <!-- MAIN CONTENT -->
-  <main class="main-content" id="main-content">
-
-    <!-- ===== HOME ===== -->
-    <section id="screen-home" class="screen-section">
-      <div class="screen-header">
-        <div>
-          <h2 id="home-greeting">Olá! 👋</h2>
-          <p class="screen-subtitle">Continue de onde parou</p>
-        </div>
-        <div class="home-xp-badge" id="home-xp-badge">Nível 1</div>
-      </div>
-
-      <!-- Stats Grid -->
-      <div class="stats-grid">
-        <div class="stat-card stat-blue">
-          <div class="stat-icon">📚</div>
-          <div class="stat-info">
-            <div class="stat-val" id="stat-materias">0</div>
-            <div class="stat-label">Matérias</div>
-          </div>
-        </div>
-        <div class="stat-card stat-purple">
-          <div class="stat-icon">🎮</div>
-          <div class="stat-info">
-            <div class="stat-val" id="stat-quizzes">0</div>
-            <div class="stat-label">Quizzes feitos</div>
-          </div>
-        </div>
-        <div class="stat-card stat-green">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-info">
-            <div class="stat-val" id="stat-pontos">0</div>
-            <div class="stat-label">Pontos</div>
-          </div>
-        </div>
-        <div class="stat-card stat-orange">
-          <div class="stat-icon">🏆</div>
-          <div class="stat-info">
-            <div class="stat-val" id="stat-rank">#--</div>
-            <div class="stat-label">Ranking</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="card progress-card">
-        <div class="progress-header">
-          <span>Progresso para o próximo nível</span>
-          <span id="progress-text">0 / 100 pts</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="section-title">Ações rápidas</div>
-      <div class="quick-actions">
-        <button class="quick-btn" onclick="showScreen('materias')">
-          <span class="qb-icon">📚</span>
-          <span>Ver Matérias</span>
-        </button>
-        <button class="quick-btn" onclick="showScreen('descobrir')">
-          <span class="qb-icon">🌍</span>
-          <span>Descobrir</span>
-        </button>
-        <button class="quick-btn" onclick="showScreen('ranking')">
-          <span class="qb-icon">🏆</span>
-          <span>Ranking</span>
-        </button>
-        <button class="quick-btn" onclick="showModal('modal-nova-materia')">
-          <span class="qb-icon">➕</span>
-          <span>Nova Matéria</span>
-        </button>
-      </div>
-
-      <!-- Feed Recente -->
-      <div class="section-title">Atividade recente</div>
-      <div id="home-feed" class="feed-list">
-        <div class="empty-state">Carregando atividades...</div>
-      </div>
-    </section>
-
-    <!-- ===== MATÉRIAS ===== -->
-    <section id="screen-materias" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>📚 Matérias</h2>
-          <p class="screen-subtitle">Organize seu aprendizado</p>
-        </div>
-        <button class="btn-primary btn-sm" onclick="showModal('modal-nova-materia')">+ Nova</button>
-      </div>
-
-      <!-- Search -->
-      <div class="search-bar">
-        <span>🔍</span>
-        <input type="text" id="search-materias" placeholder="Buscar matérias..." oninput="filterMaterias()" />
-      </div>
-
-      <!-- Filter Tabs -->
-      <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all" onclick="setMateriaFilter('all', this)">Todas</button>
-        <button class="filter-tab" data-filter="mine" onclick="setMateriaFilter('mine', this)">Minhas</button>
-        <button class="filter-tab" data-filter="public" onclick="setMateriaFilter('public', this)">Públicas</button>
-      </div>
-
-      <div id="materias-grid" class="materias-grid">
-        <div class="empty-state">Carregando matérias...</div>
-      </div>
-    </section>
-
-    <!-- ===== DETALHE MATÉRIA ===== -->
-    <section id="screen-materia-detalhe" class="screen-section hidden">
-      <div class="screen-header">
-        <button class="btn-back" onclick="showScreen('materias')">← Voltar</button>
-        <button class="btn-primary btn-sm" onclick="showModal('modal-novo-topico')">+ Tópico</button>
-      </div>
-
-      <div class="materia-hero" id="materia-hero">
-        <div class="materia-hero-icon" id="materia-hero-icon">📚</div>
-        <div>
-          <h2 id="materia-hero-nome">Matéria</h2>
-          <p id="materia-hero-desc">Descrição</p>
-          <div class="materia-hero-meta">
-            <span id="materia-hero-autor">Por: --</span>
-            <span id="materia-hero-topicos">0 tópicos</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-title">Tópicos</div>
-      <div id="topicos-list" class="topicos-list">
-        <div class="empty-state">Nenhum tópico ainda. Crie o primeiro!</div>
-      </div>
-
-      <div class="section-title">Quizzes desta matéria</div>
-      <div id="quizzes-materia" class="quizzes-list">
-        <div class="empty-state">Nenhum quiz ainda.</div>
-      </div>
-      <button class="btn-secondary btn-full mt-2" onclick="showModal('modal-novo-quiz')">+ Criar Quiz</button>
-    </section>
-
-    <!-- ===== DETALHE TÓPICO ===== -->
-    <section id="screen-topico-detalhe" class="screen-section hidden">
-      <div class="screen-header">
-        <button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar</button>
-      </div>
-      <div class="topico-content card" id="topico-content">
-        <h2 id="topico-title">Tópico</h2>
-        <div class="topico-meta" id="topico-meta"></div>
-        <div class="topico-body" id="topico-body"></div>
-      </div>
-      <div class="section-title">Comentários</div>
-      <div id="topico-comentarios" class="comentarios-list"></div>
-      <div class="comentario-form">
-        <input type="text" id="new-comment" placeholder="Escreva um comentário..." />
-        <button class="btn-primary" onclick="addComment()">Enviar</button>
-      </div>
-    </section>
-
-    <!-- ===== QUIZ ===== -->
-    <section id="screen-quiz" class="screen-section hidden">
-      <div class="quiz-header">
-        <button class="btn-back" onclick="exitQuiz()">← Sair</button>
-        <div class="quiz-progress-wrap">
-          <div class="quiz-q-counter" id="quiz-q-counter">1/10</div>
-          <div class="quiz-progress-track">
-            <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
-          </div>
-        </div>
-        <div class="quiz-timer" id="quiz-timer">⏱ 30s</div>
-      </div>
-
-      <div class="quiz-body">
-        <div class="quiz-card" id="quiz-card">
-          <div class="quiz-q-num" id="quiz-q-num">Questão 1</div>
-          <div class="quiz-question" id="quiz-question">Carregando pergunta...</div>
-          <div class="quiz-options" id="quiz-options"></div>
-        </div>
-      </div>
-
-      <div class="quiz-footer">
-        <div class="quiz-score-live">⭐ <span id="quiz-score-live">0</span> pts</div>
-      </div>
-    </section>
-
-    <!-- ===== RESULTADO ===== -->
-    <section id="screen-resultado" class="screen-section hidden">
-      <div class="resultado-container">
-        <div class="resultado-emoji" id="resultado-emoji">🎉</div>
-        <h2 id="resultado-titulo">Parabéns!</h2>
-        <p id="resultado-subtitulo">Quiz finalizado</p>
-
-        <div class="resultado-stats">
-          <div class="res-stat">
-            <div class="res-val" id="res-acertos">0</div>
-            <div class="res-label">Acertos</div>
-          </div>
-          <div class="res-stat">
-            <div class="res-val" id="res-total">0</div>
-            <div class="res-label">Total</div>
-          </div>
-          <div class="res-stat">
-            <div class="res-val" id="res-pontos">+0</div>
-            <div class="res-label">Pontos</div>
-          </div>
-          <div class="res-stat">
-            <div class="res-val" id="res-tempo">0s</div>
-            <div class="res-label">Tempo</div>
-          </div>
-        </div>
-
-        <div class="resultado-barra">
-          <div class="resultado-barra-fill" id="resultado-barra-fill"></div>
-        </div>
-        <p class="resultado-pct" id="resultado-pct">0% de acerto</p>
-
-        <div class="resultado-review" id="resultado-review"></div>
-
-        <div class="resultado-actions">
-          <button class="btn-primary" onclick="showScreen('home')">🏠 Voltar ao início</button>
-          <button class="btn-secondary" onclick="showScreen('ranking')">🏆 Ver Ranking</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== RANKING ===== -->
-    <section id="screen-ranking" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>🏆 Ranking</h2>
-          <p class="screen-subtitle">Top 50 usuários</p>
-        </div>
-      </div>
-
-      <div class="podio" id="podio">
-        <div class="podio-item p2">
-          <div class="podio-avatar" id="podio2-av">?</div>
-          <div class="podio-name" id="podio2-name">--</div>
-          <div class="podio-pts" id="podio2-pts">0</div>
-          <div class="podio-place">2°</div>
-        </div>
-        <div class="podio-item p1">
-          <div class="podio-crown">👑</div>
-          <div class="podio-avatar" id="podio1-av">?</div>
-          <div class="podio-name" id="podio1-name">--</div>
-          <div class="podio-pts" id="podio1-pts">0</div>
-          <div class="podio-place">1°</div>
-        </div>
-        <div class="podio-item p3">
-          <div class="podio-avatar" id="podio3-av">?</div>
-          <div class="podio-name" id="podio3-name">--</div>
-          <div class="podio-pts" id="podio3-pts">0</div>
-          <div class="podio-place">3°</div>
-        </div>
-      </div>
-
-      <div class="my-rank-card" id="my-rank-card">
-        <span>Sua posição:</span>
-        <span class="my-rank-num" id="my-rank-num">#--</span>
-        <span id="my-rank-pts">0 pts</span>
-      </div>
-
-      <div id="ranking-list" class="ranking-list">
-        <div class="empty-state">Carregando ranking...</div>
-      </div>
-    </section>
-
-    <!-- ===== DESCOBRIR ===== -->
-    <section id="screen-descobrir" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>🌍 Descobrir</h2>
-          <p class="screen-subtitle">Feed global da comunidade</p>
-        </div>
-      </div>
-
-      <!-- Post Creator -->
-      <div class="post-creator card">
-        <div class="post-creator-row">
-          <div class="pc-avatar" id="pc-avatar">?</div>
-          <input type="text" id="new-post-text" placeholder="Compartilhe algo com a comunidade..." class="post-input" />
-        </div>
-        <div class="post-creator-actions">
-          <div class="post-type-btns">
-            <button class="ptype-btn active" data-type="post" onclick="setPostType('post', this)">💬 Post</button>
-            <button class="ptype-btn" data-type="dica" onclick="setPostType('dica', this)">💡 Dica</button>
-            <button class="ptype-btn" data-type="duvida" onclick="setPostType('duvida', this)">❓ Dúvida</button>
-          </div>
-          <button class="btn-primary btn-sm" onclick="createPost()">Publicar</button>
-        </div>
-      </div>
-
-      <!-- Filter -->
-      <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all" onclick="setFeedFilter('all', this)">Todos</button>
-        <button class="filter-tab" data-filter="post" onclick="setFeedFilter('post', this)">Posts</button>
-        <button class="filter-tab" data-filter="dica" onclick="setFeedFilter('dica', this)">Dicas</button>
-        <button class="filter-tab" data-filter="duvida" onclick="setFeedFilter('duvida', this)">Dúvidas</button>
-      </div>
-
-      <div id="descobrir-feed" class="feed-list">
-        <div class="empty-state">Carregando feed...</div>
-      </div>
-    </section>
-
-    <!-- ===== CHAT ===== -->
-    <section id="screen-chat" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>💬 Chat</h2>
-          <p class="screen-subtitle">Converse com a comunidade</p>
-        </div>
-      </div>
-
-      <div class="chat-layout">
-        <!-- Rooms list -->
-        <div class="chat-rooms" id="chat-rooms">
-          <div class="chat-rooms-header">
-            <span>Salas</span>
-            <button class="btn-sm btn-primary" onclick="showModal('modal-nova-sala')">+</button>
-          </div>
-          <div id="rooms-list"></div>
-        </div>
-
-        <!-- Chat window -->
-        <div class="chat-window" id="chat-window">
-          <div class="chat-no-room" id="chat-no-room">
-            <div class="empty-state">Selecione uma sala para começar a conversar</div>
-          </div>
-          <div class="chat-room-view hidden" id="chat-room-view">
-            <div class="chat-room-header">
-              <div class="chat-room-info">
-                <strong id="chat-room-name">Sala</strong>
-                <span id="chat-room-members">0 membros</span>
-              </div>
-            </div>
-            <div class="chat-messages" id="chat-messages"></div>
-            <div class="chat-input-row">
-              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
-              <button class="btn-primary" onclick="sendChatMessage()">Enviar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== PERFIL ===== -->
-    <section id="screen-perfil" class="screen-section hidden">
-      <div class="perfil-hero">
-        <div class="perfil-avatar-wrap">
-          <div class="perfil-avatar" id="perfil-avatar">?</div>
-          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')">✏️</button>
-        </div>
-        <h2 id="perfil-name">--</h2>
-        <p id="perfil-email">--</p>
-        <div class="perfil-badges" id="perfil-badges"></div>
-      </div>
-
-      <div class="perfil-stats">
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-pts">0</div>
-          <div class="pstat-label">Pontos</div>
-        </div>
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-quizzes">0</div>
-          <div class="pstat-label">Quizzes</div>
-        </div>
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-materias">0</div>
-          <div class="pstat-label">Matérias</div>
-        </div>
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-seguidores">0</div>
-          <div class="pstat-label">Seguidores</div>
-        </div>
-      </div>
-
-      <!-- Edit Profile -->
-      <div class="card mt-2">
-        <div class="section-title">Editar perfil</div>
-        <div class="field-group">
-          <label>Nome</label>
-          <div class="input-wrap">
-            <input type="text" id="edit-name" placeholder="Seu nome" />
-          </div>
-        </div>
-        <div class="field-group">
-          <label>Bio</label>
-          <textarea id="edit-bio" placeholder="Fale sobre você..." rows="3"></textarea>
-        </div>
-        <button class="btn-primary btn-full" onclick="saveProfile()">💾 Salvar perfil</button>
-      </div>
-
-      <!-- Histórico -->
-      <div class="section-title">Histórico de quizzes</div>
-      <div id="perfil-historico" class="historico-list">
-        <div class="empty-state">Nenhum quiz realizado ainda</div>
-      </div>
-    </section>
-
-    <!-- ===== NOTIFICAÇÕES ===== -->
-    <section id="screen-notificacoes" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>🔔 Notificações</h2>
-        </div>
-        <button class="btn-sm btn-secondary" onclick="markAllRead()">Marcar lidas</button>
-      </div>
-      <div id="notificacoes-list" class="notif-list">
-        <div class="empty-state">Sem notificações</div>
-      </div>
-    </section>
-
-    <!-- ===== ADM ===== -->
-    <section id="screen-adm" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>⚙️ Painel ADM</h2>
-          <p class="screen-subtitle">Controle total da plataforma</p>
-        </div>
-      </div>
-
-      <!-- ADM Stats -->
-      <div class="stats-grid">
-        <div class="stat-card stat-blue">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-users">0</div>
-            <div class="stat-label">Usuários</div>
-          </div>
-        </div>
-        <div class="stat-card stat-purple">
-          <div class="stat-icon">📚</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-materias">0</div>
-            <div class="stat-label">Matérias</div>
-          </div>
-        </div>
-        <div class="stat-card stat-green">
-          <div class="stat-icon">🎮</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-quizzes">0</div>
-            <div class="stat-label">Quizzes</div>
-          </div>
-        </div>
-        <div class="stat-card stat-orange">
-          <div class="stat-icon">💬</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-posts">0</div>
-            <div class="stat-label">Posts</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tabs ADM -->
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setAdmTab('usuarios', this)">Usuários</button>
-        <button class="filter-tab" onclick="setAdmTab('conteudo', this)">Conteúdo</button>
-        <button class="filter-tab" onclick="setAdmTab('denuncias', this)">Denúncias</button>
-      </div>
-
-      <div id="adm-usuarios" class="adm-tab">
-        <div class="search-bar">
-          <span>🔍</span>
-          <input type="text" id="adm-search-user" placeholder="Buscar usuário..." oninput="admSearchUser()" />
-        </div>
-        <div id="adm-users-list" class="adm-list"></div>
-      </div>
-      <div id="adm-conteudo" class="adm-tab hidden">
-        <div id="adm-content-list" class="adm-list"></div>
-      </div>
-      <div id="adm-denuncias" class="adm-tab hidden">
-        <div id="adm-reports-list" class="adm-list">
-          <div class="empty-state">Nenhuma denúncia</div>
-        </div>
-      </div>
-    </section>
-
-  </main><!-- /main-content -->
-
-  <!-- BOTTOM NAV (mobile) -->
-  <nav class="bottom-nav">
-    <a class="bnav-item active" data-screen="home" onclick="showScreen('home')">🏠<span>Home</span></a>
-    <a class="bnav-item" data-screen="materias" onclick="showScreen('materias')">📚<span>Matérias</span></a>
-    <a class="bnav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍<span>Descobrir</span></a>
-    <a class="bnav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆<span>Ranking</span></a>
-    <a class="bnav-item" data-screen="chat" onclick="showScreen('chat')">💬<span>Chat</span></a>
-  </nav>
-
-</div><!-- /app -->
-
-<!-- ==================== MODALS ==================== -->
-
-<!-- Modal: Nova Matéria -->
-<div class="modal hidden" id="modal-nova-materia">
-  <div class="modal-backdrop" onclick="closeModal('modal-nova-materia')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📚 Nova Matéria</h3>
-      <button class="modal-close" onclick="closeModal('modal-nova-materia')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Nome da matéria *</label>
-        <input type="text" id="nm-nome" placeholder="Ex: Matemática, História..." />
-      </div>
-      <div class="field-group">
-        <label>Descrição</label>
-        <textarea id="nm-desc" placeholder="Descreva o que será estudado..." rows="3"></textarea>
-      </div>
-      <div class="field-group">
-        <label>Ícone</label>
-        <div class="emoji-picker" id="emoji-picker-materia">
-          <button class="emoji-opt selected" data-emoji="📚" onclick="selectEmoji('materia','📚',this)">📚</button>
-          <button class="emoji-opt" data-emoji="🔬" onclick="selectEmoji('materia','🔬',this)">🔬</button>
-          <button class="emoji-opt" data-emoji="🧮" onclick="selectEmoji('materia','🧮',this)">🧮</button>
-          <button class="emoji-opt" data-emoji="🎨" onclick="selectEmoji('materia','🎨',this)">🎨</button>
-          <button class="emoji-opt" data-emoji="🌍" onclick="selectEmoji('materia','🌍',this)">🌍</button>
-          <button class="emoji-opt" data-emoji="💻" onclick="selectEmoji('materia','💻',this)">💻</button>
-          <button class="emoji-opt" data-emoji="📖" onclick="selectEmoji('materia','📖',this)">📖</button>
-          <button class="emoji-opt" data-emoji="⚗️" onclick="selectEmoji('materia','⚗️',this)">⚗️</button>
-          <button class="emoji-opt" data-emoji="🎵" onclick="selectEmoji('materia','🎵',this)">🎵</button>
-          <button class="emoji-opt" data-emoji="🏃" onclick="selectEmoji('materia','🏃',this)">🏃</button>
-        </div>
-      </div>
-      <div class="field-group">
-        <label>Visibilidade</label>
-        <div class="radio-group">
-          <label class="radio-opt"><input type="radio" name="nm-vis" value="public" checked /> 🌍 Pública</label>
-          <label class="radio-opt"><input type="radio" name="nm-vis" value="private" /> 🔒 Privada</label>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-nova-materia')">Cancelar</button>
-      <button class="btn-primary" onclick="criarMateria()">Criar Matéria</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Novo Tópico -->
-<div class="modal hidden" id="modal-novo-topico">
-  <div class="modal-backdrop" onclick="closeModal('modal-novo-topico')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📝 Novo Tópico</h3>
-      <button class="modal-close" onclick="closeModal('modal-novo-topico')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Título *</label>
-        <input type="text" id="nt-titulo" placeholder="Título do tópico" />
-      </div>
-      <div class="field-group">
-        <label>Conteúdo *</label>
-        <textarea id="nt-conteudo" placeholder="Escreva o conteúdo aqui..." rows="6"></textarea>
-      </div>
-      <div class="field-group">
-        <label>Tags (separadas por vírgula)</label>
-        <input type="text" id="nt-tags" placeholder="ex: fórmulas, teoria, prática" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-novo-topico')">Cancelar</button>
-      <button class="btn-primary" onclick="criarTopico()">Criar Tópico</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Novo Quiz -->
-<div class="modal hidden" id="modal-novo-quiz">
-  <div class="modal-backdrop" onclick="closeModal('modal-novo-quiz')"></div>
-  <div class="modal-box modal-lg">
-    <div class="modal-header">
-      <h3>🎮 Criar Quiz</h3>
-      <button class="modal-close" onclick="closeModal('modal-novo-quiz')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Nome do quiz *</label>
-        <input type="text" id="nq-nome" placeholder="Ex: Quiz de Álgebra" />
-      </div>
-      <div class="field-group">
-        <label>Tempo por questão (segundos)</label>
-        <input type="number" id="nq-tempo" value="30" min="10" max="120" />
-      </div>
-      <div class="section-title">Questões <button class="btn-sm btn-secondary" onclick="addQuizQuestion()">+ Adicionar</button></div>
-      <div id="quiz-questions-builder" class="qbuilder">
-        <!-- Questions added dynamically -->
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-novo-quiz')">Cancelar</button>
-      <button class="btn-primary" onclick="salvarQuiz()">💾 Salvar Quiz</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Nova Sala de Chat -->
-<div class="modal hidden" id="modal-nova-sala">
-  <div class="modal-backdrop" onclick="closeModal('modal-nova-sala')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>💬 Nova Sala</h3>
-      <button class="modal-close" onclick="closeModal('modal-nova-sala')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Nome da sala *</label>
-        <input type="text" id="ns-nome" placeholder="Ex: Matemática Avançada" />
-      </div>
-      <div class="field-group">
-        <label>Descrição</label>
-        <input type="text" id="ns-desc" placeholder="Sobre o que é essa sala?" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-nova-sala')">Cancelar</button>
-      <button class="btn-primary" onclick="criarSala()">Criar Sala</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Edit Avatar -->
-<div class="modal hidden" id="modal-edit-avatar">
-  <div class="modal-backdrop" onclick="closeModal('modal-edit-avatar')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>✏️ Escolher Avatar</h3>
-      <button class="modal-close" onclick="closeModal('modal-edit-avatar')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="avatar-grid" id="avatar-grid">
-        <!-- Generated dynamically -->
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-primary" onclick="saveAvatar()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Ver Perfil de Outro Usuário -->
-<div class="modal hidden" id="modal-user-profile">
-  <div class="modal-backdrop" onclick="closeModal('modal-user-profile')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>👤 Perfil</h3>
-      <button class="modal-close" onclick="closeModal('modal-user-profile')">✕</button>
-    </div>
-    <div class="modal-body" id="modal-user-profile-body">
-      <!-- Loaded dynamically -->
-    </div>
-  </div>
-</div>
-
-<!-- TOAST CONTAINER -->
-<div id="toast-container" class="toast-container"></div>
-
-<!-- CONFETTI -->
-<canvas id="confetti-canvas" class="confetti-canvas hidden"></canvas>
-
-<script src="app.js"></script>
-</body>
-</html>
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #3b82f6;
+  --primary-xlight: #dbeafe;
+  --secondary: #6366f1;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --bg: #f1f5f9;
+  --card-bg: #ffffff;
+  --surface: #f8fafc;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.06);
+  --shadow-xl: 0 20px 50px rgba(0,0,0,0.15);
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  --sidebar-w: 260px;
+  --topbar-h: 60px;
+  --bottom-nav-h: 64px;
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --font: 'Sora', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ==================== RESET & BASE ==================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: var(--primary); cursor: pointer; }
+button { cursor: pointer; font-family: var(--font); border: none; background: none; }
+input, textarea, select {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  outline: none;
+  border: none;
+  background: none;
+  width: 100%;
+}
+textarea { resize: vertical; }
+img { max-width: 100%; }
+.hidden { display: none !important; }
+
+/* ==================== SPLASH ==================== */
+.splash {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 50%, #7c3aed 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.splash-logo { text-align: center; color: white; }
+.splash-icon { font-size: 4rem; animation: splash-pulse 1.2s ease-in-out infinite; margin-bottom: 1rem; }
+.splash-logo h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; }
+.splash-logo p { opacity: 0.8; margin-top: 0.5rem; font-size: 0.95rem; }
+.splash-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 99px; margin: 1.5rem auto 0; overflow: hidden; }
+.splash-bar-fill { height: 100%; width: 0%; background: white; border-radius: 99px; animation: splash-fill 2s ease forwards; }
+@keyframes splash-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes splash-fill { to { width: 100%; } }
+
+/* ==================== AUTH ==================== */
+#auth-screen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+  position: relative; overflow: hidden; padding: 1rem;
+}
+.auth-bg { position: absolute; inset: 0; pointer-events: none; }
+.auth-blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0.3;
+}
+.b1 { width: 400px; height: 400px; background: var(--primary); top: -100px; left: -100px; animation: blob-move 8s ease-in-out infinite; }
+.b2 { width: 300px; height: 300px; background: var(--secondary); bottom: -80px; right: -80px; animation: blob-move 10s ease-in-out infinite reverse; }
+.b3 { width: 250px; height: 250px; background: #06b6d4; top: 50%; left: 50%; transform: translate(-50%,-50%); animation: blob-move 12s ease-in-out infinite; }
+@keyframes blob-move {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(20px,-20px) scale(1.05); }
+  66% { transform: translate(-15px,15px) scale(0.95); }
+}
+
+.auth-container {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  width: 100%; max-width: 420px;
+  box-shadow: var(--shadow-xl);
+  position: relative; z-index: 1;
+  animation: fadeInUp 0.4s ease;
+}
+.auth-brand { text-align: center; margin-bottom: 2rem; }
+.brand-icon { font-size: 2.5rem; }
+.auth-brand h1 { font-size: 1.8rem; font-weight: 800; color: var(--primary); letter-spacing: -0.03em; }
+.auth-brand p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+.auth-tabs { display: flex; gap: 0.5rem; background: var(--bg); border-radius: var(--radius); padding: 4px; margin-bottom: 1.5rem; }
+.auth-tab { flex: 1; padding: 0.6rem; border-radius: calc(var(--radius) - 4px); font-weight: 600; font-size: 0.9rem; color: var(--text-muted); transition: var(--transition); }
+.auth-tab.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
+
+.auth-error { background: #fee2e2; color: #dc2626; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.88rem; margin-bottom: 1rem; border-left: 3px solid #dc2626; }
+
+/* ==================== FIELDS ==================== */
+.field-group { margin-bottom: 1rem; }
+.field-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.input-wrap {
+  display: flex; align-items: center;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0 0.75rem;
+  transition: var(--transition);
+}
+.input-wrap:focus-within { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.input-wrap input { padding: 0.75rem 0.5rem; }
+.input-icon { font-size: 1rem; color: var(--text-muted); flex-shrink: 0; }
+.toggle-pw { background: none; border: none; padding: 0 0.25rem; font-size: 1rem; color: var(--text-muted); }
+textarea { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; width: 100%; transition: var(--transition); }
+textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); outline: none; }
+
+.auth-hint { text-align: center; font-size: 0.88rem; color: var(--text-muted); margin-top: 1rem; }
+
+/* ==================== BUTTONS ==================== */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white; font-weight: 700; font-size: 0.95rem;
+  padding: 0.75rem 1.5rem; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; transition: var(--transition);
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.4); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: var(--surface); color: var(--text); font-weight: 600; font-size: 0.9rem;
+  padding: 0.7rem 1.2rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  cursor: pointer; transition: var(--transition);
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.btn-secondary:hover { background: var(--border-light); border-color: var(--text-muted); }
+.btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 0.5rem 1rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.85rem; transition: var(--transition); }
+.btn-danger:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-full { width: 100%; }
+.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.82rem; border-radius: var(--radius-sm); }
+.btn-back { background: none; color: var(--text-muted); font-weight: 600; padding: 0.5rem 0; font-size: 0.9rem; display: flex; align-items: center; gap: 0.25rem; }
+.btn-back:hover { color: var(--primary); }
+.btn-loader { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-logout { width: 100%; background: #fee2e2; color: #dc2626; padding: 0.6rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: var(--transition); }
+.btn-logout:hover { background: #fecaca; }
+
+/* ==================== TOPBAR ==================== */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--topbar-h);
+  background: white; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1rem; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+.topbar-brand { font-weight: 800; font-size: 1.05rem; color: var(--primary); }
+.menu-btn { font-size: 1.3rem; color: var(--text-muted); padding: 0.25rem; }
+.topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+.notif-btn { position: relative; font-size: 1.2rem; color: var(--text-muted); padding: 0.25rem; }
+.notif-badge { position: absolute; top: -4px; right: -4px; background: var(--danger); color: white; font-size: 0.65rem; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.topbar-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--primary-light); }
+
+/* ==================== SIDEBAR ==================== */
+.sidebar {
+  position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: white; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 90;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+.sidebar.open { transform: translateX(0); }
+.sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 89; backdrop-filter: blur(2px); }
+.sidebar-user { display: flex; align-items: center; gap: 0.75rem; padding: 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: white; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+.sidebar-name { font-weight: 700; font-size: 0.95rem; }
+.sidebar-pts { font-size: 0.8rem; color: var(--primary); font-weight: 600; }
+.sidebar-menu { flex: 1; padding: 0.75rem 0; }
+.nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.92rem; transition: var(--transition); cursor: pointer; border-radius: 0; }
+.nav-item:hover { background: var(--primary-xlight); color: var(--primary); }
+.nav-item.active { background: var(--primary-xlight); color: var(--primary); border-right: 3px solid var(--primary); }
+.sidebar-bottom { padding: 1rem; border-top: 1px solid var(--border); }
+
+/* ==================== MAIN CONTENT ==================== */
+.main-content {
+  padding: calc(var(--topbar-h) + 1rem) 1rem calc(var(--bottom-nav-h) + 1rem);
+  max-width: 800px; margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* ==================== SCREEN SECTIONS ==================== */
+.screen-section { animation: fadeInUp 0.3s ease; }
+@keyframes fadeInUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+.screen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.screen-header h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.screen-subtitle { font-size: 0.88rem; color: var(--text-muted); margin-top: 0.15rem; }
+.section-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.5rem 0 0.75rem; display: flex; align-items: center; justify-content: space-between; }
+
+/* ==================== CARDS ==================== */
+.card { background: white; border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.mt-2 { margin-top: 1rem; }
+
+/* ==================== STATS GRID ==================== */
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+.stat-card { background: white; border-radius: var(--radius); padding: 1rem; display: flex; align-items: center; gap: 0.75rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: var(--transition); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-icon { font-size: 1.75rem; flex-shrink: 0; }
+.stat-val { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+.stat-blue { border-left: 4px solid var(--primary); }
+.stat-purple { border-left: 4px solid var(--purple); }
+.stat-green { border-left: 4px solid var(--success); }
+.stat-orange { border-left: 4px solid var(--orange); }
+
+/* ==================== PROGRESS ==================== */
+.progress-card { margin-bottom: 1rem; }
+.progress-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.6rem; }
+.progress-track { height: 10px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 99px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ==================== QUICK ACTIONS ==================== */
+.quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+.quick-btn { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.88rem; transition: var(--transition); box-shadow: var(--shadow-sm); }
+.quick-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+.qb-icon { font-size: 1.5rem; }
+.home-xp-badge { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 0.4rem 0.9rem; border-radius: 99px; font-size: 0.8rem; font-weight: 700; }
+
+/* ==================== FEED ==================== */
+.feed-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.feed-item { background: white; border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); animation: fadeInUp 0.3s ease; }
+.feed-item-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; }
+.feed-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.feed-meta { flex: 1; }
+.feed-author { font-weight: 700; font-size: 0.9rem; }
+.feed-time { font-size: 0.75rem; color: var(--text-muted); }
+.feed-type-badge { padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+.type-post { background: #dbeafe; color: #1d4ed8; }
+.type-dica { background: #fef9c3; color: #92400e; }
+.type-duvida { background: #ede9fe; color: #6d28d9; }
+.feed-text { font-size: 0.9rem; color: var(--text); line-height: 1.6; margin-bottom: 0.6rem; }
+.feed-actions { display: flex; gap: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border-light); }
+.feed-action-btn { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; padding: 0.25rem 0; display: flex; align-items: center; gap: 0.25rem; transition: var(--transition); }
+.feed-action-btn:hover { color: var(--primary); }
+.feed-action-btn.liked { color: #ef4444; }
+
+/* ==================== SEARCH & FILTERS ==================== */
+.search-bar { display: flex; align-items: center; gap: 0.5rem; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 0 0.75rem; margin-bottom: 1rem; }
+.search-bar:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.search-bar input { padding: 0.65rem 0; }
+.filter-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.filter-tab { padding: 0.4rem 0.9rem; border-radius: 99px; font-size: 0.82rem; font-weight: 700; background: white; border: 1.5px solid var(--border); color: var(--text-muted); transition: var(--transition); }
+.filter-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ==================== MATÉRIAS ==================== */
+.materias-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+.materia-card { background: white; border-radius: var(--radius); padding: 1.1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); display: flex; gap: 1rem; align-items: flex-start; transition: var(--transition); cursor: pointer; }
+.materia-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--primary-light); }
+.materia-icon-wrap { width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--primary-xlight); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+.materia-info { flex: 1; min-width: 0; }
+.materia-nome { font-weight: 700; font-size: 1rem; margin-bottom: 0.2rem; }
+.materia-desc { font-size: 0.82rem; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.materia-meta { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+.materia-tag { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 0.25rem; }
+.materia-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+/* Matéria Hero */
+.materia-hero { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; border-radius: var(--radius-lg); padding: 1.5rem; display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; }
+.materia-hero-icon { font-size: 3rem; flex-shrink: 0; }
+.materia-hero h2 { font-size: 1.4rem; font-weight: 800; }
+.materia-hero p { font-size: 0.88rem; opacity: 0.85; margin-top: 0.25rem; }
+.materia-hero-meta { display: flex; gap: 1rem; margin-top: 0.6rem; }
+.materia-hero-meta span { font-size: 0.78rem; background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 99px; }
+
+/* ==================== TÓPICOS ==================== */
+.topicos-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.topico-item { background: white; border-radius: var(--radius-sm); padding: 0.9rem 1rem; border: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; cursor: pointer; transition: var(--transition); }
+.topico-item:hover { border-color: var(--primary); transform: translateX(4px); }
+.topico-item-icon { font-size: 1.2rem; color: var(--primary); }
+.topico-item-info { flex: 1; }
+.topico-item-title { font-weight: 600; font-size: 0.92rem; }
+.topico-item-meta { font-size: 0.78rem; color: var(--text-muted); }
+.topico-content { }
+.topico-content h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+.topico-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; }
+.topico-body { font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; color: var(--text); }
+
+/* ==================== QUIZZES ==================== */
+.quizzes-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.quiz-item { background: white; border-radius: var(--radius-sm); padding: 0.9rem 1rem; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; transition: var(--transition); }
+.quiz-item:hover { border-color: var(--primary); }
+.quiz-item-info { }
+.quiz-item-name { font-weight: 700; }
+.quiz-item-meta { font-size: 0.78rem; color: var(--text-muted); }
+
+/* ==================== QUIZ GAME ==================== */
+.quiz-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.quiz-progress-wrap { flex: 1; }
+.quiz-q-counter { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem; }
+.quiz-progress-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.quiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 99px; transition: width 0.4s ease; }
+.quiz-timer { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: var(--warning); background: #fef3c7; padding: 0.3rem 0.7rem; border-radius: 99px; white-space: nowrap; }
+.quiz-timer.danger { color: var(--danger); background: #fee2e2; animation: timer-pulse 0.5s ease-in-out infinite; }
+@keyframes timer-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+.quiz-body { display: flex; justify-content: center; }
+.quiz-card { background: white; border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: var(--shadow); width: 100%; max-width: 600px; }
+.quiz-q-num { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+.quiz-question { font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin-bottom: 1.5rem; }
+.quiz-options { display: flex; flex-direction: column; gap: 0.6rem; }
+.quiz-opt {
+  padding: 0.9rem 1rem; border-radius: var(--radius-sm);
+  border: 2px solid var(--border); background: var(--surface);
+  font-weight: 600; font-size: 0.92rem; text-align: left;
+  transition: var(--transition); cursor: pointer; display: flex; align-items: center; gap: 0.75rem;
+}
+.quiz-opt:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-xlight); }
+.quiz-opt.correct { border-color: var(--success); background: #d1fae5; color: #065f46; }
+.quiz-opt.wrong { border-color: var(--danger); background: #fee2e2; color: #991b1b; }
+.quiz-opt:disabled { cursor: not-allowed; }
+.quiz-opt-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--border); color: var(--text-muted); font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.quiz-opt.correct .quiz-opt-letter { background: var(--success); color: white; }
+.quiz-opt.wrong .quiz-opt-letter { background: var(--danger); color: white; }
+
+.quiz-footer { text-align: center; margin-top: 1rem; }
+.quiz-score-live { font-size: 1rem; font-weight: 700; color: var(--primary); }
+
+/* ==================== RESULTADO ==================== */
+.resultado-container { text-align: center; padding: 1rem 0; max-width: 500px; margin: 0 auto; }
+.resultado-emoji { font-size: 5rem; animation: bounce 0.6s ease; margin-bottom: 1rem; }
+@keyframes bounce { 0%,100% { transform: scale(1); } 40% { transform: scale(1.2); } }
+.resultado-container h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem; }
+.resultado-container p { color: var(--text-muted); margin-bottom: 1.5rem; }
+.resultado-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin-bottom: 1.5rem; }
+.res-stat { background: white; border-radius: var(--radius-sm); padding: 0.75rem 0.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.res-val { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+.res-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+.resultado-barra { height: 12px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 0.5rem; }
+.resultado-barra-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--success), #34d399); transition: width 1s ease; }
+.resultado-pct { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1.5rem; }
+.resultado-review { text-align: left; margin-bottom: 1.5rem; max-height: 300px; overflow-y: auto; }
+.review-item { padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; font-size: 0.85rem; }
+.review-correct { background: #d1fae5; border-left: 3px solid var(--success); }
+.review-wrong { background: #fee2e2; border-left: 3px solid var(--danger); }
+.review-item strong { font-weight: 700; }
+.resultado-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+/* ==================== RANKING ==================== */
+.podio { display: flex; align-items: flex-end; justify-content: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+.podio-item { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; padding: 1rem 0.75rem; background: white; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); min-width: 90px; }
+.p1 { order: 2; background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #f59e0b; }
+.p2 { order: 1; }
+.p3 { order: 3; }
+.podio-crown { font-size: 1.5rem; }
+.podio-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: white; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.p1 .podio-avatar { width: 56px; height: 56px; font-size: 1.4rem; border: 3px solid #f59e0b; }
+.podio-name { font-weight: 700; font-size: 0.82rem; text-align: center; }
+.podio-pts { font-size: 0.75rem; color: var(--primary); font-weight: 700; }
+.podio-place { font-size: 1.25rem; font-weight: 800; }
+.p1 .podio-place { color: #d97706; }
+.p2 .podio-place { color: #64748b; }
+.p3 .podio-place { color: #92400e; }
+
+.my-rank-card { background: linear-gradient(135deg, var(--primary-xlight), #ede9fe); border: 1.5px solid var(--primary-light); border-radius: var(--radius); padding: 0.9rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; font-weight: 600; }
+.my-rank-num { font-size: 1.4rem; font-weight: 800; color: var(--primary); flex: 1; }
+
+.ranking-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.ranking-item { background: white; border-radius: var(--radius-sm); padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--border); transition: var(--transition); }
+.ranking-item:hover { border-color: var(--primary); }
+.rank-pos { font-size: 0.9rem; font-weight: 800; color: var(--text-muted); width: 28px; flex-shrink: 0; text-align: center; }
+.rank-pos.top3 { color: #d97706; }
+.rank-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rank-info { flex: 1; }
+.rank-name { font-weight: 700; font-size: 0.92rem; }
+.rank-sub { font-size: 0.75rem; color: var(--text-muted); }
+.rank-pts { font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+.rank-me { background: var(--primary-xlight); border-color: var(--primary); }
+
+/* ==================== POST CREATOR ==================== */
+.post-creator { margin-bottom: 1rem; }
+.post-creator-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+.pc-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.post-input { flex: 1; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-full); padding: 0.6rem 1rem; font-size: 0.9rem; transition: var(--transition); }
+.post-input:focus { border-color: var(--primary); background: white; outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.post-creator-actions { display: flex; align-items: center; justify-content: space-between; }
+.post-type-btns { display: flex; gap: 0.4rem; }
+.ptype-btn { padding: 0.35rem 0.7rem; border-radius: 99px; font-size: 0.78rem; font-weight: 700; border: 1.5px solid var(--border); color: var(--text-muted); transition: var(--transition); }
+.ptype-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ==================== CHAT ==================== */
+.chat-layout { display: flex; gap: 0; height: calc(100vh - var(--topbar-h) - var(--bottom-nav-h) - 140px); min-height: 400px; }
+.chat-rooms { width: 200px; flex-shrink: 0; background: white; border-radius: var(--radius) 0 0 var(--radius); border: 1px solid var(--border); overflow-y: auto; }
+.chat-rooms-header { padding: 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 0.85rem; }
+.room-item { padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: var(--transition); }
+.room-item:hover { background: var(--primary-xlight); }
+.room-item.active { background: var(--primary); color: white; }
+.room-name { font-weight: 600; font-size: 0.88rem; }
+.room-last { font-size: 0.72rem; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.room-item.active .room-last { color: rgba(255,255,255,0.7); }
+
+.chat-window { flex: 1; background: white; border-radius: 0 var(--radius) var(--radius) 0; border: 1px solid var(--border); border-left: none; display: flex; flex-direction: column; overflow: hidden; }
+.chat-no-room { display: flex; align-items: center; justify-content: center; height: 100%; }
+.chat-room-view { display: flex; flex-direction: column; height: 100%; }
+.chat-room-header { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+.chat-room-info strong { font-size: 0.95rem; display: block; }
+.chat-room-members { font-size: 0.75rem; color: var(--text-muted); }
+.chat-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.chat-msg { display: flex; gap: 0.5rem; align-items: flex-end; }
+.chat-msg.mine { flex-direction: row-reverse; }
+.chat-msg-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chat-msg-bubble { max-width: 70%; background: var(--surface); border-radius: 12px 12px 12px 4px; padding: 0.5rem 0.8rem; }
+.chat-msg.mine .chat-msg-bubble { background: var(--primary); color: white; border-radius: 12px 12px 4px 12px; }
+.chat-msg-name { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.15rem; }
+.chat-msg.mine .chat-msg-name { display: none; }
+.chat-msg-text { font-size: 0.88rem; line-height: 1.5; }
+.chat-msg-time { font-size: 0.65rem; color: var(--text-light); margin-top: 0.2rem; }
+.chat-msg.mine .chat-msg-time { color: rgba(255,255,255,0.6); }
+.chat-input-row { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid var(--border); }
+.chat-input-row input { flex: 1; background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-full); padding: 0.5rem 1rem; font-size: 0.9rem; transition: var(--transition); }
+.chat-input-row input:focus { border-color: var(--primary); outline: none; }
+
+/* ==================== PERFIL ==================== */
+.perfil-hero { text-align: center; padding: 2rem 1rem; background: linear-gradient(135deg, var(--primary-xlight), #ede9fe); border-radius: var(--radius-lg); margin-bottom: 1rem; }
+.perfil-avatar-wrap { position: relative; display: inline-block; margin-bottom: 0.75rem; }
+.perfil-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary); color: white; font-size: 2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 4px solid white; box-shadow: var(--shadow); }
+.perfil-avatar-edit { position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; border: 2px solid white; }
+.perfil-hero h2 { font-size: 1.4rem; font-weight: 800; }
+.perfil-hero p { color: var(--text-muted); font-size: 0.88rem; }
+.perfil-badges { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap; }
+.badge { padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; }
+.badge-gold { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.badge-silver { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.badge-blue { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+
+.perfil-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+.pstat { background: white; border-radius: var(--radius-sm); padding: 0.75rem 0.5rem; text-align: center; border: 1px solid var(--border); }
+.pstat-val { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+.pstat-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+
+.historico-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.historico-item { background: white; border-radius: var(--radius-sm); padding: 0.75rem 1rem; border: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
+.hist-icon { font-size: 1.25rem; }
+.hist-info { flex: 1; }
+.hist-name { font-weight: 700; font-size: 0.9rem; }
+.hist-meta { font-size: 0.75rem; color: var(--text-muted); }
+.hist-pts { font-weight: 800; color: var(--success); }
+
+/* ==================== NOTIFICAÇÕES ==================== */
+.notif-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.notif-item { background: white; border-radius: var(--radius-sm); padding: 0.9rem 1rem; border: 1px solid var(--border); display: flex; gap: 0.75rem; align-items: flex-start; transition: var(--transition); }
+.notif-item.unread { border-left: 3px solid var(--primary); background: var(--primary-xlight); }
+.notif-icon { font-size: 1.5rem; flex-shrink: 0; }
+.notif-content { flex: 1; }
+.notif-msg { font-size: 0.88rem; font-weight: 600; }
+.notif-time { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ==================== ADM ==================== */
+.adm-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.adm-user-item { background: white; border-radius: var(--radius-sm); padding: 0.75rem 1rem; border: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
+.adm-user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: white; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+.adm-user-info { flex: 1; }
+.adm-user-name { font-weight: 700; font-size: 0.9rem; }
+.adm-user-meta { font-size: 0.75rem; color: var(--text-muted); }
+.adm-user-actions { display: flex; gap: 0.4rem; }
+.adm-tab { }
+
+/* ==================== MODALS ==================== */
+.modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+@media (min-width: 640px) { .modal { align-items: center; } }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+.modal-box {
+  position: relative; z-index: 1;
+  background: white; border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  width: 100%; max-width: 520px; max-height: 90vh;
+  display: flex; flex-direction: column;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+@media (min-width: 640px) { .modal-box { border-radius: var(--radius-xl); } }
+.modal-lg { max-width: 680px; }
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@media (min-width: 640px) { @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } } }
+.modal-header { padding: 1.25rem 1.25rem 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.modal-header h3 { font-size: 1.1rem; font-weight: 800; }
+.modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--text-muted); flex-shrink: 0; }
+.modal-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 0 1.25rem 1.25rem; display: flex; gap: 0.75rem; justify-content: flex-end; flex-shrink: 0; }
+
+/* EMOJI PICKER */
+.emoji-picker { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.emoji-opt { width: 40px; height: 40px; border-radius: var(--radius-sm); border: 2px solid var(--border); font-size: 1.25rem; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.emoji-opt.selected { border-color: var(--primary); background: var(--primary-xlight); }
+.emoji-opt:hover { border-color: var(--primary); }
+
+/* RADIO GROUP */
+.radio-group { display: flex; gap: 1rem; }
+.radio-opt { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+
+/* QUIZ BUILDER */
+.qbuilder { display: flex; flex-direction: column; gap: 1rem; }
+.qb-item { background: var(--surface); border-radius: var(--radius); padding: 1rem; border: 1px solid var(--border); }
+.qb-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.qb-item-title { font-weight: 700; font-size: 0.9rem; }
+.qb-opts { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; }
+.qb-opt { display: flex; align-items: center; gap: 0.4rem; }
+.qb-opt input[type="radio"] { width: auto; }
+.qb-opt input[type="text"] { background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.4rem 0.6rem; font-size: 0.85rem; flex: 1; }
+
+/* AVATAR GRID */
+.avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+.avatar-opt { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--border); font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); }
+.avatar-opt.selected { border-color: var(--primary); background: var(--primary-xlight); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+
+/* ==================== COMMENTS ==================== */
+.comentarios-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+.comment-item { background: white; border-radius: var(--radius-sm); padding: 0.75rem; border: 1px solid var(--border); }
+.comment-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+.comment-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.comment-author { font-weight: 700; font-size: 0.85rem; }
+.comment-time { font-size: 0.72rem; color: var(--text-muted); }
+.comment-text { font-size: 0.88rem; color: var(--text); }
+.comentario-form { display: flex; gap: 0.5rem; }
+.comentario-form input { flex: 1; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 0.65rem 0.9rem; font-size: 0.9rem; }
+.comentario-form input:focus { border-color: var(--primary); outline: none; }
+
+/* ==================== TOAST ==================== */
+.toast-container { position: fixed; bottom: calc(var(--bottom-nav-h) + 1rem); right: 1rem; z-index: 9000; display: flex; flex-direction: column; gap: 0.5rem; }
+.toast { background: white; border-radius: var(--radius); padding: 0.85rem 1.1rem; box-shadow: var(--shadow-lg); border: 1px solid var(--border); display: flex; align-items: center; gap: 0.6rem; animation: toastIn 0.3s ease; max-width: 300px; font-size: 0.88rem; font-weight: 600; }
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--primary); }
+@keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { to { transform: translateX(120%); opacity: 0; } }
+.toast.out { animation: toastOut 0.3s ease forwards; }
+
+/* ==================== EMPTY STATE ==================== */
+.empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
+.empty-state::before { content: '📭'; display: block; font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+/* ==================== BOTTOM NAV ==================== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--bottom-nav-h);
+  background: white; border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  z-index: 100;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+.bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; color: var(--text-muted); font-size: 0.65rem; font-weight: 700; padding: 0.5rem 0; cursor: pointer; transition: var(--transition); }
+.bnav-item span { font-size: 0.62rem; }
+.bnav-item:first-child { font-size: 1.25rem; }
+.bnav-item > :first-child { font-size: 1.2rem; }
+.bnav-item.active { color: var(--primary); }
+
+/* ==================== CONFETTI ==================== */
+.confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 9998; }
+
+/* ==================== UTILITIES ==================== */
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.font-bold { font-weight: 700; }
+.flex { display: flex; }
+.gap-1 { gap: 0.5rem; }
+.items-center { align-items: center; }
+
+/* ==================== DESKTOP / TABLET ==================== */
+@media (min-width: 768px) {
+  :root { --sidebar-w: 240px; }
+  .sidebar { transform: translateX(0); }
+  .sidebar-overlay { display: none !important; }
+  .menu-btn { display: none; }
+  .main-content { padding-left: calc(var(--sidebar-w) + 1.5rem); padding-right: 1.5rem; max-width: calc(var(--sidebar-w) + 780px); }
+  .bottom-nav { display: none; }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .quick-actions { grid-template-columns: repeat(4, 1fr); }
+  .chat-rooms { width: 240px; }
+  .modal { align-items: center; }
+  .modal-box { border-radius: var(--radius-xl); }
+  .main-content { padding-bottom: 2rem; }
+}
+
+@media (min-width: 1024px) {
+  .materias-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* Skeleton loading */
+.skeleton { background: linear-gradient(90deg, var(--border) 25%, var(--border-light) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-sm); }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Accessibility */
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
