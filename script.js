@@ -1,3 +1,18 @@
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+    apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+    authDomain: "sexta-feira-fb01a.firebaseapp.com",
+    databaseURL: "https://sexta-feira-fb01a-default-rtdb.firebaseio.com",
+    projectId: "sexta-feira-fb01a",
+    storageBucket: "sexta-feira-fb01a.firebasestorage.app",
+    messagingSenderId: "82809140147",
+    appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6",
+    measurementId: "G-DEZ5ZESQH7"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // ==================== LOCALSTORAGE MANAGER ====================
 class StorageManager {
     constructor() {
@@ -5,53 +20,9 @@ class StorageManager {
     }
 
     initializeStorage() {
-        if (!localStorage.getItem('users')) {
-            localStorage.setItem('users', JSON.stringify([]));
-        }
-        if (!localStorage.getItem('subjects')) {
-            localStorage.setItem('subjects', JSON.stringify([]));
-        }
-        if (!localStorage.getItem('quizzes')) {
-            localStorage.setItem('quizzes', JSON.stringify([]));
-        }
-        if (!localStorage.getItem('topics')) {
-            localStorage.setItem('topics', JSON.stringify([]));
-        }
         if (!localStorage.getItem('currentUser')) {
             localStorage.setItem('currentUser', JSON.stringify(null));
         }
-    }
-
-    getUsers() {
-        return JSON.parse(localStorage.getItem('users')) || [];
-    }
-
-    saveUsers(users) {
-        localStorage.setItem('users', JSON.stringify(users));
-    }
-
-    getSubjects() {
-        return JSON.parse(localStorage.getItem('subjects')) || [];
-    }
-
-    saveSubjects(subjects) {
-        localStorage.setItem('subjects', JSON.stringify(subjects));
-    }
-
-    getQuizzes() {
-        return JSON.parse(localStorage.getItem('quizzes')) || [];
-    }
-
-    saveQuizzes(quizzes) {
-        localStorage.setItem('quizzes', JSON.stringify(quizzes));
-    }
-
-    getTopics() {
-        return JSON.parse(localStorage.getItem('topics')) || [];
-    }
-
-    saveTopics(topics) {
-        localStorage.setItem('topics', JSON.stringify(topics));
     }
 
     getCurrentUser() {
@@ -64,27 +35,6 @@ class StorageManager {
 
     clearCurrentUser() {
         localStorage.setItem('currentUser', JSON.stringify(null));
-    }
-
-    findUserByName(name) {
-        const users = this.getUsers();
-        return users.find(u => u.name.toLowerCase() === name.toLowerCase());
-    }
-
-    findUserById(id) {
-        const users = this.getUsers();
-        return users.find(u => u.id === id);
-    }
-
-    updateUser(userId, userData) {
-        const users = this.getUsers();
-        const index = users.findIndex(u => u.id === userId);
-        if (index !== -1) {
-            users[index] = { ...users[index], ...userData };
-            this.saveUsers(users);
-            return users[index];
-        }
-        return null;
     }
 
     generateId() {
@@ -108,15 +58,16 @@ let questionCount = 0;
 let currentTopic = null;
 let allUsers = [];
 let allSubjects = [];
+let notificationsCount = 0;
+let notificationsListener = null;
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ App iniciado');
+    console.log('✅ App iniciado com Firebase');
     setupAuthEventListeners();
     setupAppEventListeners();
     setupNavigationListeners();
     
-    // Verificar se há usuário logado
     const savedUser = storage.getCurrentUser();
     if (savedUser) {
         currentUser = savedUser;
@@ -125,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadHomeData();
         loadAllUsers();
         loadAllSubjects();
+        setupNotificationsListener();
     } else {
         showAuth();
     }
@@ -132,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== AUTH EVENT LISTENERS ====================
 function setupAuthEventListeners() {
-    // Toggle
     document.getElementById('toggle-signup')?.addEventListener('click', (e) => {
         e.preventDefault();
         toggleAuthForm();
@@ -143,19 +94,16 @@ function setupAuthEventListeners() {
         toggleAuthForm();
     });
 
-    // Login
     document.getElementById('login-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         handleLogin();
     });
 
-    // Signup
     document.getElementById('signup-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         handleSignup();
     });
 
-    // Logout
     document.getElementById('btn-logout')?.addEventListener('click', handleLogout);
 }
 
@@ -197,7 +145,7 @@ function showAuthSuccess(message) {
     successEl.classList.add('show');
 }
 
-function handleLogin() {
+async function handleLogin() {
     const username = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
 
@@ -206,35 +154,60 @@ function handleLogin() {
         return;
     }
 
-    // Buscar usuário no localStorage
-    const user = storage.findUserByName(username);
+    const btn = document.getElementById('login-form').querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
 
-    if (!user) {
-        showAuthError('Usuário não encontrado');
-        return;
+    try {
+        const snapshot = await db.ref('users').orderByChild('name').equalTo(username).once('value');
+        
+        if (!snapshot.exists()) {
+            showAuthError('Usuário não encontrado');
+            btn.disabled = false;
+            btn.textContent = 'Entrar na Plataforma';
+            return;
+        }
+
+        let userData = null;
+        let userId = null;
+
+        snapshot.forEach(child => {
+            if (child.val().password === password) {
+                userData = child.val();
+                userId = child.key;
+            }
+        });
+
+        if (!userData) {
+            showAuthError('Senha incorreta');
+            btn.disabled = false;
+            btn.textContent = 'Entrar na Plataforma';
+            return;
+        }
+
+        currentUser = { id: userId, ...userData };
+        storage.setCurrentUser(currentUser);
+        console.log('✅ Login realizado com sucesso:', userId);
+
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+
+        showApp();
+        updateUserDisplay();
+        loadHomeData();
+        loadAllUsers();
+        loadAllSubjects();
+        setupNotificationsListener();
+    } catch (error) {
+        console.error('❌ Erro de login:', error);
+        showAuthError('Erro ao fazer login');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar na Plataforma';
     }
-
-    if (user.password !== password) {
-        showAuthError('Senha incorreta');
-        return;
-    }
-
-    // Login bem-sucedido
-    currentUser = user;
-    storage.setCurrentUser(user);
-    console.log('✅ Login realizado com sucesso:', user.id);
-
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-password').value = '';
-
-    showApp();
-    updateUserDisplay();
-    loadHomeData();
-    loadAllUsers();
-    loadAllSubjects();
 }
 
-function handleSignup() {
+async function handleSignup() {
     const name = document.getElementById('signup-name').value.trim();
     const password = document.getElementById('signup-password').value.trim();
     const passwordConfirm = document.getElementById('signup-password-confirm').value.trim();
@@ -246,10 +219,14 @@ function handleSignup() {
     }
 
     // Verificar se nome já existe
-    const nameExists = storage.findUserByName(name);
-    if (nameExists) {
-        showAuthNameError('Este nome já está em uso. Escolha outro');
-        return;
+    try {
+        const snapshot = await db.ref('users').orderByChild('name').equalTo(name).once('value');
+        if (snapshot.exists()) {
+            showAuthNameError('Este nome já está em uso. Escolha outro');
+            return;
+        }
+    } catch (error) {
+        console.error('❌ Erro ao verificar nome:', error);
     }
 
     if (password.length < 6) {
@@ -267,26 +244,20 @@ function handleSignup() {
     btn.textContent = 'Criando...';
 
     try {
-        // Criar novo usuário
         const newUser = {
-            id: storage.generateId(),
             name: name,
             password: password,
             class: classroom,
             points: 0,
             friends: [],
+            followers: [],
             createdAt: new Date().toISOString()
         };
 
-        const users = storage.getUsers();
-        users.push(newUser);
-        storage.saveUsers(users);
+        const userRef = db.ref('users').push();
+        await userRef.set(newUser);
 
-        console.log('✅ Usuário criado com sucesso:', {
-            id: newUser.id,
-            name: newUser.name,
-            class: newUser.class
-        });
+        console.log('✅ Usuário criado com sucesso:', userRef.key);
 
         showAuthSuccess('Conta criada com sucesso! Redirecionando...');
 
@@ -310,6 +281,12 @@ function handleLogout() {
     currentUser = null;
     storage.clearCurrentUser();
     admLoggedIn = false;
+    
+    // Remover listener de notificações
+    if (notificationsListener) {
+        notificationsListener.off();
+    }
+    
     console.log('✅ Logout realizado com sucesso');
     showAuth();
 }
@@ -333,10 +310,8 @@ function updateUserDisplay() {
 }
 
 function showScreen(screenName) {
-    // Limpar todas as seções
     document.querySelectorAll('.screen').forEach(s => {
         s.classList.remove('active');
-        // Limpar conteúdo dinâmico
         const containers = s.querySelectorAll('[id$="-container"], [id$="-list"], [id$="-grid"]');
         containers.forEach(c => c.innerHTML = '');
     });
@@ -364,38 +339,154 @@ function showScreen(screenName) {
     }
 }
 
+// ==================== NOTIFICATIONS SYSTEM ====================
+function setupNotificationsListener() {
+    if (!currentUser) return;
+
+    const notificationsRef = db.ref(`notifications/${currentUser.id}`);
+    
+    notificationsListener = notificationsRef.on('child_added', (snapshot) => {
+        const notification = snapshot.val();
+        notificationsCount++;
+        updateNotificationBell();
+        console.log('🔔 Nova notificação:', notification);
+    });
+}
+
+function updateNotificationBell() {
+    const bellIcon = document.querySelector('.notification-bell');
+    if (bellIcon) {
+        if (notificationsCount > 0) {
+            bellIcon.innerHTML = `🔔 <span class="notification-badge">${notificationsCount}</span>`;
+        } else {
+            bellIcon.innerHTML = '🔔';
+        }
+    }
+}
+
+async function loadNotifications() {
+    if (!currentUser) return;
+
+    try {
+        const snapshot = await db.ref(`notifications/${currentUser.id}`).once('value');
+        const notifications = [];
+
+        snapshot.forEach(child => {
+            notifications.push({
+                id: child.key,
+                ...child.val()
+            });
+        });
+
+        displayNotifications(notifications);
+    } catch (error) {
+        console.error('❌ Erro ao carregar notificações:', error);
+    }
+}
+
+function displayNotifications(notifications) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 2000;
+        max-width: 350px;
+        max-height: 400px;
+        overflow-y: auto;
+    `;
+
+    if (notifications.length === 0) {
+        modal.innerHTML = '<p style="padding: 20px; text-align: center; color: #64748b;">Nenhuma notificação</p>';
+    } else {
+        let html = '<div style="padding: 16px;">';
+        notifications.forEach(notif => {
+            html += `
+                <div style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+                    <strong>${notif.type === 'like' ? '❤️' : '👤'}</strong> ${notif.message}
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">${new Date(notif.timestamp).toLocaleString('pt-BR')}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        modal.innerHTML = html;
+    }
+
+    // Remover modal anterior se existir
+    const oldModal = document.querySelector('.notifications-modal');
+    if (oldModal) oldModal.remove();
+
+    modal.className = 'notifications-modal';
+    document.body.appendChild(modal);
+
+    setTimeout(() => modal.remove(), 5000);
+}
+
 // ==================== HOME ====================
-function loadHomeData() {
+async function loadHomeData() {
     if (!currentUser) return;
 
     document.getElementById('welcome-name').textContent = currentUser.name || 'Usuário';
     document.getElementById('welcome-class').textContent = currentUser.class || 'Não definida';
     document.getElementById('welcome-points').textContent = currentUser.points || 0;
 
-    // Carregar matérias recentes
-    const subjects = storage.getSubjects().slice(0, 3);
-    const subjectsList = document.getElementById('home-subjects');
-    subjectsList.innerHTML = '';
+    try {
+        const snapshot = await db.ref('subjects').limitToFirst(3).once('value');
+        const subjectsList = document.getElementById('home-subjects');
+        subjectsList.innerHTML = '';
 
-    if (subjects.length === 0) {
-        subjectsList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Nenhuma matéria disponível</p>';
-    } else {
-        subjects.forEach(subject => {
-            const card = createSubjectCard(subject.id, subject);
-            subjectsList.appendChild(card);
-        });
+        if (!snapshot.exists()) {
+            subjectsList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Nenhuma matéria disponível</p>';
+        } else {
+            snapshot.forEach(child => {
+                const subject = child.val();
+                const card = createSubjectCard(child.key, subject);
+                subjectsList.appendChild(card);
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar home:', error);
     }
 }
 
 // ==================== LOAD ALL DATA ====================
-function loadAllUsers() {
-    allUsers = storage.getUsers();
-    console.log('✅ Usuários carregados:', allUsers.length);
+async function loadAllUsers() {
+    try {
+        const snapshot = await db.ref('users').once('value');
+        allUsers = [];
+
+        snapshot.forEach(child => {
+            allUsers.push({
+                id: child.key,
+                ...child.val()
+            });
+        });
+
+        console.log('✅ Usuários carregados:', allUsers.length);
+    } catch (error) {
+        console.error('❌ Erro ao carregar usuários:', error);
+    }
 }
 
-function loadAllSubjects() {
-    allSubjects = storage.getSubjects();
-    console.log('✅ Matérias carregadas:', allSubjects.length);
+async function loadAllSubjects() {
+    try {
+        const snapshot = await db.ref('subjects').once('value');
+        allSubjects = [];
+
+        snapshot.forEach(child => {
+            allSubjects.push({
+                id: child.key,
+                ...child.val()
+            });
+        });
+
+        console.log('✅ Matérias carregadas:', allSubjects.length);
+    } catch (error) {
+        console.error('❌ Erro ao carregar matérias:', error);
+    }
 }
 
 // ==================== SUBJECTS ====================
@@ -409,7 +500,7 @@ function closeCreateSubject() {
     document.getElementById('subject-desc').value = '';
 }
 
-function createSubject() {
+async function createSubject() {
     const title = document.getElementById('subject-title').value.trim();
     const desc = document.getElementById('subject-desc').value.trim();
 
@@ -420,50 +511,54 @@ function createSubject() {
 
     try {
         const newSubject = {
-            id: storage.generateId(),
             title: title,
             description: desc || '',
             createdAt: new Date().toISOString(),
-            createdBy: currentUser.id
+            createdBy: currentUser.id,
+            createdByName: currentUser.name,
+            likes: 0
         };
 
-        const subjects = storage.getSubjects();
-        subjects.push(newSubject);
-        storage.saveSubjects(subjects);
+        await db.ref('subjects').push().set(newSubject);
 
         console.log('✅ Matéria criada com sucesso');
         closeCreateSubject();
         loadSubjects();
         loadAllSubjects();
-        loadAdmData();
+        showNotification('Matéria criada com sucesso!', 'success');
     } catch (error) {
         console.error('❌ Erro ao criar matéria:', error);
         showNotification('Erro ao criar matéria', 'error');
     }
 }
 
-function loadSubjects() {
-    const subjects = storage.getSubjects();
-    const container = document.getElementById('subjects-container');
-    const detail = document.getElementById('subject-detail');
+async function loadSubjects() {
+    try {
+        const snapshot = await db.ref('subjects').once('value');
+        const container = document.getElementById('subjects-container');
+        const detail = document.getElementById('subject-detail');
 
-    if (currentSubject) {
-        container.style.display = 'none';
-        detail.style.display = 'block';
-        loadSubjectDetail();
-    } else {
-        container.style.display = 'grid';
-        detail.style.display = 'none';
-        container.innerHTML = '';
-
-        if (subjects.length === 0) {
-            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Nenhuma matéria criada</p>';
+        if (currentSubject) {
+            container.style.display = 'none';
+            detail.style.display = 'block';
+            await loadSubjectDetail();
         } else {
-            subjects.forEach(subject => {
-                const card = createSubjectCard(subject.id, subject);
-                container.appendChild(card);
-            });
+            container.style.display = 'grid';
+            detail.style.display = 'none';
+            container.innerHTML = '';
+
+            if (!snapshot.exists()) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Nenhuma matéria criada</p>';
+            } else {
+                snapshot.forEach(child => {
+                    const subject = child.val();
+                    const card = createSubjectCard(child.key, subject);
+                    container.appendChild(card);
+                });
+            }
         }
+    } catch (error) {
+        console.error('❌ Erro ao carregar matérias:', error);
     }
 }
 
@@ -473,20 +568,52 @@ function createSubjectCard(id, subject) {
     card.innerHTML = `
         <h3>${subject.title}</h3>
         <p>${subject.description || 'Sem descrição'}</p>
+        <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+            <button class="btn btn-icon" onclick="likeSubject('${id}')" style="font-size: 16px;">❤️</button>
+            <span style="font-size: 12px; color: #64748b;">${subject.likes || 0}</span>
+        </div>
     `;
-    card.addEventListener('click', () => {
-        currentSubject = { id, ...subject };
-        loadSubjects();
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('button')) {
+            currentSubject = { id, ...subject };
+            loadSubjects();
+        }
     });
     return card;
 }
 
-function loadSubjectDetail() {
+async function likeSubject(subjectId) {
+    try {
+        const snapshot = await db.ref(`subjects/${subjectId}`).once('value');
+        const subject = snapshot.val();
+        const newLikes = (subject.likes || 0) + 1;
+
+        await db.ref(`subjects/${subjectId}/likes`).set(newLikes);
+
+        // Criar notificação para o criador
+        if (subject.createdBy !== currentUser.id) {
+            await db.ref(`notifications/${subject.createdBy}`).push().set({
+                type: 'like',
+                message: `${currentUser.name} curtiu seu quiz "${subject.title}"`,
+                timestamp: new Date().toISOString(),
+                fromUser: currentUser.id
+            });
+        }
+
+        console.log('✅ Quiz curtido com sucesso');
+        loadSubjects();
+        showNotification('Quiz curtido!', 'success');
+    } catch (error) {
+        console.error('❌ Erro ao curtir quiz:', error);
+    }
+}
+
+async function loadSubjectDetail() {
     document.getElementById('detail-title').textContent = currentSubject.title;
     document.getElementById('detail-desc').textContent = currentSubject.description || 'Sem descrição';
 
-    loadTopics();
-    loadQuizzes();
+    await loadTopics();
+    await loadQuizzes();
 }
 
 // ==================== TÓPICOS ====================
@@ -500,7 +627,7 @@ function closeCreateTopic() {
     document.getElementById('topic-content').value = '';
 }
 
-function saveTopic() {
+async function saveTopic() {
     const title = document.getElementById('topic-title').value.trim();
     const content = document.getElementById('topic-content').value.trim();
 
@@ -511,48 +638,85 @@ function saveTopic() {
 
     try {
         const newTopic = {
-            id: storage.generateId(),
             title: title,
             content: content,
             subjectId: currentSubject.id,
             createdAt: new Date().toISOString(),
-            createdBy: currentUser.id
+            createdBy: currentUser.id,
+            createdByName: currentUser.name,
+            likes: 0
         };
 
-        const topics = storage.getTopics();
-        topics.push(newTopic);
-        storage.saveTopics(topics);
+        await db.ref('topics').push().set(newTopic);
 
         console.log('✅ Tópico criado com sucesso');
         closeCreateTopic();
         loadTopics();
+        showNotification('Tópico criado com sucesso!', 'success');
     } catch (error) {
         console.error('❌ Erro ao salvar tópico:', error);
         showNotification('Erro ao salvar tópico', 'error');
     }
 }
 
-function loadTopics() {
-    const topics = storage.getTopics().filter(t => t.subjectId === currentSubject.id);
-    const topicsList = document.getElementById('topics-list');
-    topicsList.innerHTML = '';
+async function loadTopics() {
+    try {
+        const snapshot = await db.ref('topics').orderByChild('subjectId').equalTo(currentSubject.id).once('value');
+        const topicsList = document.getElementById('topics-list');
+        topicsList.innerHTML = '';
 
-    if (topics.length === 0) {
-        topicsList.innerHTML = '<p style="color: #64748b;">Nenhum tópico nesta matéria</p>';
-    } else {
-        topics.forEach(topic => {
-            const item = document.createElement('div');
-            item.className = 'topic-item';
-            item.innerHTML = `
-                <h5>${topic.title}</h5>
-                <p>${topic.content.substring(0, 100)}...</p>
-            `;
-            item.addEventListener('click', () => {
-                currentTopic = { id: topic.id, ...topic };
-                showTopicDetail();
+        if (!snapshot.exists()) {
+            topicsList.innerHTML = '<p style="color: #64748b;">Nenhum tópico nesta matéria</p>';
+        } else {
+            snapshot.forEach(child => {
+                const topic = child.val();
+                const item = document.createElement('div');
+                item.className = 'topic-item';
+                item.innerHTML = `
+                    <h5>${topic.title}</h5>
+                    <p>${topic.content.substring(0, 100)}...</p>
+                    <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-icon" onclick="likeTopic('${child.key}')" style="font-size: 14px;">❤️</button>
+                        <span style="font-size: 12px; color: #64748b;">${topic.likes || 0}</span>
+                    </div>
+                `;
+                item.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) {
+                        currentTopic = { id: child.key, ...topic };
+                        showTopicDetail();
+                    }
+                });
+                topicsList.appendChild(item);
             });
-            topicsList.appendChild(item);
-        });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar tópicos:', error);
+    }
+}
+
+async function likeTopic(topicId) {
+    try {
+        const snapshot = await db.ref(`topics/${topicId}`).once('value');
+        const topic = snapshot.val();
+        const newLikes = (topic.likes || 0) + 1;
+
+        await db.ref(`topics/${topicId}/likes`).set(newLikes);
+
+        // Criar notificação para o criador
+        if (topic.createdBy !== currentUser.id) {
+            await db.ref(`notifications/${topic.createdBy}`).push().set({
+                type: 'like',
+                message: `${currentUser.name} curtiu seu tópico "${topic.title}"`,
+                timestamp: new Date().toISOString(),
+                fromUser: currentUser.id
+            });
+        }
+
+        console.log('✅ Tópico curtido com sucesso');
+        loadTopics();
+        showNotification('Tópico curtido!', 'success');
+    } catch (error) {
+        console.error('❌ Erro ao curtir tópico:', error);
     }
 }
 
@@ -612,7 +776,7 @@ function removeQuestion(index) {
     if (box) box.remove();
 }
 
-function saveQuiz() {
+async function saveQuiz() {
     const title = document.getElementById('quiz-title').value.trim();
     const questionBoxes = document.querySelectorAll('.question-box');
 
@@ -647,66 +811,105 @@ function saveQuiz() {
 
     try {
         const newQuiz = {
-            id: storage.generateId(),
             title: title,
             subjectId: currentSubject.id,
             questions: questions,
             createdAt: new Date().toISOString(),
-            createdBy: currentUser.id
+            createdBy: currentUser.id,
+            createdByName: currentUser.name,
+            likes: 0
         };
 
-        const quizzes = storage.getQuizzes();
-        quizzes.push(newQuiz);
-        storage.saveQuizzes(quizzes);
+        await db.ref('quizzes').push().set(newQuiz);
 
         console.log('✅ Quiz criado com sucesso');
         closeCreateQuiz();
         loadQuizzes();
+        showNotification('Quiz criado com sucesso!', 'success');
     } catch (error) {
         console.error('❌ Erro ao salvar quiz:', error);
         showNotification('Erro ao salvar quiz', 'error');
     }
 }
 
-function loadQuizzes() {
-    const quizzes = storage.getQuizzes().filter(q => q.subjectId === currentSubject.id);
-    const quizzesList = document.getElementById('quizzes-list');
-    quizzesList.innerHTML = '';
+async function loadQuizzes() {
+    try {
+        const snapshot = await db.ref('quizzes').orderByChild('subjectId').equalTo(currentSubject.id).once('value');
+        const quizzesList = document.getElementById('quizzes-list');
+        quizzesList.innerHTML = '';
 
-    if (quizzes.length === 0) {
-        quizzesList.innerHTML = '<p style="color: #64748b;">Nenhum quiz nesta matéria</p>';
-    } else {
-        quizzes.forEach(quiz => {
-            const item = document.createElement('div');
-            item.className = 'quiz-item';
-            item.innerHTML = `
-                <span class="quiz-item-name">${quiz.title}</span>
-                <button class="btn btn-primary btn-small">Jogar</button>
-            `;
-            item.querySelector('button').addEventListener('click', () => startQuiz(quiz.id));
-            quizzesList.appendChild(item);
-        });
+        if (!snapshot.exists()) {
+            quizzesList.innerHTML = '<p style="color: #64748b;">Nenhum quiz nesta matéria</p>';
+        } else {
+            snapshot.forEach(child => {
+                const quiz = child.val();
+                const item = document.createElement('div');
+                item.className = 'quiz-item';
+                item.innerHTML = `
+                    <span class="quiz-item-name">${quiz.title}</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-icon" onclick="likeQuiz('${child.key}')" style="font-size: 14px;">❤️</button>
+                        <span style="font-size: 12px; color: #64748b;">${quiz.likes || 0}</span>
+                        <button class="btn btn-primary btn-small">Jogar</button>
+                    </div>
+                `;
+                item.querySelector('.btn-primary').addEventListener('click', () => startQuiz(child.key));
+                quizzesList.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar quizzes:', error);
     }
 }
 
-function startQuiz(quizId) {
-    const quizzes = storage.getQuizzes();
-    const quiz = quizzes.find(q => q.id === quizId);
+async function likeQuiz(quizId) {
+    try {
+        const snapshot = await db.ref(`quizzes/${quizId}`).once('value');
+        const quiz = snapshot.val();
+        const newLikes = (quiz.likes || 0) + 1;
 
-    if (!quiz) {
-        showNotification('Quiz não encontrado', 'error');
-        return;
+        await db.ref(`quizzes/${quizId}/likes`).set(newLikes);
+
+        // Criar notificação para o criador
+        if (quiz.createdBy !== currentUser.id) {
+            await db.ref(`notifications/${quiz.createdBy}`).push().set({
+                type: 'like',
+                message: `${currentUser.name} curtiu seu quiz "${quiz.title}"`,
+                timestamp: new Date().toISOString(),
+                fromUser: currentUser.id
+            });
+        }
+
+        console.log('✅ Quiz curtido com sucesso');
+        loadQuizzes();
+        showNotification('Quiz curtido!', 'success');
+    } catch (error) {
+        console.error('❌ Erro ao curtir quiz:', error);
     }
+}
 
-    currentQuiz = quiz;
-    currentQuestions = quiz.questions;
-    currentQuestionIndex = 0;
-    currentScore = 0;
-    currentCorrect = 0;
-    currentIncorrect = 0;
+async function startQuiz(quizId) {
+    try {
+        const snapshot = await db.ref(`quizzes/${quizId}`).once('value');
+        const quiz = snapshot.val();
 
-    showScreen('quiz');
-    showQuestion();
+        if (!quiz) {
+            showNotification('Quiz não encontrado', 'error');
+            return;
+        }
+
+        currentQuiz = { id: quizId, ...quiz };
+        currentQuestions = quiz.questions;
+        currentQuestionIndex = 0;
+        currentScore = 0;
+        currentCorrect = 0;
+        currentIncorrect = 0;
+
+        showScreen('quiz');
+        showQuestion();
+    } catch (error) {
+        console.error('❌ Erro ao iniciar quiz:', error);
+    }
 }
 
 function showQuestion() {
@@ -769,11 +972,13 @@ function nextQuestion() {
     showQuestion();
 }
 
-function finishQuiz() {
+async function finishQuiz() {
     try {
-        // Atualizar pontos do usuário
-        currentUser.points = (currentUser.points || 0) + currentScore;
-        storage.updateUser(currentUser.id, { points: currentUser.points });
+        // Atualizar pontos do usuário no Firebase
+        const newPoints = (currentUser.points || 0) + currentScore;
+        await db.ref(`users/${currentUser.id}/points`).set(newPoints);
+
+        currentUser.points = newPoints;
         storage.setCurrentUser(currentUser);
 
         document.getElementById('result-score').textContent = currentScore;
@@ -811,54 +1016,66 @@ function backToSubjects() {
 }
 
 // ==================== RANKING ====================
-function loadRanking() {
-    const users = storage.getUsers()
-        .sort((a, b) => (b.points || 0) - (a.points || 0))
-        .slice(0, 50);
+async function loadRanking() {
+    try {
+        const snapshot = await db.ref('users').orderByChild('points').once('value');
+        const users = [];
 
-    const rankingContainer = document.getElementById('ranking-container');
-    rankingContainer.innerHTML = '';
+        snapshot.forEach(child => {
+            users.push({
+                id: child.key,
+                ...child.val()
+            });
+        });
 
-    if (users.length === 0) {
-        rankingContainer.innerHTML = '<p style="text-align: center; color: #64748b;">Nenhum usuário ainda</p>';
-        return;
+        // Ordenar do maior para o menor
+        users.sort((a, b) => (b.points || 0) - (a.points || 0));
+
+        const rankingContainer = document.getElementById('ranking-container');
+        rankingContainer.innerHTML = '';
+
+        if (users.length === 0) {
+            rankingContainer.innerHTML = '<p style="text-align: center; color: #64748b;">Nenhum usuário ainda</p>';
+            return;
+        }
+
+        let position = 1;
+        users.slice(0, 50).forEach(user => {
+            const item = document.createElement('div');
+            item.className = 'ranking-item';
+
+            let positionClass = '';
+            if (position === 1) positionClass = 'gold';
+            else if (position === 2) positionClass = 'silver';
+            else if (position === 3) positionClass = 'bronze';
+
+            item.innerHTML = `
+                <div class="ranking-position ${positionClass}">${position}º</div>
+                <div class="ranking-info">
+                    <div class="ranking-name">${user.name || 'Usuário'}</div>
+                    <div class="ranking-class">${user.class || 'Não definida'}</div>
+                </div>
+                <div class="ranking-points">${user.points || 0} pts</div>
+            `;
+
+            rankingContainer.appendChild(item);
+            position++;
+        });
+    } catch (error) {
+        console.error('❌ Erro ao carregar ranking:', error);
     }
-
-    let position = 1;
-    users.forEach(user => {
-        const item = document.createElement('div');
-        item.className = 'ranking-item';
-
-        let positionClass = '';
-        if (position === 1) positionClass = 'gold';
-        else if (position === 2) positionClass = 'silver';
-        else if (position === 3) positionClass = 'bronze';
-
-        item.innerHTML = `
-            <div class="ranking-position ${positionClass}">${position}º</div>
-            <div class="ranking-info">
-                <div class="ranking-name">${user.name || 'Usuário'}</div>
-                <div class="ranking-class">${user.class || 'Não definida'}</div>
-            </div>
-            <div class="ranking-points">${user.points || 0} pts</div>
-        `;
-
-        rankingContainer.appendChild(item);
-        position++;
-    });
 }
 
-// ==================== DESCOBRIR ====================
-function loadDiscover() {
+// ==================== DESCOBRIR (FEED GLOBAL) ====================
+async function loadDiscover() {
     document.getElementById('discover-search-input').value = '';
     setupDiscoverTabs();
-    displayDiscoverSubjects('');
-    displayDiscoverPeople('');
+    await displayDiscoverSubjects('');
+    await displayDiscoverPeople('');
 }
 
 function setupDiscoverTabs() {
     const tabs = document.querySelectorAll('.discover-tab');
-    const contents = document.querySelectorAll('.discover-tab-content');
 
     tabs.forEach(tab => {
         tab.removeEventListener('click', handleDiscoverTabClick);
@@ -891,117 +1108,162 @@ function handleDiscoverSearch(e) {
     }
 }
 
-function displayDiscoverSubjects(query) {
-    let subjects = storage.getSubjects();
-    
-    if (query) {
-        subjects = subjects.filter(s => 
-            s.title.toLowerCase().includes(query)
-        );
+async function displayDiscoverSubjects(query) {
+    try {
+        const snapshot = await db.ref('subjects').once('value');
+        let subjects = [];
+
+        snapshot.forEach(child => {
+            subjects.push({
+                id: child.key,
+                ...child.val()
+            });
+        });
+
+        if (query) {
+            subjects = subjects.filter(s => 
+                s.title.toLowerCase().includes(query)
+            );
+        }
+
+        const list = document.getElementById('discover-subjects-list');
+        list.innerHTML = '';
+
+        if (subjects.length === 0) {
+            list.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma matéria encontrada</p>';
+            return;
+        }
+
+        subjects.forEach(subject => {
+            const item = document.createElement('div');
+            item.className = 'discover-item';
+            item.innerHTML = `
+                <div class="discover-item-info">
+                    <h4>${subject.title}</h4>
+                    <p>${subject.description || 'Sem descrição'}</p>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Por ${subject.createdByName || 'Anônimo'}</p>
+                </div>
+                <div class="discover-item-actions">
+                    <button class="btn btn-primary btn-small" onclick="selectSubjectFromDiscover('${subject.id}')">Acessar</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    } catch (error) {
+        console.error('❌ Erro ao exibir matérias:', error);
     }
-
-    const list = document.getElementById('discover-subjects-list');
-    list.innerHTML = '';
-
-    if (subjects.length === 0) {
-        list.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma matéria encontrada</p>';
-        return;
-    }
-
-    subjects.forEach(subject => {
-        const item = document.createElement('div');
-        item.className = 'discover-item';
-        item.innerHTML = `
-            <div class="discover-item-info">
-                <h4>${subject.title}</h4>
-                <p>${subject.description || 'Sem descrição'}</p>
-            </div>
-            <div class="discover-item-actions">
-                <button class="btn btn-primary btn-small" onclick="selectSubjectFromDiscover('${subject.id}')">Acessar</button>
-            </div>
-        `;
-        list.appendChild(item);
-    });
 }
 
-function displayDiscoverPeople(query) {
-    let people = storage.getUsers().filter(u => u.id !== currentUser.id);
-    
-    if (query) {
-        people = people.filter(u => 
-            u.name.toLowerCase().includes(query)
-        );
+async function displayDiscoverPeople(query) {
+    try {
+        const snapshot = await db.ref('users').once('value');
+        let people = [];
+
+        snapshot.forEach(child => {
+            if (child.key !== currentUser.id) {
+                people.push({
+                    id: child.key,
+                    ...child.val()
+                });
+            }
+        });
+
+        if (query) {
+            people = people.filter(u => 
+                u.name.toLowerCase().includes(query)
+            );
+        }
+
+        const list = document.getElementById('discover-people-list');
+        list.innerHTML = '';
+
+        if (people.length === 0) {
+            list.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma pessoa encontrada</p>';
+            return;
+        }
+
+        people.forEach(person => {
+            const isFollowing = currentUser.following && currentUser.following.includes(person.id);
+            
+            const item = document.createElement('div');
+            item.className = 'discover-item';
+            item.innerHTML = `
+                <div class="discover-item-info">
+                    <h4>${person.name}</h4>
+                    <p>${person.class || 'Não definida'} • ${person.points || 0} pontos</p>
+                </div>
+                <div class="discover-item-actions">
+                    <button class="btn ${isFollowing ? 'btn-secondary' : 'btn-primary'} btn-small" onclick="followUser('${person.id}', this)" ${isFollowing ? 'disabled' : ''}>
+                        ${isFollowing ? '✓ Seguindo' : '👤 Seguir'}
+                    </button>
+                </div>
+            `;
+            
+            list.appendChild(item);
+        });
+    } catch (error) {
+        console.error('❌ Erro ao exibir pessoas:', error);
     }
-
-    const list = document.getElementById('discover-people-list');
-    list.innerHTML = '';
-
-    if (people.length === 0) {
-        list.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma pessoa encontrada</p>';
-        return;
-    }
-
-    people.forEach(person => {
-        const isFriend = currentUser.friends && currentUser.friends.includes(person.id);
-        
-        const item = document.createElement('div');
-        item.className = 'discover-item';
-        item.innerHTML = `
-            <div class="discover-item-info">
-                <h4>${person.name}</h4>
-                <p>${person.class || 'Não definida'} • ${person.points || 0} pontos</p>
-            </div>
-            <div class="discover-item-actions">
-                <button class="btn ${isFriend ? 'btn-secondary' : 'btn-primary'} btn-small" onclick="addFriendFromDiscover('${person.id}', this)" ${isFriend ? 'disabled' : ''}>
-                    ${isFriend ? '✓ Amigo' : '➕ Adicionar'}
-                </button>
-            </div>
-        `;
-        
-        list.appendChild(item);
-    });
 }
 
 function selectSubjectFromDiscover(subjectId) {
-    const subjects = storage.getSubjects();
-    const subject = subjects.find(s => s.id === subjectId);
+    const subject = allSubjects.find(s => s.id === subjectId);
     currentSubject = subject;
     showScreen('subjects');
     loadSubjects();
 }
 
-function addFriendFromDiscover(friendId, btn) {
-    if (currentUser.friends && currentUser.friends.includes(friendId)) {
-        showNotification('Este usuário já é seu amigo', 'info');
-        return;
+async function followUser(userId, btn) {
+    try {
+        if (!currentUser.following) {
+            currentUser.following = [];
+        }
+
+        if (currentUser.following.includes(userId)) {
+            showNotification('Você já está seguindo este usuário', 'info');
+            return;
+        }
+
+        currentUser.following.push(userId);
+        await db.ref(`users/${currentUser.id}/following`).set(currentUser.following);
+        storage.setCurrentUser(currentUser);
+
+        // Adicionar seguidor para o outro usuário
+        const snapshot = await db.ref(`users/${userId}/followers`).once('value');
+        let followers = snapshot.val() || [];
+        followers.push(currentUser.id);
+        await db.ref(`users/${userId}/followers`).set(followers);
+
+        // Criar notificação
+        await db.ref(`notifications/${userId}`).push().set({
+            type: 'follow',
+            message: `${currentUser.name} começou a te seguir`,
+            timestamp: new Date().toISOString(),
+            fromUser: currentUser.id
+        });
+
+        console.log('✅ Usuário seguido com sucesso');
+        btn.disabled = true;
+        btn.textContent = '✓ Seguindo';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+        
+        showNotification('Usuário seguido com sucesso!', 'success');
+    } catch (error) {
+        console.error('❌ Erro ao seguir usuário:', error);
+        showNotification('Erro ao seguir usuário', 'error');
     }
-
-    if (!currentUser.friends) {
-        currentUser.friends = [];
-    }
-
-    currentUser.friends.push(friendId);
-    storage.updateUser(currentUser.id, { friends: currentUser.friends });
-    storage.setCurrentUser(currentUser);
-
-    console.log('✅ Amigo adicionado com sucesso');
-    btn.disabled = true;
-    btn.textContent = '✓ Amigo';
-    btn.classList.remove('btn-primary');
-    btn.classList.add('btn-secondary');
-    
-    showNotification('Amigo adicionado com sucesso!', 'success');
 }
 
 // ==================== CHAT ====================
-function loadChats() {
+async function loadChats() {
     const chatList = document.getElementById('chat-list');
     const chatWindow = document.getElementById('chat-window');
 
     if (currentChat) {
         chatList.style.display = 'none';
         chatWindow.style.display = 'flex';
-        loadChatMessages();
+        await loadChatMessages();
     } else {
         chatList.style.display = 'grid';
         chatWindow.style.display = 'none';
@@ -1012,30 +1274,35 @@ function loadChats() {
         if (friends.length === 0) {
             chatList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhum amigo para conversar. Adicione amigos na aba Descobrir!</p>';
         } else {
-            friends.forEach(friendId => {
-                const friend = storage.findUserById(friendId);
-                if (friend) {
-                    const item = document.createElement('div');
-                    item.className = 'chat-item';
-                    item.innerHTML = `
-                        <div class="chat-item-info">
-                            <h3>${friend.name}</h3>
-                            <p>${friend.class}</p>
-                        </div>
-                        <span class="chat-item-time">💬</span>
-                    `;
-                    item.addEventListener('click', () => {
-                        currentChat = { id: friendId, name: friend.name };
-                        loadChats();
-                    });
-                    chatList.appendChild(item);
+            for (const friendId of friends) {
+                try {
+                    const snapshot = await db.ref(`users/${friendId}`).once('value');
+                    const friend = snapshot.val();
+                    if (friend) {
+                        const item = document.createElement('div');
+                        item.className = 'chat-item';
+                        item.innerHTML = `
+                            <div class="chat-item-info">
+                                <h3>${friend.name}</h3>
+                                <p>${friend.class}</p>
+                            </div>
+                            <span class="chat-item-time">💬</span>
+                        `;
+                        item.addEventListener('click', () => {
+                            currentChat = { id: friendId, name: friend.name };
+                            loadChats();
+                        });
+                        chatList.appendChild(item);
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao carregar amigo:', error);
                 }
-            });
+            }
         }
     }
 }
 
-function loadChatMessages() {
+async function loadChatMessages() {
     document.getElementById('chat-title').textContent = currentChat.name;
     const messagesContainer = document.getElementById('messages-container');
     messagesContainer.innerHTML = '';
@@ -1059,7 +1326,7 @@ function sendMessage() {
 }
 
 // ==================== PROFILE ====================
-function loadProfile() {
+async function loadProfile() {
     if (!currentUser) return;
 
     document.getElementById('profile-name').textContent = currentUser.name || 'Usuário';
@@ -1070,10 +1337,10 @@ function loadProfile() {
     document.getElementById('profile-class-info').textContent = currentUser.class || 'Não definida';
     document.getElementById('profile-points-info').textContent = currentUser.points || 0;
 
-    loadFriends(currentUser.friends || []);
+    await loadFriends(currentUser.friends || []);
 }
 
-function loadFriends(friendIds) {
+async function loadFriends(friendIds) {
     const friendsList = document.getElementById('friends-list');
     friendsList.innerHTML = '';
 
@@ -1082,23 +1349,28 @@ function loadFriends(friendIds) {
         return;
     }
 
-    friendIds.forEach(friendId => {
-        const friend = storage.findUserById(friendId);
-        if (friend) {
-            const item = document.createElement('div');
-            item.className = 'friend-item';
-            item.innerHTML = `
-                <div class="friend-info">
-                    <h4>${friend.name}</h4>
-                    <p>${friend.class}</p>
-                </div>
-                <div class="friend-actions">
-                    <button class="btn btn-primary btn-small" onclick="removeFriend('${friendId}')">Remover</button>
-                </div>
-            `;
-            friendsList.appendChild(item);
+    for (const friendId of friendIds) {
+        try {
+            const snapshot = await db.ref(`users/${friendId}`).once('value');
+            const friend = snapshot.val();
+            if (friend) {
+                const item = document.createElement('div');
+                item.className = 'friend-item';
+                item.innerHTML = `
+                    <div class="friend-info">
+                        <h4>${friend.name}</h4>
+                        <p>${friend.class}</p>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="btn btn-primary btn-small" onclick="removeFriend('${friendId}')">Remover</button>
+                    </div>
+                `;
+                friendsList.appendChild(item);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar amigo:', error);
         }
-    });
+    }
 }
 
 function openEditProfile() {
@@ -1106,7 +1378,7 @@ function openEditProfile() {
     
     if (newClass !== null && newClass.trim() !== '') {
         currentUser.class = newClass.trim();
-        storage.updateUser(currentUser.id, { class: currentUser.class });
+        db.ref(`users/${currentUser.id}/class`).set(currentUser.class);
         storage.setCurrentUser(currentUser);
         
         console.log('✅ Perfil atualizado com sucesso');
@@ -1126,7 +1398,7 @@ function openChangePassword() {
         }
 
         currentUser.password = newPassword;
-        storage.updateUser(currentUser.id, { password: currentUser.password });
+        db.ref(`users/${currentUser.id}/password`).set(currentUser.password);
         storage.setCurrentUser(currentUser);
         
         console.log('✅ Senha alterada com sucesso');
@@ -1138,41 +1410,50 @@ function openAddFriend() {
     const friendName = prompt('Digite o nome do amigo que deseja adicionar:');
     
     if (friendName !== null && friendName.trim() !== '') {
-        const friend = storage.findUserByName(friendName.trim());
+        // Buscar usuário pelo nome
+        db.ref('users').orderByChild('name').equalTo(friendName.trim()).once('value', async (snapshot) => {
+            if (!snapshot.exists()) {
+                showNotification('Usuário não encontrado', 'error');
+                return;
+            }
 
-        if (!friend) {
-            showNotification('Usuário não encontrado', 'error');
-            return;
-        }
+            let friend = null;
+            let friendId = null;
 
-        if (friend.id === currentUser.id) {
-            showNotification('Você não pode adicionar a si mesmo', 'error');
-            return;
-        }
+            snapshot.forEach(child => {
+                friend = child.val();
+                friendId = child.key;
+            });
 
-        if (currentUser.friends && currentUser.friends.includes(friend.id)) {
-            showNotification('Este usuário já é seu amigo', 'info');
-            return;
-        }
+            if (friendId === currentUser.id) {
+                showNotification('Você não pode adicionar a si mesmo', 'error');
+                return;
+            }
 
-        if (!currentUser.friends) {
-            currentUser.friends = [];
-        }
+            if (currentUser.friends && currentUser.friends.includes(friendId)) {
+                showNotification('Este usuário já é seu amigo', 'info');
+                return;
+            }
 
-        currentUser.friends.push(friend.id);
-        storage.updateUser(currentUser.id, { friends: currentUser.friends });
-        storage.setCurrentUser(currentUser);
+            if (!currentUser.friends) {
+                currentUser.friends = [];
+            }
 
-        console.log('✅ Amigo adicionado com sucesso');
-        showNotification('Amigo adicionado com sucesso!', 'success');
-        loadProfile();
+            currentUser.friends.push(friendId);
+            await db.ref(`users/${currentUser.id}/friends`).set(currentUser.friends);
+            storage.setCurrentUser(currentUser);
+
+            console.log('✅ Amigo adicionado com sucesso');
+            showNotification('Amigo adicionado com sucesso!', 'success');
+            loadProfile();
+        });
     }
 }
 
 function removeFriend(friendId) {
     if (confirm('Tem certeza que deseja remover este amigo?')) {
         currentUser.friends = currentUser.friends.filter(id => id !== friendId);
-        storage.updateUser(currentUser.id, { friends: currentUser.friends });
+        db.ref(`users/${currentUser.id}/friends`).set(currentUser.friends);
         storage.setCurrentUser(currentUser);
 
         console.log('✅ Amigo removido com sucesso');
@@ -1194,17 +1475,21 @@ function loadAdmPanel() {
     }
 }
 
-function populateSubjectSelect() {
+async function populateSubjectSelect() {
     const select = document.getElementById('adm-quiz-subject');
     select.innerHTML = '<option value="">-- Escolha uma matéria --</option>';
     
-    const subjects = storage.getSubjects();
-    subjects.forEach(subject => {
-        const option = document.createElement('option');
-        option.value = subject.id;
-        option.textContent = subject.title;
-        select.appendChild(option);
-    });
+    try {
+        const snapshot = await db.ref('subjects').once('value');
+        snapshot.forEach(child => {
+            const option = document.createElement('option');
+            option.value = child.key;
+            option.textContent = child.val().title;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('❌ Erro ao carregar matérias:', error);
+    }
 }
 
 function admLogin() {
@@ -1230,7 +1515,7 @@ function admLogout() {
     loadAdmPanel();
 }
 
-function depositPoints() {
+async function depositPoints() {
     const amount = parseInt(document.getElementById('adm-points-amount').value);
 
     if (!amount || amount < 1) {
@@ -1238,18 +1523,23 @@ function depositPoints() {
         return;
     }
 
-    currentUser.points = (currentUser.points || 0) + amount;
-    storage.updateUser(currentUser.id, { points: currentUser.points });
-    storage.setCurrentUser(currentUser);
+    try {
+        currentUser.points = (currentUser.points || 0) + amount;
+        await db.ref(`users/${currentUser.id}/points`).set(currentUser.points);
+        storage.setCurrentUser(currentUser);
 
-    document.getElementById('adm-points-amount').value = '';
-    showNotification(`${amount} pontos depositados com sucesso!`, 'success');
-    updateUserDisplay();
-    loadHomeData();
-    loadAllUsers();
+        document.getElementById('adm-points-amount').value = '';
+        showNotification(`${amount} pontos depositados com sucesso!`, 'success');
+        updateUserDisplay();
+        loadHomeData();
+        loadAllUsers();
+    } catch (error) {
+        console.error('❌ Erro ao depositar pontos:', error);
+        showNotification('Erro ao depositar pontos', 'error');
+    }
 }
 
-function createQuizFromCode() {
+async function createQuizFromCode() {
     const subjectId = document.getElementById('adm-quiz-subject').value;
     const code = document.getElementById('adm-quiz-code').value.trim();
 
@@ -1272,7 +1562,10 @@ function createQuizFromCode() {
         for (const line of lines) {
             const trimmed = line.trim();
 
-            if (trimmed.startsWith('/q1')) {
+            // Comando /n para nome do quiz
+            if (trimmed.startsWith('/n')) {
+                quizTitle = trimmed.substring(2).trim() || 'Quiz Importado';
+            } else if (trimmed.startsWith('/q1')) {
                 if (currentQuestion && currentQuestion.text) {
                     questions.push(currentQuestion);
                 }
@@ -1314,19 +1607,18 @@ function createQuizFromCode() {
             }
         }
 
-        // Salvar quiz
+        // Salvar quiz no Firebase
         const newQuiz = {
-            id: storage.generateId(),
             title: quizTitle,
             subjectId: subjectId,
             questions: questions,
             createdAt: new Date().toISOString(),
-            createdBy: currentUser.id
+            createdBy: currentUser.id,
+            createdByName: currentUser.name,
+            likes: 0
         };
 
-        const quizzes = storage.getQuizzes();
-        quizzes.push(newQuiz);
-        storage.saveQuizzes(quizzes);
+        await db.ref('quizzes').push().set(newQuiz);
 
         console.log('✅ Quiz criado via código com sucesso');
         document.getElementById('adm-quiz-code').value = '';
@@ -1339,196 +1631,56 @@ function createQuizFromCode() {
     }
 }
 
-function loadAdmData() {
-    // Carregar matérias
-    const subjects = storage.getSubjects();
-    const admSubjects = document.getElementById('adm-subjects');
-    admSubjects.innerHTML = '';
+async function loadAdmData() {
+    try {
+        // Carregar matérias
+        const subjectsSnapshot = await db.ref('subjects').once('value');
+        const admSubjects = document.getElementById('adm-subjects');
+        admSubjects.innerHTML = '';
 
-    subjects.forEach(subject => {
-        const item = document.createElement('div');
-        item.className = 'adm-item';
-        item.innerHTML = `
-            <div class="adm-item-info">
-                <h4>${subject.title}</h4>
-                <p>${subject.description || 'Sem descrição'}</p>
-            </div>
-            <div class="adm-item-actions">
-                <button class="btn btn-danger btn-small" onclick="deleteSubject('${subject.id}')">Deletar</button>
-            </div>
-        `;
-        admSubjects.appendChild(item);
-    });
-
-    // Carregar quizzes
-    const quizzes = storage.getQuizzes();
-    const admQuizzes = document.getElementById('adm-quizzes');
-    admQuizzes.innerHTML = '';
-
-    quizzes.forEach(quiz => {
-        const item = document.createElement('div');
-        item.className = 'adm-item';
-        item.innerHTML = `
-            <div class="adm-item-info">
-                <h4>${quiz.title}</h4>
-                <p>${quiz.questions.length} perguntas</p>
-            </div>
-            <div class="adm-item-actions">
-                <button class="btn btn-danger btn-small" onclick="deleteQuiz('${quiz.id}')">Deletar</button>
-            </div>
-        `;
-        admQuizzes.appendChild(item);
-    });
-
-    // Carregar usuários
-    const users = storage.getUsers();
-    const admUsers = document.getElementById('adm-users');
-    admUsers.innerHTML = '';
-
-    users.forEach(user => {
-        const item = document.createElement('div');
-        item.className = 'adm-item';
-        item.innerHTML = `
-            <div class="adm-item-info">
-                <h4>${user.name}</h4>
-                <p>${user.class} • ${user.points || 0} pontos</p>
-            </div>
-            <div class="adm-item-actions">
-                <button class="btn btn-danger btn-small" onclick="deleteUser('${user.id}')">Deletar</button>
-            </div>
-        `;
-        admUsers.appendChild(item);
-    });
-}
-
-function deleteSubject(id) {
-    if (confirm('Tem certeza que deseja deletar esta matéria?')) {
-        const subjects = storage.getSubjects().filter(s => s.id !== id);
-        storage.saveSubjects(subjects);
-        console.log('✅ Matéria deletada');
-        loadAdmData();
-        loadAllSubjects();
-        showNotification('Matéria deletada', 'success');
-    }
-}
-
-function deleteQuiz(id) {
-    if (confirm('Tem certeza que deseja deletar este quiz?')) {
-        const quizzes = storage.getQuizzes().filter(q => q.id !== id);
-        storage.saveQuizzes(quizzes);
-        console.log('✅ Quiz deletado');
-        loadAdmData();
-        showNotification('Quiz deletado', 'success');
-    }
-}
-
-function deleteUser(id) {
-    if (confirm('Tem certeza que deseja deletar este usuário?')) {
-        const users = storage.getUsers().filter(u => u.id !== id);
-        storage.saveUsers(users);
-        console.log('✅ Usuário deletado');
-        loadAdmData();
-        loadAllUsers();
-        showNotification('Usuário deletado', 'success');
-    }
-}
-
-// ==================== NOTIFICATION SYSTEM ====================
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        bottom: 100px;
-        right: 20px;
-        padding: 16px 24px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 14px;
-        z-index: 2000;
-        animation: slideUp 0.3s ease;
-        max-width: 300px;
-    `;
-
-    if (type === 'success') {
-        notification.style.background = '#22c55e';
-        notification.style.color = 'white';
-        notification.textContent = '✅ ' + message;
-    } else if (type === 'error') {
-        notification.style.background = '#ef4444';
-        notification.style.color = 'white';
-        notification.textContent = '❌ ' + message;
-    } else {
-        notification.style.background = '#2563eb';
-        notification.style.color = 'white';
-        notification.textContent = 'ℹ️ ' + message;
-    }
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        notification.style.animation = 'slideDownOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-// ==================== APP EVENT LISTENERS ====================
-function setupAppEventListeners() {
-    // Subjects
-    document.getElementById('btn-new-subject')?.addEventListener('click', openCreateSubject);
-    document.getElementById('btn-cancel-subject')?.addEventListener('click', closeCreateSubject);
-    document.getElementById('btn-create-subject')?.addEventListener('click', createSubject);
-    document.getElementById('btn-back-subject')?.addEventListener('click', backToSubjects);
-
-    // Topics
-    document.getElementById('btn-new-topic')?.addEventListener('click', openCreateTopic);
-    document.getElementById('btn-cancel-topic')?.addEventListener('click', closeCreateTopic);
-    document.getElementById('btn-save-topic')?.addEventListener('click', saveTopic);
-
-    // Quiz
-    document.getElementById('btn-new-quiz')?.addEventListener('click', openCreateQuiz);
-    document.getElementById('btn-cancel-quiz')?.addEventListener('click', closeCreateQuiz);
-    document.getElementById('btn-save-quiz')?.addEventListener('click', saveQuiz);
-    document.getElementById('btn-add-question')?.addEventListener('click', addQuestion);
-
-    // Quiz Player
-    document.getElementById('btn-back-quiz')?.addEventListener('click', backToSubjects);
-    document.getElementById('btn-next-question')?.addEventListener('click', nextQuestion);
-
-    // Result
-    document.getElementById('btn-back-home-result')?.addEventListener('click', () => showScreen('home'));
-
-    // Chat
-    document.getElementById('btn-back-chat')?.addEventListener('click', backToChats);
-    document.getElementById('btn-send-message')?.addEventListener('click', sendMessage);
-
-    // Profile
-    document.getElementById('btn-edit-profile')?.addEventListener('click', openEditProfile);
-    document.getElementById('btn-change-password')?.addEventListener('click', openChangePassword);
-    document.getElementById('btn-add-friend')?.addEventListener('click', openAddFriend);
-    document.getElementById('btn-access-adm')?.addEventListener('click', () => showScreen('adm'));
-
-    // ADM
-    document.getElementById('btn-adm-login')?.addEventListener('click', admLogin);
-    document.getElementById('btn-adm-logout')?.addEventListener('click', admLogout);
-    document.getElementById('btn-exit-adm')?.addEventListener('click', () => showScreen('profile'));
-    document.getElementById('btn-deposit-points')?.addEventListener('click', depositPoints);
-    document.getElementById('btn-create-quiz-code')?.addEventListener('click', createQuizFromCode);
-}
-
-function setupNavigationListeners() {
-    document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const screen = btn.getAttribute('data-screen');
-            showScreen(screen);
+        subjectsSnapshot.forEach(child => {
+            const subject = child.val();
+            const item = document.createElement('div');
+            item.className = 'adm-item';
+            item.innerHTML = `
+                <div class="adm-item-info">
+                    <h4>${subject.title}</h4>
+                    <p>${subject.description || 'Sem descrição'}</p>
+                </div>
+                <div class="adm-item-actions">
+                    <button class="btn btn-danger btn-small" onclick="deleteSubject('${child.key}')">Deletar</button>
+                </div>
+            `;
+            admSubjects.appendChild(item);
         });
-    });
 
-    document.querySelectorAll('.quick-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const screen = card.getAttribute('data-screen');
-            showScreen(screen);
+        // Carregar quizzes
+        const quizzesSnapshot = await db.ref('quizzes').once('value');
+        const admQuizzes = document.getElementById('adm-quizzes');
+        admQuizzes.innerHTML = '';
+
+        quizzesSnapshot.forEach(child => {
+            const quiz = child.val();
+            const item = document.createElement('div');
+            item.className = 'adm-item';
+            item.innerHTML = `
+                <div class="adm-item-info">
+                    <h4>${quiz.title}</h4>
+                    <p>${quiz.questions.length} perguntas</p>
+                </div>
+                <div class="adm-item-actions">
+                    <button class="btn btn-danger btn-small" onclick="deleteQuiz('${child.key}')">Deletar</button>
+                </div>
+            `;
+            admQuizzes.appendChild(item);
         });
-    });
-}
 
-console.log('✅ Script carregado com sucesso - localStorage ativo!');
+        // Carregar usuários
+        const usersSnapshot = await db.ref('users').once('value');
+        const admUsers = document.getElementById('adm-users');
+        admUsers.innerHTML = '';
+
+        usersSnapshot.forEach(child => {
+            const user = child.val();
+            const item = document.createElement('div');
+            
