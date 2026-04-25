@@ -23,9 +23,13 @@ let currentChat = null;
 let currentQuestions = [];
 let currentQuestionIndex = 0;
 let currentScore = 0;
+let currentCorrect = 0;
+let currentIncorrect = 0;
 let admLoggedIn = false;
 let questionCount = 0;
 let currentTopic = null;
+let allUsers = [];
+let allSubjects = [];
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -63,6 +67,8 @@ auth.onAuthStateChanged(async (user) => {
             showApp();
             updateUserDisplay();
             loadHomeData();
+            loadAllUsers();
+            loadAllSubjects();
         } catch (error) {
             console.error('❌ Erro ao carregar usuário:', error);
             showAuthError('Erro ao carregar dados do usuário', false);
@@ -121,11 +127,19 @@ function clearAuthMessages() {
     document.getElementById('login-error').classList.remove('show');
     document.getElementById('signup-error').classList.remove('show');
     document.getElementById('signup-success').classList.remove('show');
+    document.getElementById('signup-name-error').classList.remove('show');
 }
 
 function showAuthError(message, isSignup = false) {
     const errorId = isSignup ? 'signup-error' : 'login-error';
     const errorEl = document.getElementById(errorId);
+    errorEl.textContent = '❌ ' + message;
+    errorEl.classList.add('show');
+    setTimeout(() => errorEl.classList.remove('show'), 5000);
+}
+
+function showAuthNameError(message) {
+    const errorEl = document.getElementById('signup-name-error');
     errorEl.textContent = '❌ ' + message;
     errorEl.classList.add('show');
     setTimeout(() => errorEl.classList.remove('show'), 5000);
@@ -183,6 +197,18 @@ async function handleLogin() {
     }
 }
 
+async function checkNameExists(name) {
+    try {
+        const snapshot = await db.collection('users')
+            .where('name', '==', name)
+            .get();
+        return !snapshot.empty;
+    } catch (error) {
+        console.error('❌ Erro ao verificar nome:', error);
+        return false;
+    }
+}
+
 async function handleSignup() {
     const name = document.getElementById('signup-name').value.trim();
     const email = document.getElementById('signup-email').value.trim();
@@ -192,6 +218,13 @@ async function handleSignup() {
 
     if (!name || !email || !password || !passwordConfirm || !classroom) {
         showAuthError('Preencha todos os campos', true);
+        return;
+    }
+
+    // Verificar se nome já existe
+    const nameExists = await checkNameExists(name);
+    if (nameExists) {
+        showAuthNameError('Este nome já está em uso. Escolha outro');
         return;
     }
 
@@ -346,6 +379,8 @@ function showScreen(screenName) {
         loadSubjects();
     } else if (screenName === 'ranking') {
         loadRanking();
+    } else if (screenName === 'discover') {
+        loadDiscover();
     } else if (screenName === 'chat') {
         loadChats();
     } else if (screenName === 'profile') {
@@ -353,65 +388,6 @@ function showScreen(screenName) {
     } else if (screenName === 'adm') {
         loadAdmPanel();
     }
-}
-
-// ==================== APP EVENT LISTENERS ====================
-function setupAppEventListeners() {
-    // Subjects
-    document.getElementById('btn-new-subject')?.addEventListener('click', openCreateSubject);
-    document.getElementById('btn-cancel-subject')?.addEventListener('click', closeCreateSubject);
-    document.getElementById('btn-create-subject')?.addEventListener('click', createSubject);
-    document.getElementById('btn-back-subject')?.addEventListener('click', backToSubjects);
-
-    // Topics
-    document.getElementById('btn-new-topic')?.addEventListener('click', openCreateTopic);
-    document.getElementById('btn-cancel-topic')?.addEventListener('click', closeCreateTopic);
-    document.getElementById('btn-save-topic')?.addEventListener('click', saveTopic);
-
-    // Quiz
-    document.getElementById('btn-new-quiz')?.addEventListener('click', openCreateQuiz);
-    document.getElementById('btn-cancel-quiz')?.addEventListener('click', closeCreateQuiz);
-    document.getElementById('btn-save-quiz')?.addEventListener('click', saveQuiz);
-    document.getElementById('btn-add-question')?.addEventListener('click', addQuestion);
-
-    // Quiz Player
-    document.getElementById('btn-back-quiz')?.addEventListener('click', backToSubjects);
-    document.getElementById('btn-next-question')?.addEventListener('click', nextQuestion);
-
-    // Result
-    document.getElementById('btn-back-result')?.addEventListener('click', backToSubjects);
-    document.getElementById('btn-back-home-result')?.addEventListener('click', () => showScreen('home'));
-
-    // Chat
-    document.getElementById('btn-back-chat')?.addEventListener('click', backToChats);
-    document.getElementById('btn-send-message')?.addEventListener('click', sendMessage);
-
-    // Profile
-    document.getElementById('btn-edit-profile')?.addEventListener('click', openEditProfile);
-    document.getElementById('btn-change-password')?.addEventListener('click', openChangePassword);
-    document.getElementById('btn-add-friend')?.addEventListener('click', openAddFriend);
-    document.getElementById('btn-access-adm')?.addEventListener('click', () => showScreen('adm'));
-
-    // ADM
-    document.getElementById('btn-adm-login')?.addEventListener('click', admLogin);
-    document.getElementById('btn-adm-logout')?.addEventListener('click', admLogout);
-    document.getElementById('btn-exit-adm')?.addEventListener('click', () => showScreen('profile'));
-}
-
-function setupNavigationListeners() {
-    document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const screen = btn.getAttribute('data-screen');
-            showScreen(screen);
-        });
-    });
-
-    document.querySelectorAll('.quick-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const screen = card.getAttribute('data-screen');
-            showScreen(screen);
-        });
-    });
 }
 
 // ==================== HOME ====================
@@ -443,6 +419,39 @@ async function loadHomeData() {
     }
 }
 
+// ==================== LOAD ALL DATA ====================
+async function loadAllUsers() {
+    try {
+        const snapshot = await db.collection('users').get();
+        allUsers = [];
+        snapshot.forEach(doc => {
+            allUsers.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        console.log('✅ Usuários carregados:', allUsers.length);
+    } catch (error) {
+        console.error('❌ Erro ao carregar usuários:', error);
+    }
+}
+
+async function loadAllSubjects() {
+    try {
+        const snapshot = await db.collection('subjects').get();
+        allSubjects = [];
+        snapshot.forEach(doc => {
+            allSubjects.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        console.log('✅ Matérias carregadas:', allSubjects.length);
+    } catch (error) {
+        console.error('❌ Erro ao carregar matérias:', error);
+    }
+}
+
 // ==================== SUBJECTS ====================
 function openCreateSubject() {
     document.getElementById('create-subject-form').style.display = 'block';
@@ -459,7 +468,7 @@ async function createSubject() {
     const desc = document.getElementById('subject-desc').value.trim();
 
     if (!title) {
-        alert('O nome da matéria é obrigatório');
+        showNotification('O nome da matéria é obrigatório', 'error');
         return;
     }
 
@@ -474,9 +483,10 @@ async function createSubject() {
         console.log('✅ Matéria criada com sucesso');
         closeCreateSubject();
         loadSubjects();
+        loadAllSubjects();
     } catch (error) {
         console.error('❌ Erro ao criar matéria:', error);
-        alert('Erro ao criar matéria');
+        showNotification('Erro ao criar matéria', 'error');
     }
 }
 
@@ -555,7 +565,7 @@ async function saveTopic() {
     const content = document.getElementById('topic-content').value.trim();
 
     if (!title || !content) {
-        alert('Preencha todos os campos');
+        showNotification('Preencha todos os campos', 'error');
         return;
     }
 
@@ -573,7 +583,7 @@ async function saveTopic() {
         loadTopics();
     } catch (error) {
         console.error('❌ Erro ao salvar tópico:', error);
-        alert('Erro ao salvar tópico');
+        showNotification('Erro ao salvar tópico', 'error');
     }
 }
 
@@ -670,7 +680,7 @@ async function saveQuiz() {
     const questionBoxes = document.querySelectorAll('.question-box');
 
     if (!title || questionBoxes.length === 0) {
-        alert('Preencha todos os campos');
+        showNotification('Preencha todos os campos', 'error');
         return;
     }
 
@@ -687,7 +697,7 @@ async function saveQuiz() {
         const correct = parseInt(document.querySelector(`.question-correct-${i}`)?.value);
 
         if (!text || alternatives.some(a => !a) || isNaN(correct)) {
-            alert('Preencha todas as perguntas corretamente');
+            showNotification('Preencha todas as perguntas corretamente', 'error');
             return;
         }
 
@@ -712,7 +722,7 @@ async function saveQuiz() {
         loadQuizzes();
     } catch (error) {
         console.error('❌ Erro ao salvar quiz:', error);
-        alert('Erro ao salvar quiz');
+        showNotification('Erro ao salvar quiz', 'error');
     }
 }
 
@@ -752,6 +762,8 @@ async function startQuiz(quizId) {
         currentQuestions = currentQuiz.questions;
         currentQuestionIndex = 0;
         currentScore = 0;
+        currentCorrect = 0;
+        currentIncorrect = 0;
 
         showScreen('quiz');
         showQuestion();
@@ -805,6 +817,9 @@ function selectAnswer(index, clickedBtn) {
 
     if (index === question.correct) {
         currentScore += 10;
+        currentCorrect++;
+    } else {
+        currentIncorrect++;
     }
 
     setTimeout(() => {
@@ -845,11 +860,25 @@ async function finishQuiz() {
         await historyRef.set({ items: historyItems });
 
         document.getElementById('result-score').textContent = currentScore;
-        document.getElementById('result-message').textContent =
-            currentScore >= 50 ? 'Parabéns! Você foi bem! 🎉' : 'Continue estudando! 💪';
+        document.getElementById('result-correct').textContent = currentCorrect;
+        document.getElementById('result-incorrect').textContent = currentIncorrect;
+        
+        let message = '';
+        if (currentScore >= 80) {
+            message = 'Excelente! Você foi muito bem! 🌟';
+        } else if (currentScore >= 60) {
+            message = 'Parabéns! Você foi bem! 🎉';
+        } else if (currentScore >= 40) {
+            message = 'Bom esforço! Continue estudando! 💪';
+        } else {
+            message = 'Não desista! Tente novamente! 🚀';
+        }
+        
+        document.getElementById('result-message').textContent = message;
 
         console.log('✅ Quiz finalizado com sucesso. Pontuação:', currentScore);
         showScreen('result');
+        updateUserDisplay();
     } catch (error) {
         console.error('❌ Erro ao finalizar quiz:', error);
     }
@@ -907,6 +936,179 @@ async function loadRanking() {
     }
 }
 
+// ==================== DESCOBRIR ====================
+async function loadDiscover() {
+    try {
+        // Limpar busca
+        document.getElementById('discover-search-input').value = '';
+        
+        // Carregar abas
+        setupDiscoverTabs();
+        
+        // Carregar dados iniciais
+        await displayDiscoverSubjects('');
+        await displayDiscoverPeople('');
+    } catch (error) {
+        console.error('❌ Erro ao carregar descobrir:', error);
+    }
+}
+
+function setupDiscoverTabs() {
+    const tabs = document.querySelectorAll('.discover-tab');
+    const contents = document.querySelectorAll('.discover-tab-content');
+
+    tabs.forEach(tab => {
+        tab.removeEventListener('click', handleDiscoverTabClick);
+        tab.addEventListener('click', handleDiscoverTabClick);
+    });
+
+    // Setup search
+    const searchInput = document.getElementById('discover-search-input');
+    searchInput.removeEventListener('input', handleDiscoverSearch);
+    searchInput.addEventListener('input', handleDiscoverSearch);
+}
+
+function handleDiscoverTabClick(e) {
+    const tabName = e.target.getAttribute('data-tab');
+    
+    document.querySelectorAll('.discover-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.discover-tab-content').forEach(c => c.classList.remove('active'));
+    
+    e.target.classList.add('active');
+    document.getElementById('discover-' + tabName + '-tab').classList.add('active');
+}
+
+async function handleDiscoverSearch(e) {
+    const query = e.target.value.trim().toLowerCase();
+    const activeTab = document.querySelector('.discover-tab.active').getAttribute('data-tab');
+    
+    if (activeTab === 'subjects') {
+        await displayDiscoverSubjects(query);
+    } else {
+        await displayDiscoverPeople(query);
+    }
+}
+
+async function displayDiscoverSubjects(query) {
+    try {
+        let subjects = allSubjects;
+        
+        if (query) {
+            subjects = allSubjects.filter(s => 
+                s.title.toLowerCase().includes(query)
+            );
+        }
+
+        const list = document.getElementById('discover-subjects-list');
+        list.innerHTML = '';
+
+        if (subjects.length === 0) {
+            list.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma matéria encontrada</p>';
+            return;
+        }
+
+        subjects.forEach(subject => {
+            const item = document.createElement('div');
+            item.className = 'discover-item';
+            item.innerHTML = `
+                <div class="discover-item-info">
+                    <h4>${subject.title}</h4>
+                    <p>${subject.description || 'Sem descrição'}</p>
+                </div>
+                <div class="discover-item-actions">
+                    <button class="btn btn-primary btn-small" onclick="selectSubjectFromDiscover('${subject.id}')">Acessar</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    } catch (error) {
+        console.error('❌ Erro ao exibir matérias:', error);
+    }
+}
+
+async function displayDiscoverPeople(query) {
+    try {
+        let people = allUsers.filter(u => u.id !== currentUser.uid);
+        
+        if (query) {
+            people = people.filter(u => 
+                u.name.toLowerCase().includes(query)
+            );
+        }
+
+        const list = document.getElementById('discover-people-list');
+        list.innerHTML = '';
+
+        if (people.length === 0) {
+            list.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma pessoa encontrada</p>';
+            return;
+        }
+
+        people.forEach(person => {
+            const userDoc = db.collection('users').doc(currentUser.uid);
+            const item = document.createElement('div');
+            item.className = 'discover-item';
+            
+            // Verificar se já é amigo
+            userDoc.get().then(doc => {
+                const userData = doc.data();
+                const isFriend = userData.friends && userData.friends.includes(person.id);
+                
+                item.innerHTML = `
+                    <div class="discover-item-info">
+                        <h4>${person.name}</h4>
+                        <p>${person.class || 'Não definida'} • ${person.points || 0} pontos</p>
+                    </div>
+                    <div class="discover-item-actions">
+                        <button class="btn ${isFriend ? 'btn-secondary' : 'btn-primary'} btn-small" onclick="addFriendFromDiscover('${person.id}', this)" ${isFriend ? 'disabled' : ''}>
+                            ${isFriend ? '✓ Amigo' : '➕ Adicionar'}
+                        </button>
+                    </div>
+                `;
+            });
+            
+            list.appendChild(item);
+        });
+    } catch (error) {
+        console.error('❌ Erro ao exibir pessoas:', error);
+    }
+}
+
+function selectSubjectFromDiscover(subjectId) {
+    const subject = allSubjects.find(s => s.id === subjectId);
+    currentSubject = subject;
+    showScreen('subjects');
+    loadSubjects();
+}
+
+async function addFriendFromDiscover(friendId, btn) {
+    try {
+        const userRef = db.collection('users').doc(currentUser.uid);
+        const userDoc = await userRef.get();
+        const userData = userDoc.data();
+        let friends = userData.friends || [];
+
+        if (friends.includes(friendId)) {
+            showNotification('Este usuário já é seu amigo', 'info');
+            return;
+        }
+
+        friends.push(friendId);
+        await userRef.update({ friends: friends });
+
+        console.log('✅ Amigo adicionado com sucesso');
+        btn.disabled = true;
+        btn.textContent = '✓ Amigo';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+        
+        showNotification('Amigo adicionado com sucesso!', 'success');
+    } catch (error) {
+        console.error('❌ Erro ao adicionar amigo:', error);
+        showNotification('Erro ao adicionar amigo', 'error');
+    }
+}
+
 // ==================== CHAT ====================
 async function loadChats() {
     try {
@@ -929,7 +1131,7 @@ async function loadChats() {
             chatList.innerHTML = '';
 
             if (friends.length === 0) {
-                chatList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhum amigo para conversar. Adicione amigos na seção de Perfil!</p>';
+                chatList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhum amigo para conversar. Adicione amigos na aba Descobrir!</p>';
             } else {
                 for (const friendId of friends) {
                     const friendDoc = await db.collection('users').doc(friendId).get();
@@ -1067,9 +1269,10 @@ async function openEditProfile() {
             console.log('✅ Perfil atualizado com sucesso');
             loadProfile();
             loadHomeData();
+            showNotification('Sala atualizada com sucesso!', 'success');
         } catch (error) {
             console.error('❌ Erro ao atualizar perfil:', error);
-            alert('Erro ao atualizar perfil');
+            showNotification('Erro ao atualizar perfil', 'error');
         }
     }
 }
@@ -1079,20 +1282,20 @@ async function openChangePassword() {
     
     if (newPassword !== null && newPassword.trim() !== '') {
         if (newPassword.length < 6) {
-            alert('Senha deve ter pelo menos 6 caracteres');
+            showNotification('Senha deve ter pelo menos 6 caracteres', 'error');
             return;
         }
 
         try {
             await currentUser.updatePassword(newPassword);
             console.log('✅ Senha alterada com sucesso');
-            alert('Senha alterada com sucesso!');
+            showNotification('Senha alterada com sucesso!', 'success');
         } catch (error) {
             console.error('❌ Erro ao alterar senha:', error);
             if (error.code === 'auth/requires-recent-login') {
-                alert('Por favor, faça login novamente para alterar a senha');
+                showNotification('Por favor, faça login novamente para alterar a senha', 'error');
             } else {
-                alert('Erro ao alterar senha: ' + error.message);
+                showNotification('Erro ao alterar senha: ' + error.message, 'error');
             }
         }
     }
@@ -1109,7 +1312,7 @@ async function openAddFriend() {
                 .get();
 
             if (friendSnapshot.empty) {
-                alert('Usuário não encontrado');
+                showNotification('Usuário não encontrado', 'error');
                 return;
             }
 
@@ -1117,7 +1320,7 @@ async function openAddFriend() {
             const friendId = friendDoc.id;
 
             if (friendId === currentUser.uid) {
-                alert('Você não pode adicionar a si mesmo');
+                showNotification('Você não pode adicionar a si mesmo', 'error');
                 return;
             }
 
@@ -1127,7 +1330,7 @@ async function openAddFriend() {
             const friends = userDoc.data().friends || [];
 
             if (friends.includes(friendId)) {
-                alert('Este usuário já é seu amigo');
+                showNotification('Este usuário já é seu amigo', 'info');
                 return;
             }
 
@@ -1135,11 +1338,11 @@ async function openAddFriend() {
             await userRef.update({ friends: friends });
 
             console.log('✅ Amigo adicionado com sucesso');
-            alert('Amigo adicionado com sucesso!');
+            showNotification('Amigo adicionado com sucesso!', 'success');
             loadProfile();
         } catch (error) {
             console.error('❌ Erro ao adicionar amigo:', error);
-            alert('Erro ao adicionar amigo');
+            showNotification('Erro ao adicionar amigo', 'error');
         }
     }
 }
@@ -1156,9 +1359,10 @@ async function removeFriend(friendId) {
 
             console.log('✅ Amigo removido com sucesso');
             loadProfile();
+            showNotification('Amigo removido', 'success');
         } catch (error) {
             console.error('❌ Erro ao remover amigo:', error);
-            alert('Erro ao remover amigo');
+            showNotification('Erro ao remover amigo', 'error');
         }
     }
 }
@@ -1181,10 +1385,14 @@ function admLogin() {
     if (password === 'senhafacil') {
         admLoggedIn = true;
         document.getElementById('adm-password').value = '';
+        document.getElementById('adm-login-error').classList.remove('show');
         console.log('✅ Acesso ao painel ADM concedido');
         loadAdmPanel();
     } else {
-        alert('❌ Senha incorreta');
+        const errorEl = document.getElementById('adm-login-error');
+        errorEl.textContent = '❌ Senha incorreta';
+        errorEl.classList.add('show');
+        setTimeout(() => errorEl.classList.remove('show'), 3000);
     }
 }
 
@@ -1192,6 +1400,126 @@ function admLogout() {
     admLoggedIn = false;
     document.getElementById('adm-password').value = '';
     loadAdmPanel();
+}
+
+async function depositPoints() {
+    const amount = parseInt(document.getElementById('adm-points-amount').value);
+
+    if (!amount || amount < 1) {
+        showNotification('Digite uma quantidade válida', 'error');
+        return;
+    }
+
+    try {
+        const userRef = db.collection('users').doc(currentUser.uid);
+        const userDoc = await userRef.get();
+        const userData = userDoc.data();
+
+        const newPoints = (userData.points || 0) + amount;
+        await userRef.update({ points: newPoints });
+
+        document.getElementById('adm-points-amount').value = '';
+        showNotification(`${amount} pontos depositados com sucesso!`, 'success');
+        updateUserDisplay();
+        loadHomeData();
+    } catch (error) {
+        console.error('❌ Erro ao depositar pontos:', error);
+        showNotification('Erro ao depositar pontos', 'error');
+    }
+}
+
+async function createQuizFromCode() {
+    const code = document.getElementById('adm-quiz-code').value.trim();
+
+    if (!code) {
+        showNotification('Digite o código do quiz', 'error');
+        return;
+    }
+
+    try {
+        const lines = code.split('\n').filter(l => l.trim());
+        let quizTitle = '';
+        let questions = [];
+        let currentQuestion = null;
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+
+            if (trimmed.startsWith('/q')) {
+                if (currentQuestion) {
+                    questions.push(currentQuestion);
+                }
+                const num = trimmed.substring(2).trim();
+                quizTitle = num || 'Quiz sem título';
+                currentQuestion = {
+                    text: '',
+                    alternatives: [],
+                    correct: 0
+                };
+            } else if (trimmed.startsWith('/q1')) {
+                if (currentQuestion) {
+                    questions.push(currentQuestion);
+                }
+                currentQuestion = {
+                    text: trimmed.substring(3).trim(),
+                    alternatives: [],
+                    correct: 0
+                };
+            } else if (trimmed.startsWith('/a1')) {
+                if (currentQuestion) currentQuestion.alternatives[0] = trimmed.substring(3).trim();
+            } else if (trimmed.startsWith('/a2')) {
+                if (currentQuestion) currentQuestion.alternatives[1] = trimmed.substring(3).trim();
+            } else if (trimmed.startsWith('/a3')) {
+                if (currentQuestion) currentQuestion.alternatives[2] = trimmed.substring(3).trim();
+            } else if (trimmed.startsWith('/a4')) {
+                if (currentQuestion) currentQuestion.alternatives[3] = trimmed.substring(3).trim();
+            } else if (trimmed.startsWith('/c')) {
+                if (currentQuestion) {
+                    const correctIndex = parseInt(trimmed.substring(2).trim()) - 1;
+                    currentQuestion.correct = correctIndex >= 0 ? correctIndex : 0;
+                }
+            }
+        }
+
+        if (currentQuestion && currentQuestion.text) {
+            questions.push(currentQuestion);
+        }
+
+        if (questions.length === 0) {
+            showNotification('Nenhuma pergunta válida encontrada no código', 'error');
+            return;
+        }
+
+        // Validar perguntas
+        for (const q of questions) {
+            if (!q.text || q.alternatives.length < 4) {
+                showNotification('Cada pergunta deve ter 4 alternativas', 'error');
+                return;
+            }
+        }
+
+        // Salvar quiz
+        if (!currentSubject) {
+            showNotification('Selecione uma matéria primeiro', 'error');
+            return;
+        }
+
+        await db.collection('quizzes').add({
+            title: quizTitle || 'Quiz Importado',
+            subjectId: currentSubject.id,
+            questions: questions,
+            createdAt: new Date(),
+            createdBy: currentUser.uid
+        });
+
+        console.log('✅ Quiz criado via código com sucesso');
+        document.getElementById('adm-quiz-code').value = '';
+        showNotification('Quiz criado com sucesso!', 'success');
+        loadAdmData();
+    } catch (error) {
+        console.error('❌ Erro ao criar quiz via código:', error);
+        showNotification('Erro ao criar quiz. Verifique o formato do código', 'error');
+    }
 }
 
 async function loadAdmData() {
@@ -1269,8 +1597,11 @@ async function deleteSubject(id) {
             await db.collection('subjects').doc(id).delete();
             console.log('✅ Matéria deletada');
             loadAdmData();
+            loadAllSubjects();
+            showNotification('Matéria deletada', 'success');
         } catch (error) {
             console.error('❌ Erro ao deletar matéria:', error);
+            showNotification('Erro ao deletar matéria', 'error');
         }
     }
 }
@@ -1281,8 +1612,10 @@ async function deleteQuiz(id) {
             await db.collection('quizzes').doc(id).delete();
             console.log('✅ Quiz deletado');
             loadAdmData();
+            showNotification('Quiz deletado', 'success');
         } catch (error) {
             console.error('❌ Erro ao deletar quiz:', error);
+            showNotification('Erro ao deletar quiz', 'error');
         }
     }
 }
@@ -1293,10 +1626,74 @@ async function deleteUser(id) {
             await db.collection('users').doc(id).delete();
             console.log('✅ Usuário deletado');
             loadAdmData();
+            loadAllUsers();
+            showNotification('Usuário deletado', 'success');
         } catch (error) {
             console.error('❌ Erro ao deletar usuário:', error);
+            showNotification('Erro ao deletar usuário', 'error');
         }
     }
 }
 
-console.log('✅ Script carregado com sucesso - Todas as funções ativas!');
+// ==================== NOTIFICATION SYSTEM ====================
+function showNotification(message, type = 'info') {
+    // Criar notificação toast
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 14px;
+        z-index: 2000;
+        animation: slideUp 0.3s ease;
+        max-width: 300px;
+    `;
+
+    if (type === 'success') {
+        notification.style.background = '#22c55e';
+        notification.style.color = 'white';
+        notification.textContent = '✅ ' + message;
+    } else if (type === 'error') {
+        notification.style.background = '#ef4444';
+        notification.style.color = 'white';
+        notification.textContent = '❌ ' + message;
+    } else {
+        notification.style.background = '#2563eb';
+        notification.style.color = 'white';
+        notification.textContent = 'ℹ️ ' + message;
+    }
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.animation = 'slideDown 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Adicionar animações CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(20px);
+        
