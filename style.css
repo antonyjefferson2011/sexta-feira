@@ -1,337 +1,839 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduConnect — Aprenda. Conecte. Evolua.</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #f5f5f5;
-    color: #333;
-}
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+      authDomain: "sexta-feira-fb01a.firebaseapp.com",
+      databaseURL: "https://sexta-feira-fb01a-default-rtdb.firebaseio.com",
+      projectId: "sexta-feira-fb01a",
+      storageBucket: "sexta-feira-fb01a.firebasestorage.app",
+      messagingSenderId: "82809140147",
+      appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6",
+      measurementId: "G-DEZ5ZESQH7"
+    };
 
-/* AUTH SCREEN */
-.auth-screen {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-    padding: 20px;
-}
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-.auth-container {
-    background: white;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 100%;
-    max-width: 400px;
-}
+    window._firebase = { auth, db, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile };
+  </script>
+</head>
+<body>
 
-.auth-container h1 {
-    text-align: center;
-    color: #2563eb;
-    margin-bottom: 10px;
-    font-size: 28px;
-}
+<!-- ==================== SPLASH SCREEN ==================== -->
+<div id="splash-screen" class="splash">
+  <div class="splash-logo">
+    <div class="splash-icon">⚡</div>
+    <h1>EduConnect</h1>
+    <p>Carregando plataforma...</p>
+    <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+  </div>
+</div>
 
-.auth-container p {
-    text-align: center;
-    color: #666;
-    margin-bottom: 30px;
-}
+<!-- ==================== AUTH SCREEN ==================== -->
+<div id="auth-screen" class="screen hidden">
+  <div class="auth-bg">
+    <div class="auth-blob b1"></div>
+    <div class="auth-blob b2"></div>
+    <div class="auth-blob b3"></div>
+  </div>
+  <div class="auth-container">
+    <div class="auth-brand">
+      <span class="brand-icon">⚡</span>
+      <h1>EduConnect</h1>
+      <p>Aprenda. Conecte. Evolua.</p>
+    </div>
 
-.auth-form {
-    display: none;
-}
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Entrar</button>
+      <button class="auth-tab" data-tab="register">Cadastrar</button>
+    </div>
 
-.auth-form.active {
-    display: block;
-}
+    <!-- Login Form -->
+    <div id="login-form" class="auth-form">
+      <div class="field-group">
+        <label>E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+          <button class="toggle-pw" onclick="togglePw('login-password', this)">👁</button>
+        </div>
+      </div>
+      <div id="login-error" class="auth-error hidden"></div>
+      <button class="btn-primary btn-full" id="btn-login" onclick="doLogin()">
+        <span>Entrar na plataforma</span>
+        <div class="btn-loader hidden"></div>
+      </button>
+      <p class="auth-hint">Novo aqui? <a href="#" onclick="switchTab('register')">Crie sua conta grátis →</a></p>
+    </div>
 
-.auth-form h2 {
-    margin-bottom: 20px;
-    font-size: 20px;
-}
+    <!-- Register Form -->
+    <div id="register-form" class="auth-form hidden">
+      <div class="field-group">
+        <label>Nome completo</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="reg-name" placeholder="Seu nome" autocomplete="name" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+          <button class="toggle-pw" onclick="togglePw('reg-password', this)">👁</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Confirmar senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-confirm" placeholder="Repita a senha" autocomplete="new-password" />
+        </div>
+      </div>
+      <div id="reg-error" class="auth-error hidden"></div>
+      <button class="btn-primary btn-full" id="btn-register" onclick="doRegister()">
+        <span>Criar minha conta</span>
+        <div class="btn-loader hidden"></div>
+      </button>
+      <p class="auth-hint">Já tem conta? <a href="#" onclick="switchTab('login')">Fazer login →</a></p>
+    </div>
+  </div>
+</div>
 
-.auth-form input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-}
+<!-- ==================== MAIN APP ==================== -->
+<div id="app" class="hidden">
 
-.auth-form input:focus {
-    outline: none;
-    border-color: #2563eb;
-}
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <span class="topbar-brand">⚡ EduConnect</span>
+    </div>
+    <div class="topbar-right">
+      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn">
+        🔔 <span class="notif-badge hidden" id="notif-count">0</span>
+      </button>
+      <div class="topbar-avatar" onclick="showScreen('perfil')" id="topbar-avatar">?</div>
+    </div>
+  </header>
 
-.error-msg {
-    color: #ef4444;
-    font-size: 12px;
-    margin-bottom: 10px;
-    display: none;
-}
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <div>
+        <div class="sidebar-name" id="sidebar-name">Carregando...</div>
+        <div class="sidebar-pts" id="sidebar-pts">0 pts</div>
+      </div>
+    </div>
+    <div class="sidebar-menu">
+      <a class="nav-item active" data-screen="home" onclick="showScreen('home')">🏠 <span>Home</span></a>
+      <a class="nav-item" data-screen="materias" onclick="showScreen('materias')">📚 <span>Matérias</span></a>
+      <a class="nav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍 <span>Descobrir</span></a>
+      <a class="nav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆 <span>Ranking</span></a>
+      <a class="nav-item" data-screen="chat" onclick="showScreen('chat')">💬 <span>Chat</span></a>
+      <a class="nav-item" data-screen="perfil" onclick="showScreen('perfil')">👤 <span>Perfil</span></a>
+      <a class="nav-item" data-screen="adm" id="nav-adm" onclick="showScreen('adm')" style="display:none">⚙️ <span>ADM</span></a>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="btn-logout" onclick="doLogout()">🚪 Sair</button>
+    </div>
+  </nav>
+  <div class="sidebar-overlay hidden" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-.error-msg.show {
-    display: block;
-}
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="main-content">
 
-.auth-form p {
-    text-align: center;
-    margin-top: 15px;
-    font-size: 14px;
-}
+    <!-- ===== HOME ===== -->
+    <section id="screen-home" class="screen-section">
+      <div class="screen-header">
+        <div>
+          <h2 id="home-greeting">Olá! 👋</h2>
+          <p class="screen-subtitle">Continue de onde parou</p>
+        </div>
+        <div class="home-xp-badge" id="home-xp-badge">Nível 1</div>
+      </div>
 
-.auth-form a {
-    color: #2563eb;
-    text-decoration: none;
-    font-weight: bold;
-    cursor: pointer;
-}
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card stat-blue">
+          <div class="stat-icon">📚</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-materias">0</div>
+            <div class="stat-label">Matérias</div>
+          </div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-icon">🎮</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-quizzes">0</div>
+            <div class="stat-label">Quizzes feitos</div>
+          </div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-pontos">0</div>
+            <div class="stat-label">Pontos</div>
+          </div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-rank">#--</div>
+            <div class="stat-label">Ranking</div>
+          </div>
+        </div>
+      </div>
 
-/* APP SCREEN */
-.app-screen {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    padding-bottom: 80px;
-}
+      <!-- Progress Bar -->
+      <div class="card progress-card">
+        <div class="progress-header">
+          <span>Progresso para o próximo nível</span>
+          <span id="progress-text">0 / 100 pts</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
 
-.app-header {
-    background: white;
-    padding: 16px 20px;
-    border-bottom: 2px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+      <!-- Quick Actions -->
+      <div class="section-title">Ações rápidas</div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="showScreen('materias')">
+          <span class="qb-icon">📚</span>
+          <span>Ver Matérias</span>
+        </button>
+        <button class="quick-btn" onclick="showScreen('descobrir')">
+          <span class="qb-icon">🌍</span>
+          <span>Descobrir</span>
+        </button>
+        <button class="quick-btn" onclick="showScreen('ranking')">
+          <span class="qb-icon">🏆</span>
+          <span>Ranking</span>
+        </button>
+        <button class="quick-btn" onclick="showModal('modal-nova-materia')">
+          <span class="qb-icon">➕</span>
+          <span>Nova Matéria</span>
+        </button>
+      </div>
 
-.app-header h1 {
-    color: #2563eb;
-    font-size: 24px;
-    margin: 0;
-}
+      <!-- Feed Recente -->
+      <div class="section-title">Atividade recente</div>
+      <div id="home-feed" class="feed-list">
+        <div class="empty-state">Carregando atividades...</div>
+      </div>
+    </section>
 
-.header-right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
+    <!-- ===== MATÉRIAS ===== -->
+    <section id="screen-materias" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>📚 Matérias</h2>
+          <p class="screen-subtitle">Organize seu aprendizado</p>
+        </div>
+        <button class="btn-primary btn-sm" onclick="showModal('modal-nova-materia')">+ Nova</button>
+      </div>
 
-#user-name {
-    font-weight: bold;
-    font-size: 14px;
-}
+      <!-- Search -->
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="search-materias" placeholder="Buscar matérias..." oninput="filterMaterias()" />
+      </div>
 
-.app-main {
-    flex: 1;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-}
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="setMateriaFilter('all', this)">Todas</button>
+        <button class="filter-tab" data-filter="mine" onclick="setMateriaFilter('mine', this)">Minhas</button>
+        <button class="filter-tab" data-filter="public" onclick="setMateriaFilter('public', this)">Públicas</button>
+      </div>
 
-.screen {
-    display: none;
-}
+      <div id="materias-grid" class="materias-grid">
+        <div class="empty-state">Carregando matérias...</div>
+      </div>
+    </section>
 
-.screen.active {
-    display: block;
-    animation: fadeIn 0.3s;
-}
+    <!-- ===== DETALHE MATÉRIA ===== -->
+    <section id="screen-materia-detalhe" class="screen-section hidden">
+      <div class="screen-header">
+        <button class="btn-back" onclick="showScreen('materias')">← Voltar</button>
+        <button class="btn-primary btn-sm" onclick="showModal('modal-novo-topico')">+ Tópico</button>
+      </div>
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+      <div class="materia-hero" id="materia-hero">
+        <div class="materia-hero-icon" id="materia-hero-icon">📚</div>
+        <div>
+          <h2 id="materia-hero-nome">Matéria</h2>
+          <p id="materia-hero-desc">Descrição</p>
+          <div class="materia-hero-meta">
+            <span id="materia-hero-autor">Por: --</span>
+            <span id="materia-hero-topicos">0 tópicos</span>
+          </div>
+        </div>
+      </div>
 
-.screen h2 {
-    margin-bottom: 20px;
-    color: #2563eb;
-}
+      <div class="section-title">Tópicos</div>
+      <div id="topicos-list" class="topicos-list">
+        <div class="empty-state">Nenhum tópico ainda. Crie o primeiro!</div>
+      </div>
 
-/* WELCOME */
-.welcome {
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-    color: white;
-    padding: 30px;
-    border-radius: 12px;
-    margin-bottom: 30px;
-}
+      <div class="section-title">Quizzes desta matéria</div>
+      <div id="quizzes-materia" class="quizzes-list">
+        <div class="empty-state">Nenhum quiz ainda.</div>
+      </div>
+      <button class="btn-secondary btn-full mt-2" onclick="showModal('modal-novo-quiz')">+ Criar Quiz</button>
+    </section>
 
-.welcome h2 {
-    color: white;
-    margin-bottom: 10px;
-}
+    <!-- ===== DETALHE TÓPICO ===== -->
+    <section id="screen-topico-detalhe" class="screen-section hidden">
+      <div class="screen-header">
+        <button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar</button>
+      </div>
+      <div class="topico-content card" id="topico-content">
+        <h2 id="topico-title">Tópico</h2>
+        <div class="topico-meta" id="topico-meta"></div>
+        <div class="topico-body" id="topico-body"></div>
+      </div>
+      <div class="section-title">Comentários</div>
+      <div id="topico-comentarios" class="comentarios-list"></div>
+      <div class="comentario-form">
+        <input type="text" id="new-comment" placeholder="Escreva um comentário..." />
+        <button class="btn-primary" onclick="addComment()">Enviar</button>
+      </div>
+    </section>
 
-.welcome p {
-    color: rgba(255,255,255,0.9);
-}
+    <!-- ===== QUIZ ===== -->
+    <section id="screen-quiz" class="screen-section hidden">
+      <div class="quiz-header">
+        <button class="btn-back" onclick="exitQuiz()">← Sair</button>
+        <div class="quiz-progress-wrap">
+          <div class="quiz-q-counter" id="quiz-q-counter">1/10</div>
+          <div class="quiz-progress-track">
+            <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+          </div>
+        </div>
+        <div class="quiz-timer" id="quiz-timer">⏱ 30s</div>
+      </div>
 
-/* QUICK MENU */
-.quick-menu {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 30px;
-}
+      <div class="quiz-body">
+        <div class="quiz-card" id="quiz-card">
+          <div class="quiz-q-num" id="quiz-q-num">Questão 1</div>
+          <div class="quiz-question" id="quiz-question">Carregando pergunta...</div>
+          <div class="quiz-options" id="quiz-options"></div>
+        </div>
+      </div>
 
-.quick-btn {
-    padding: 20px;
-    background: white;
-    border: 2px solid #ddd;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: all 0.3s;
-}
+      <div class="quiz-footer">
+        <div class="quiz-score-live">⭐ <span id="quiz-score-live">0</span> pts</div>
+      </div>
+    </section>
 
-.quick-btn:hover {
-    border-color: #2563eb;
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2);
-}
+    <!-- ===== RESULTADO ===== -->
+    <section id="screen-resultado" class="screen-section hidden">
+      <div class="resultado-container">
+        <div class="resultado-emoji" id="resultado-emoji">🎉</div>
+        <h2 id="resultado-titulo">Parabéns!</h2>
+        <p id="resultado-subtitulo">Quiz finalizado</p>
 
-/* BUTTONS */
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s;
-}
+        <div class="resultado-stats">
+          <div class="res-stat">
+            <div class="res-val" id="res-acertos">0</div>
+            <div class="res-label">Acertos</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-total">0</div>
+            <div class="res-label">Total</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-pontos">+0</div>
+            <div class="res-label">Pontos</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-tempo">0s</div>
+            <div class="res-label">Tempo</div>
+          </div>
+        </div>
 
-.btn-primary {
-    background: #2563eb;
-    color: white;
-}
+        <div class="resultado-barra">
+          <div class="resultado-barra-fill" id="resultado-barra-fill"></div>
+        </div>
+        <p class="resultado-pct" id="resultado-pct">0% de acerto</p>
 
-.btn-primary:hover {
-    background: #1d4ed8;
-}
+        <div class="resultado-review" id="resultado-review"></div>
 
-.btn-secondary {
-    background: #ddd;
-    color: #333;
-}
+        <div class="resultado-actions">
+          <button class="btn-primary" onclick="showScreen('home')">🏠 Voltar ao início</button>
+          <button class="btn-secondary" onclick="showScreen('ranking')">🏆 Ver Ranking</button>
+        </div>
+      </div>
+    </section>
 
-.btn-secondary:hover {
-    background: #ccc;
-}
+    <!-- ===== RANKING ===== -->
+    <section id="screen-ranking" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>🏆 Ranking</h2>
+          <p class="screen-subtitle">Top 50 usuários</p>
+        </div>
+      </div>
 
-.btn-danger {
-    background: #ef4444;
-    color: white;
-}
+      <div class="podio" id="podio">
+        <div class="podio-item p2">
+          <div class="podio-avatar" id="podio2-av">?</div>
+          <div class="podio-name" id="podio2-name">--</div>
+          <div class="podio-pts" id="podio2-pts">0</div>
+          <div class="podio-place">2°</div>
+        </div>
+        <div class="podio-item p1">
+          <div class="podio-crown">👑</div>
+          <div class="podio-avatar" id="podio1-av">?</div>
+          <div class="podio-name" id="podio1-name">--</div>
+          <div class="podio-pts" id="podio1-pts">0</div>
+          <div class="podio-place">1°</div>
+        </div>
+        <div class="podio-item p3">
+          <div class="podio-avatar" id="podio3-av">?</div>
+          <div class="podio-name" id="podio3-name">--</div>
+          <div class="podio-pts" id="podio3-pts">0</div>
+          <div class="podio-place">3°</div>
+        </div>
+      </div>
 
-.btn-danger:hover {
-    background: #dc2626;
-}
+      <div class="my-rank-card" id="my-rank-card">
+        <span>Sua posição:</span>
+        <span class="my-rank-num" id="my-rank-num">#--</span>
+        <span id="my-rank-pts">0 pts</span>
+      </div>
 
-.btn-small {
-    padding: 8px 16px;
-    font-size: 12px;
-}
+      <div id="ranking-list" class="ranking-list">
+        <div class="empty-state">Carregando ranking...</div>
+      </div>
+    </section>
 
-/* LIST */
-.list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
-}
+    <!-- ===== DESCOBRIR ===== -->
+    <section id="screen-descobrir" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>🌍 Descobrir</h2>
+          <p class="screen-subtitle">Feed global da comunidade</p>
+        </div>
+      </div>
 
-.list-item {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 4px solid #2563eb;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    cursor: pointer;
-    transition: all 0.3s;
-}
+      <!-- Post Creator -->
+      <div class="post-creator card">
+        <div class="post-creator-row">
+          <div class="pc-avatar" id="pc-avatar">?</div>
+          <input type="text" id="new-post-text" placeholder="Compartilhe algo com a comunidade..." class="post-input" />
+        </div>
+        <div class="post-creator-actions">
+          <div class="post-type-btns">
+            <button class="ptype-btn active" data-type="post" onclick="setPostType('post', this)">💬 Post</button>
+            <button class="ptype-btn" data-type="dica" onclick="setPostType('dica', this)">💡 Dica</button>
+            <button class="ptype-btn" data-type="duvida" onclick="setPostType('duvida', this)">❓ Dúvida</button>
+          </div>
+          <button class="btn-primary btn-sm" onclick="createPost()">Publicar</button>
+        </div>
+      </div>
 
-.list-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-}
+      <!-- Filter -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="setFeedFilter('all', this)">Todos</button>
+        <button class="filter-tab" data-filter="post" onclick="setFeedFilter('post', this)">Posts</button>
+        <button class="filter-tab" data-filter="dica" onclick="setFeedFilter('dica', this)">Dicas</button>
+        <button class="filter-tab" data-filter="duvida" onclick="setFeedFilter('duvida', this)">Dúvidas</button>
+      </div>
 
-.list-item h3 {
-    color: #2563eb;
-    margin-bottom: 8px;
-    font-size: 16px;
-}
+      <div id="descobrir-feed" class="feed-list">
+        <div class="empty-state">Carregando feed...</div>
+      </div>
+    </section>
 
-.list-item p {
-    color: #666;
-    font-size: 13px;
-    line-height: 1.4;
-}
+    <!-- ===== CHAT ===== -->
+    <section id="screen-chat" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>💬 Chat</h2>
+          <p class="screen-subtitle">Converse com a comunidade</p>
+        </div>
+      </div>
 
-/* PROFILE */
-.profile-info {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
+      <div class="chat-layout">
+        <!-- Rooms list -->
+        <div class="chat-rooms" id="chat-rooms">
+          <div class="chat-rooms-header">
+            <span>Salas</span>
+            <button class="btn-sm btn-primary" onclick="showModal('modal-nova-sala')">+</button>
+          </div>
+          <div id="rooms-list"></div>
+        </div>
 
-.profile-info p {
-    margin-bottom: 10px;
-    font-size: 16px;
-}
+        <!-- Chat window -->
+        <div class="chat-window" id="chat-window">
+          <div class="chat-no-room" id="chat-no-room">
+            <div class="empty-state">Selecione uma sala para começar a conversar</div>
+          </div>
+          <div class="chat-room-view hidden" id="chat-room-view">
+            <div class="chat-room-header">
+              <div class="chat-room-info">
+                <strong id="chat-room-name">Sala</strong>
+                <span id="chat-room-members">0 membros</span>
+              </div>
+            </div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input-row">
+              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
+              <button class="btn-primary" onclick="sendChatMessage()">Enviar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-/* BOTTOM NAV */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 2px solid #ddd;
-    display: flex;
-    justify-content: space-around;
-    height: 70px;
-    z-index: 1000;
-}
+    <!-- ===== PERFIL ===== -->
+    <section id="screen-perfil" class="screen-section hidden">
+      <div class="perfil-hero">
+        <div class="perfil-avatar-wrap">
+          <div class="perfil-avatar" id="perfil-avatar">?</div>
+          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')">✏️</button>
+        </div>
+        <h2 id="perfil-name">--</h2>
+        <p id="perfil-email">--</p>
+        <div class="perfil-badges" id="perfil-badges"></div>
+      </div>
 
-.nav-item {
-    flex: 1;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    color: #999;
-    transition: color 0.3s;
-}
+      <div class="perfil-stats">
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-pts">0</div>
+          <div class="pstat-label">Pontos</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-quizzes">0</div>
+          <div class="pstat-label">Quizzes</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-materias">0</div>
+          <div class="pstat-label">Matérias</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-seguidores">0</div>
+          <div class="pstat-label">Seguidores</div>
+        </div>
+      </div>
 
-.nav-item.active {
-    color: #2563eb;
-}
+      <!-- Edit Profile -->
+      <div class="card mt-2">
+        <div class="section-title">Editar perfil</div>
+        <div class="field-group">
+          <label>Nome</label>
+          <div class="input-wrap">
+            <input type="text" id="edit-name" placeholder="Seu nome" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Bio</label>
+          <textarea id="edit-bio" placeholder="Fale sobre você..." rows="3"></textarea>
+        </div>
+        <button class="btn-primary btn-full" onclick="saveProfile()">💾 Salvar perfil</button>
+      </div>
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
-    .auth-container {
-        padding: 30px 20px;
-    }
+      <!-- Histórico -->
+      <div class="section-title">Histórico de quizzes</div>
+      <div id="perfil-historico" class="historico-list">
+        <div class="empty-state">Nenhum quiz realizado ainda</div>
+      </div>
+    </section>
 
-    .app-main {
-        padding: 15px;
-    }
+    <!-- ===== NOTIFICAÇÕES ===== -->
+    <section id="screen-notificacoes" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>🔔 Notificações</h2>
+        </div>
+        <button class="btn-sm btn-secondary" onclick="markAllRead()">Marcar lidas</button>
+      </div>
+      <div id="notificacoes-list" class="notif-list">
+        <div class="empty-state">Sem notificações</div>
+      </div>
+    </section>
 
-    .list {
-        grid-template-columns: 1fr;
-    }
+    <!-- ===== ADM ===== -->
+    <section id="screen-adm" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>⚙️ Painel ADM</h2>
+          <p class="screen-subtitle">Controle total da plataforma</p>
+        </div>
+      </div>
 
-    .quick-menu {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
+      <!-- ADM Stats -->
+      <div class="stats-grid">
+        <div class="stat-card stat-blue">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-users">0</div>
+            <div class="stat-label">Usuários</div>
+          </div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-icon">📚</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-materias">0</div>
+            <div class="stat-label">Matérias</div>
+          </div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-icon">🎮</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-quizzes">0</div>
+            <div class="stat-label">Quizzes</div>
+          </div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-icon">💬</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-posts">0</div>
+            <div class="stat-label">Posts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs ADM -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setAdmTab('usuarios', this)">Usuários</button>
+        <button class="filter-tab" onclick="setAdmTab('conteudo', this)">Conteúdo</button>
+        <button class="filter-tab" onclick="setAdmTab('denuncias', this)">Denúncias</button>
+      </div>
+
+      <div id="adm-usuarios" class="adm-tab">
+        <div class="search-bar">
+          <span>🔍</span>
+          <input type="text" id="adm-search-user" placeholder="Buscar usuário..." oninput="admSearchUser()" />
+        </div>
+        <div id="adm-users-list" class="adm-list"></div>
+      </div>
+      <div id="adm-conteudo" class="adm-tab hidden">
+        <div id="adm-content-list" class="adm-list"></div>
+      </div>
+      <div id="adm-denuncias" class="adm-tab hidden">
+        <div id="adm-reports-list" class="adm-list">
+          <div class="empty-state">Nenhuma denúncia</div>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /main-content -->
+
+  <!-- BOTTOM NAV (mobile) -->
+  <nav class="bottom-nav">
+    <a class="bnav-item active" data-screen="home" onclick="showScreen('home')">🏠<span>Home</span></a>
+    <a class="bnav-item" data-screen="materias" onclick="showScreen('materias')">📚<span>Matérias</span></a>
+    <a class="bnav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍<span>Descobrir</span></a>
+    <a class="bnav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆<span>Ranking</span></a>
+    <a class="bnav-item" data-screen="chat" onclick="showScreen('chat')">💬<span>Chat</span></a>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal: Nova Matéria -->
+<div class="modal hidden" id="modal-nova-materia">
+  <div class="modal-backdrop" onclick="closeModal('modal-nova-materia')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📚 Nova Matéria</h3>
+      <button class="modal-close" onclick="closeModal('modal-nova-materia')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Nome da matéria *</label>
+        <input type="text" id="nm-nome" placeholder="Ex: Matemática, História..." />
+      </div>
+      <div class="field-group">
+        <label>Descrição</label>
+        <textarea id="nm-desc" placeholder="Descreva o que será estudado..." rows="3"></textarea>
+      </div>
+      <div class="field-group">
+        <label>Ícone</label>
+        <div class="emoji-picker" id="emoji-picker-materia">
+          <button class="emoji-opt selected" data-emoji="📚" onclick="selectEmoji('materia','📚',this)">📚</button>
+          <button class="emoji-opt" data-emoji="🔬" onclick="selectEmoji('materia','🔬',this)">🔬</button>
+          <button class="emoji-opt" data-emoji="🧮" onclick="selectEmoji('materia','🧮',this)">🧮</button>
+          <button class="emoji-opt" data-emoji="🎨" onclick="selectEmoji('materia','🎨',this)">🎨</button>
+          <button class="emoji-opt" data-emoji="🌍" onclick="selectEmoji('materia','🌍',this)">🌍</button>
+          <button class="emoji-opt" data-emoji="💻" onclick="selectEmoji('materia','💻',this)">💻</button>
+          <button class="emoji-opt" data-emoji="📖" onclick="selectEmoji('materia','📖',this)">📖</button>
+          <button class="emoji-opt" data-emoji="⚗️" onclick="selectEmoji('materia','⚗️',this)">⚗️</button>
+          <button class="emoji-opt" data-emoji="🎵" onclick="selectEmoji('materia','🎵',this)">🎵</button>
+          <button class="emoji-opt" data-emoji="🏃" onclick="selectEmoji('materia','🏃',this)">🏃</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Visibilidade</label>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="nm-vis" value="public" checked /> 🌍 Pública</label>
+          <label class="radio-opt"><input type="radio" name="nm-vis" value="private" /> 🔒 Privada</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-nova-materia')">Cancelar</button>
+      <button class="btn-primary" onclick="criarMateria()">Criar Matéria</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Novo Tópico -->
+<div class="modal hidden" id="modal-novo-topico">
+  <div class="modal-backdrop" onclick="closeModal('modal-novo-topico')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📝 Novo Tópico</h3>
+      <button class="modal-close" onclick="closeModal('modal-novo-topico')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Título *</label>
+        <input type="text" id="nt-titulo" placeholder="Título do tópico" />
+      </div>
+      <div class="field-group">
+        <label>Conteúdo *</label>
+        <textarea id="nt-conteudo" placeholder="Escreva o conteúdo aqui..." rows="6"></textarea>
+      </div>
+      <div class="field-group">
+        <label>Tags (separadas por vírgula)</label>
+        <input type="text" id="nt-tags" placeholder="ex: fórmulas, teoria, prática" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-novo-topico')">Cancelar</button>
+      <button class="btn-primary" onclick="criarTopico()">Criar Tópico</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Novo Quiz -->
+<div class="modal hidden" id="modal-novo-quiz">
+  <div class="modal-backdrop" onclick="closeModal('modal-novo-quiz')"></div>
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3>🎮 Criar Quiz</h3>
+      <button class="modal-close" onclick="closeModal('modal-novo-quiz')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Nome do quiz *</label>
+        <input type="text" id="nq-nome" placeholder="Ex: Quiz de Álgebra" />
+      </div>
+      <div class="field-group">
+        <label>Tempo por questão (segundos)</label>
+        <input type="number" id="nq-tempo" value="30" min="10" max="120" />
+      </div>
+      <div class="section-title">Questões <button class="btn-sm btn-secondary" onclick="addQuizQuestion()">+ Adicionar</button></div>
+      <div id="quiz-questions-builder" class="qbuilder">
+        <!-- Questions added dynamically -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-novo-quiz')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarQuiz()">💾 Salvar Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nova Sala de Chat -->
+<div class="modal hidden" id="modal-nova-sala">
+  <div class="modal-backdrop" onclick="closeModal('modal-nova-sala')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>💬 Nova Sala</h3>
+      <button class="modal-close" onclick="closeModal('modal-nova-sala')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Nome da sala *</label>
+        <input type="text" id="ns-nome" placeholder="Ex: Matemática Avançada" />
+      </div>
+      <div class="field-group">
+        <label>Descrição</label>
+        <input type="text" id="ns-desc" placeholder="Sobre o que é essa sala?" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-nova-sala')">Cancelar</button>
+      <button class="btn-primary" onclick="criarSala()">Criar Sala</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Avatar -->
+<div class="modal hidden" id="modal-edit-avatar">
+  <div class="modal-backdrop" onclick="closeModal('modal-edit-avatar')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✏️ Escolher Avatar</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-avatar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="avatar-grid" id="avatar-grid">
+        <!-- Generated dynamically -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="saveAvatar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ver Perfil de Outro Usuário -->
+<div class="modal hidden" id="modal-user-profile">
+  <div class="modal-backdrop" onclick="closeModal('modal-user-profile')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>👤 Perfil</h3>
+      <button class="modal-close" onclick="closeModal('modal-user-profile')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-user-profile-body">
+      <!-- Loaded dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- CONFETTI -->
+<canvas id="confetti-canvas" class="confetti-canvas hidden"></canvas>
+
+<script src="app.js"></script>
+</body>
+</html>
