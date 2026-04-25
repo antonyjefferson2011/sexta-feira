@@ -1,7 +1,3 @@
-/* ============================================================
-   Sexta-Feira Studies — script.js
-   COMPLETO, FUNCIONAL, SEM SPLASH
-   ============================================================ */
 'use strict';
 
 // Firebase Config
@@ -18,7 +14,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
-
 console.log('✅ Firebase OK');
 
 // ========== STATE ==========
@@ -43,7 +38,6 @@ function $(id){ return document.getElementById(id); }
 function txt(id,v){ const e=$(id); if(e)e.textContent=v; }
 function show(id){ const e=$(id); if(e)e.style.display=''; }
 function hide(id){ const e=$(id); if(e)e.style.display='none'; }
-function isHidden(id){ const e=$(id); return !e || e.style.display==='none'; }
 
 function toast(msg, type){
   const c = $('toast-container'); if(!c) return;
@@ -52,15 +46,12 @@ function toast(msg, type){
   d.style.cssText = 'background:white; padding:12px 18px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); font-weight:600; font-size:14px; animation:slideIn 0.3s ease;';
   d.innerHTML = (icons[type]||'') + ' ' + esc(msg);
   c.appendChild(d);
-  setTimeout(()=>{ d.style.animation='slideOut 0.3s ease forwards'; setTimeout(()=>d.remove(),300); },3000);
+  setTimeout(()=>{ d.style.opacity='0'; d.style.transition='0.3s'; setTimeout(()=>d.remove(),300); },3000);
 }
 
 // ========== AUTH ==========
 function switchTab(t){
-  document.querySelectorAll('.auth-tab-btn').forEach(b=>{
-    b.style.background = 'transparent';
-    b.style.color = '#888';
-  });
+  document.querySelectorAll('.auth-tab-btn').forEach(b=>{ b.style.background='transparent'; b.style.color='#888'; });
   if(t==='login'){
     show('login-form'); hide('register-form');
     document.querySelectorAll('.auth-tab-btn')[0].style.background='white';
@@ -82,21 +73,18 @@ function togglePass(id, btn){
 async function handleLogin(){
   const u = $('login-username')?.value?.trim();
   const p = $('login-password')?.value;
-  if(!u||!p){ show('login-error'); $('login-error').textContent='Preencha todos os campos'; return; }
+  if(!u||!p){ const e=$('login-error'); if(e){e.style.display=''; e.textContent='Preencha todos os campos';} return; }
   
   const snap = await db.ref('usuarios').orderByChild('username').equalTo(u).once('value');
   const users = snap.val();
-  if(!users){ show('login-error'); $('login-error').textContent='Usuário não encontrado'; return; }
+  if(!users){ const e=$('login-error'); if(e){e.style.display=''; e.textContent='Usuário não encontrado';} return; }
   
   const uid = Object.keys(users)[0];
   const data = users[uid];
-  if(data.password !== p){ show('login-error'); $('login-error').textContent='Senha incorreta'; return; }
+  if(data.password !== p){ const e=$('login-error'); if(e){e.style.display=''; e.textContent='Senha incorreta';} return; }
   
-  try {
-    await auth.signInWithEmailAndPassword(data.email, p);
-  } catch(e){
-    try { await auth.createUserWithEmailAndPassword(data.email, p); } catch(e2){}
-  }
+  try { await auth.signInWithEmailAndPassword(data.email, p); }
+  catch(ex){ try { await auth.createUserWithEmailAndPassword(data.email, p); } catch(ex2){} }
 }
 
 async function handleRegister(){
@@ -104,21 +92,22 @@ async function handleRegister(){
   const email = $('reg-email')?.value?.trim();
   const pw = $('reg-password')?.value;
   const cf = $('reg-confirm')?.value;
+  const err = $('reg-error');
   
-  if(!uname||!email||!pw||!cf){ show('reg-error'); $('reg-error').textContent='Preencha todos os campos'; return; }
-  if(uname.length<3){ show('reg-error'); $('reg-error').textContent='Nome muito curto (mín. 3)'; return; }
-  if(pw.length<6){ show('reg-error'); $('reg-error').textContent='Senha muito curta (mín. 6)'; return; }
-  if(pw!==cf){ show('reg-error'); $('reg-error').textContent='Senhas não coincidem'; return; }
+  if(!uname||!email||!pw||!cf){ if(err){err.style.display=''; err.textContent='Preencha todos os campos';} return; }
+  if(uname.length<3){ if(err){err.style.display=''; err.textContent='Nome muito curto (mín. 3)';} return; }
+  if(pw.length<6){ if(err){err.style.display=''; err.textContent='Senha muito curta (mín. 6)';} return; }
+  if(pw!==cf){ if(err){err.style.display=''; err.textContent='Senhas não coincidem';} return; }
   
   const s1 = await db.ref('usuarios').orderByChild('username').equalTo(uname).once('value');
-  if(s1.val()){ show('reg-error'); $('reg-error').textContent='Nome de usuário já está em uso!'; return; }
+  if(s1.val()){ if(err){err.style.display=''; err.textContent='Nome de usuário já está em uso!';} return; }
   
   const s2 = await db.ref('usuarios').orderByChild('email').equalTo(email).once('value');
-  if(s2.val()){ show('reg-error'); $('reg-error').textContent='E-mail já cadastrado!'; return; }
+  if(s2.val()){ if(err){err.style.display=''; err.textContent='E-mail já cadastrado!';} return; }
   
   let cred;
   try { cred = await auth.createUserWithEmailAndPassword(email, pw); }
-  catch(e){ show('reg-error'); $('reg-error').textContent='Erro: '+e.message; return; }
+  catch(e){ if(err){err.style.display=''; err.textContent='Erro: '+e.message;} return; }
   
   await db.ref('usuarios/'+cred.user.uid).set({
     uid: cred.user.uid, username: uname, email, password: pw,
@@ -155,16 +144,18 @@ auth.onAuthStateChanged(async (user)=>{
   } else {
     STATE.user=null; STATE.userData=null;
     hide('app'); show('auth-screen');
+    switchTab('login');
   }
 });
 
 // ========== UI ==========
 function updateUI(){
   const u = STATE.userData; if(!u) return;
-  txt('sidebar-name', u.username); txt('sidebar-pts', fmt(u.points));
-  txt('sidebar-avatar', u.avatar); txt('topbar-avatar', u.avatar);
-  txt('pc-avatar', u.avatar); txt('perfil-avatar', u.avatar);
-  txt('perfil-name', u.username); txt('perfil-email', u.email);
+  txt('sidebar-name', u.username||'?'); txt('sidebar-pts', fmt(u.points));
+  const av = u.avatar||'🎓';
+  txt('sidebar-avatar', av); txt('topbar-avatar', av);
+  txt('pc-avatar', av); txt('perfil-avatar', av);
+  txt('perfil-name', u.username||'--'); txt('perfil-email', u.email||'--');
   txt('home-greeting', 'Olá, '+(u.username||'Estudante').split(' ')[0]+'! 👋');
 }
 
@@ -172,9 +163,6 @@ function updateUI(){
 function showScreen(name){
   document.querySelectorAll('#main-content > div').forEach(d=>d.style.display='none');
   const t = $('screen-'+name); if(t) t.style.display='';
-  
-  document.querySelectorAll('.nav-link').forEach(a=>a.style.color='#555');
-  document.querySelectorAll('.bnav-item').forEach(a=>a.style.color='#888');
   
   const sidebar = $('sidebar');
   if(sidebar) sidebar.style.transform='translateX(-100%)';
@@ -225,8 +213,7 @@ async function loadHome(){
   const f=$('progress-fill'); if(f)f.style.width=pct+'%';
   
   const ms = await db.ref('materias').once('value');
-  const mat = ms.val();
-  let cnt=0;
+  const mat = ms.val(); let cnt=0;
   if(mat) cnt = Object.values(mat).filter(m=>m.autorId===STATE.user.uid).length;
   txt('stat-materias', cnt);
   
@@ -247,17 +234,15 @@ async function loadHome(){
 }
 
 function feedHTML(p, compact){
-  const tipo = {post:'💬',dica:'💡',duvida:'❓',atividade:'⚡'}[p.tipo]||'💬';
   return `
     <div style="background:white; border-radius:15px; padding:15px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
         <div style="width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">${esc(p.avatar||p.autorAvatar||'?')}</div>
         <div style="flex:1;"><span style="font-weight:700;">${esc(p.autorNome||'?')}</span> <span style="color:#888;font-size:12px;">${ago(p.createdAt)}</span></div>
-        <span style="font-size:11px;">${tipo}</span>
       </div>
       <div>${esc(p.texto)}</div>
       ${!compact?`<div style="margin-top:10px; display:flex; gap:12px;">
-        <button onclick="likePost('${p.id}')" style="border:none;background:none;cursor:pointer;font-weight:600;color:${p.likes&&p.likes[STATE.user?.uid]?'#ef4444':'#888'};">❤️ ${p.likes?Object.keys(p.likes).length:0}</button>
+        <button onclick="likePost('${p.id}')" style="border:none;background:none;cursor:pointer;font-weight:600;color:#888;">❤️ ${p.likes?Object.keys(p.likes).length:0}</button>
         ${p.autorId===STATE.user?.uid?`<button onclick="deletePost('${p.id}')" style="border:none;background:none;cursor:pointer;color:#ef4444;font-weight:600;">🗑</button>`:''}
       </div>`:''}
     </div>`;
@@ -274,15 +259,11 @@ function loadMaterias(){
     const s = ($('search-materias')?.value||'').toLowerCase();
     if(s) arr = arr.filter(m=>(m.nome||'').toLowerCase().includes(s));
     arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    if(!arr.length){ c.innerHTML='<div style="text-align:center;color:#888;padding:20px;">🔍 Nenhuma encontrada</div>'; return; }
+    if(!arr.length){ c.innerHTML='<div style="text-align:center;color:#888;padding:20px;">🔍 Nenhuma</div>'; return; }
     c.innerHTML = arr.map(m=>`
       <div onclick="openMateria('${m.id}')" style="background:white; border-radius:15px; padding:15px; margin-bottom:10px; cursor:pointer; display:flex; gap:12px; align-items:center; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
         <span style="font-size:35px;">${m.icone||'📚'}</span>
-        <div style="flex:1;">
-          <div style="font-weight:700;">${esc(m.nome)}</div>
-          <div style="font-size:12px;color:#888;">${esc(m.descricao||'')}</div>
-          <div style="font-size:11px;color:#888;margin-top:5px;">👤 ${esc(m.autorNome||'?')} · ${m.topicosCount||0} tópicos</div>
-        </div>
+        <div style="flex:1;"><div style="font-weight:700;">${esc(m.nome)}</div><div style="font-size:12px;color:#888;">${esc(m.descricao||'')}</div><div style="font-size:11px;color:#888;margin-top:5px;">👤 ${esc(m.autorNome||'?')} · ${m.topicosCount||0} tópicos</div></div>
       </div>
     `).join('');
   });
@@ -326,10 +307,8 @@ async function openMateria(id){
     const c = $('topicos-list'); if(!c) return;
     if(!t){ c.innerHTML='<div style="text-align:center;color:#888;padding:20px;">Nenhum tópico</div>'; return; }
     c.innerHTML = Object.entries(t).map(([tid,top])=>`
-      <div onclick="openTopico('${tid}')" style="background:white; border-radius:12px; padding:12px; margin-bottom:8px; cursor:pointer; display:flex; align-items:center; gap:10px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-        <span>📄</span>
-        <div style="flex:1;"><div style="font-weight:600;">${esc(top.titulo)}</div><div style="font-size:11px;color:#888;">${esc(top.autorNome||'?')} · ${ago(top.createdAt)}</div></div>
-        <span>→</span>
+      <div onclick="openTopico('${tid}')" style="background:white; border-radius:12px; padding:12px; margin-bottom:8px; cursor:pointer; display:flex; align-items:center; gap:10px;">
+        <span>📄</span><div style="flex:1;"><div style="font-weight:600;">${esc(top.titulo)}</div><div style="font-size:11px;color:#888;">${esc(top.autorNome||'?')} · ${ago(top.createdAt)}</div></div><span>→</span>
       </div>
     `).join('');
   });
@@ -339,7 +318,7 @@ async function openMateria(id){
     const c = $('quizzes-materia'); if(!c) return;
     if(!q){ c.innerHTML='<div style="text-align:center;color:#888;padding:20px;">Nenhum quiz</div>'; return; }
     c.innerHTML = Object.entries(q).map(([qid,quiz])=>`
-      <div style="background:white; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+      <div style="background:white; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
         <div><strong>🎮 ${esc(quiz.nome)}</strong><br><span style="font-size:12px;color:#888;">${quiz.questoes?.length||0} questões</span></div>
         <button onclick="startQuiz('${id}','${qid}')" style="background:#6C5CE7; color:white; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">▶ Jogar</button>
       </div>
@@ -378,10 +357,7 @@ async function openTopico(id){
     const c = $('topico-comentarios'); if(!c) return;
     if(!com){ c.innerHTML='<div style="color:#888;padding:10px;">Sem comentários</div>'; return; }
     c.innerHTML = Object.entries(com).sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0)).map(([cid,co])=>`
-      <div style="background:#f9f9f9; border-radius:10px; padding:10px; margin-bottom:6px;">
-        <strong>${esc(co.autorNome||'?')}</strong> <span style="font-size:11px;color:#888;">${ago(co.createdAt)}</span>
-        <div>${esc(co.texto)}</div>
-      </div>
+      <div style="background:#f9f9f9; border-radius:10px; padding:10px; margin-bottom:6px;"><strong>${esc(co.autorNome||'?')}</strong> <span style="font-size:11px;color:#888;">${ago(co.createdAt)}</span><div>${esc(co.texto)}</div></div>
     `).join('');
   });
 }
@@ -414,13 +390,8 @@ async function processarCmd(){
       curQ={pergunta:l.substring(3).trim()}; alts=[]; corr=-1;
     }
     else if(l.startsWith('/a ')) alts.push(l.substring(3).trim());
-    else if(l.startsWith('/c ')){
-      const map={A:0,B:1,C:2,D:3};
-      corr = map[l.substring(3).trim().toUpperCase()] ?? -1;
-    }
-    else if(l==='/f'){
-      if(curQ&&alts.length>=2&&corr>=0){ curQ.alternativas=alts; curQ.correta=corr; questoes.push(curQ); curQ=null; alts=[]; corr=-1; }
-    }
+    else if(l.startsWith('/c ')){ const map={A:0,B:1,C:2,D:3}; corr = map[l.substring(3).trim().toUpperCase()] ?? -1; }
+    else if(l==='/f'){ if(curQ&&alts.length>=2&&corr>=0){ curQ.alternativas=alts; curQ.correta=corr; questoes.push(curQ); curQ=null; alts=[]; corr=-1; } }
   }
   if(curQ&&alts.length>=2&&corr>=0){ curQ.alternativas=alts; curQ.correta=corr; questoes.push(curQ); }
   
@@ -438,11 +409,7 @@ async function startQuiz(mId, qId){
   const s = await db.ref('quizzes/'+mId+'/'+qId).once('value');
   const q = s.val(); if(!q?.questoes?.length) return toast('Quiz inválido','error');
   
-  STATE.quiz = {
-    questions: shuffle([...q.questoes]), index:0, score:0, correct:0,
-    timer:null, timeLeft:q.tempo||30, start:Date.now(), answers:[],
-    nome:q.nome, mId, qId
-  };
+  STATE.quiz = { questions: shuffle([...q.questoes]), index:0, score:0, correct:0, timer:null, timeLeft:q.tempo||30, start:Date.now(), answers:[], nome:q.nome, mId, qId };
   showScreen('quiz-game');
   renderQ();
   await db.ref('quizzes/'+mId+'/'+qId).update({totalPlays:(q.totalPlays||0)+1});
@@ -451,8 +418,7 @@ async function startQuiz(mId, qId){
 function renderQ(){
   const g = STATE.quiz;
   if(g.index >= g.questions.length){ finishQ(); return; }
-  const q = g.questions[g.index];
-  const total = g.questions.length;
+  const q = g.questions[g.index], total = g.questions.length;
   txt('quiz-q-counter', (g.index+1)+'/'+total);
   txt('quiz-q-num', 'Questão '+(g.index+1));
   txt('quiz-question', q.pergunta);
@@ -469,88 +435,45 @@ function renderQ(){
   clearInterval(g.timer);
   g.timeLeft = STATE.quiz.timeLeft || 30;
   updateT();
-  g.timer = setInterval(()=>{
-    g.timeLeft--;
-    updateT();
-    if(g.timeLeft<=0){ clearInterval(g.timer); selectA(-1); }
-  },1000);
+  g.timer = setInterval(()=>{ g.timeLeft--; updateT(); if(g.timeLeft<=0){ clearInterval(g.timer); selectA(-1); } },1000);
 }
 
-function updateT(){
-  const e = $('quiz-timer');
-  if(e){ e.textContent='⏱ '+STATE.quiz.timeLeft+'s'; e.style.color=STATE.quiz.timeLeft<=5?'#ef4444':'#856404'; }
-}
+function updateT(){ const e=$('quiz-timer'); if(e){ e.textContent='⏱ '+STATE.quiz.timeLeft+'s'; e.style.color=STATE.quiz.timeLeft<=5?'#ef4444':'#856404'; } }
 
 function selectA(chosen){
   clearInterval(STATE.quiz.timer);
-  const g = STATE.quiz;
-  const q = g.questions[g.index];
-  const correct = q.correta;
-  const isCorrect = chosen===correct;
-  
+  const g = STATE.quiz, q = g.questions[g.index], correct = q.correta, isCorrect = chosen===correct;
   document.querySelectorAll('#quiz-options button').forEach((b,i)=>{
     b.disabled=true;
     if(i===correct) b.style.cssText='background:#d1fae5; border-color:#10b981; color:#065f46;';
     if(i===chosen&&!isCorrect) b.style.cssText='background:#fee2e2; border-color:#ef4444; color:#991b1b;';
   });
-  
-  if(isCorrect){
-    const pts = Math.max(10, Math.round(10+(g.timeLeft/30)*10));
-    g.score+=pts; g.correct++;
-    g.answers.push({pergunta:q.pergunta, chosen, correct, isCorrect:true, pts});
-  } else {
-    g.answers.push({pergunta:q.pergunta, chosen, correct, isCorrect:false, pts:0});
-  }
+  if(isCorrect){ const pts = Math.max(10, Math.round(10+(g.timeLeft/30)*10)); g.score+=pts; g.correct++; g.answers.push({pergunta:q.pergunta, chosen, correct, isCorrect:true, pts}); }
+  else { g.answers.push({pergunta:q.pergunta, chosen, correct, isCorrect:false, pts:0}); }
   txt('quiz-score-live', g.score);
-  
   setTimeout(()=>{ g.index++; renderQ(); },1500);
 }
 
 async function finishQ(){
   clearInterval(STATE.quiz.timer);
-  const g = STATE.quiz;
-  const total = g.questions.length;
-  const elapsed = Math.round((Date.now()-g.start)/1000);
-  const pct = Math.round((g.correct/total)*100);
-  const bonus = pct>=90?50:pct>=70?30:pct>=50?15:0;
-  const totalPts = g.score+bonus;
+  const g = STATE.quiz, total = g.questions.length, elapsed = Math.round((Date.now()-g.start)/1000), pct = Math.round((g.correct/total)*100);
+  const bonus = pct>=90?50:pct>=70?30:pct>=50?15:0, totalPts = g.score+bonus;
   
-  await db.ref('historico/'+STATE.user.uid).push({
-    quizNome:g.nome, score:totalPts, acertos:g.correct, total, pct, tempo:elapsed, createdAt:Date.now()
-  });
-  
+  await db.ref('historico/'+STATE.user.uid).push({ quizNome:g.nome, score:totalPts, acertos:g.correct, total, pct, tempo:elapsed, createdAt:Date.now() });
   await addPts(totalPts);
   await db.ref('usuarios/'+STATE.user.uid).update({quizzesPlayed:(STATE.userData.quizzesPlayed||0)+1});
-  
-  await db.ref('posts').push({
-    tipo:'atividade', texto:'completou o quiz "'+g.nome+'" com '+pct+'%!',
-    autorId:STATE.user.uid, autorNome:STATE.userData.username, avatar:STATE.userData.avatar, createdAt:Date.now()
-  });
+  await db.ref('posts').push({ tipo:'atividade', texto:'completou o quiz "'+g.nome+'" com '+pct+'%!', autorId:STATE.user.uid, autorNome:STATE.userData.username, avatar:STATE.userData.avatar, createdAt:Date.now() });
   
   showScreen('resultado');
-  const emoji = pct>=80?'🎉':pct>=60?'👍':pct>=40?'😅':'💪';
-  const tit = pct>=80?'Excelente!':pct>=60?'Bom trabalho!':'Continue!';
-  txt('resultado-emoji',emoji); txt('resultado-titulo',tit);
+  txt('resultado-emoji', pct>=80?'🎉':pct>=60?'👍':pct>=40?'😅':'💪');
+  txt('resultado-titulo', pct>=80?'Excelente!':pct>=60?'Bom trabalho!':'Continue!');
   txt('resultado-subtitulo', g.nome);
-  txt('res-acertos', g.correct); txt('res-total', total);
-  txt('res-pontos','+'+totalPts); txt('res-tempo', elapsed+'s');
-  txt('resultado-pct', pct+'%');
-  const f = $('resultado-barra-fill'); if(f) f.style.width=pct+'%';
-  
-  const r = $('resultado-review');
-  if(r) r.innerHTML = g.answers.map(a=>`
-    <div style="padding:10px; border-radius:8px; margin-bottom:5px; background:${a.isCorrect?'#d1fae5':'#fee2e2'}; border-left:3px solid ${a.isCorrect?'#10b981':'#ef4444'};">
-      ${a.isCorrect?'✅':'❌'} ${esc(a.pergunta)} ${a.isCorrect?'<span style="float:right;font-weight:700;">+'+a.pts+'</span>':''}
-    </div>
-  `).join('');
+  txt('res-acertos', g.correct); txt('res-total', total); txt('res-pontos','+'+totalPts); txt('res-tempo', elapsed+'s'); txt('resultado-pct', pct+'%');
+  const f=$('resultado-barra-fill'); if(f) f.style.width=pct+'%';
+  const r=$('resultado-review'); if(r) r.innerHTML = g.answers.map(a=>`<div style="padding:10px; border-radius:8px; margin-bottom:5px; background:${a.isCorrect?'#d1fae5':'#fee2e2'}; border-left:3px solid ${a.isCorrect?'#10b981':'#ef4444'};">${a.isCorrect?'✅':'❌'} ${esc(a.pergunta)} ${a.isCorrect?'<span style="float:right;font-weight:700;">+'+a.pts+'</span>':''}</div>`).join('');
 }
 
-function exitQuiz(){
-  if(!confirm('Sair do quiz?')) return;
-  clearInterval(STATE.quiz.timer);
-  showScreen('materia-detalhe');
-}
-
+function exitQuiz(){ if(!confirm('Sair do quiz?')) return; clearInterval(STATE.quiz.timer); showScreen('materia-detalhe'); }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
 // ========== FEED ==========
@@ -571,238 +494,96 @@ function setPostType(t, btn){
   if(btn){ btn.style.background='#6C5CE7'; btn.style.color='white'; btn.style.borderColor='#6C5CE7'; }
 }
 
-// ========== FEED FILTER (ATUALIZADO COM USUÁRIOS) ==========
 function setFeedFilter(f, btn){
-  STATE.feedFilter = f;
-  
-  // Atualizar botões
-  document.querySelectorAll('.feed-filter-btn').forEach(b => {
-    b.style.background = 'white';
-    b.style.color = '#555';
-    b.style.borderColor = '#eee';
-  });
-  if(btn){ 
-    btn.style.background = '#6C5CE7'; 
-    btn.style.color = 'white'; 
-    btn.style.borderColor = '#6C5CE7'; 
-  }
-  
-  // Mostrar/esconder barra de pesquisa
-  const searchBar = $('search-users-bar');
-  const feedContainer = $('descobrir-feed');
-  
-  if (f === 'usuarios') {
-    // Mostrar barra de pesquisa e carregar usuários
-    if (searchBar) searchBar.style.display = '';
-    if (feedContainer) feedContainer.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">⏳ Carregando usuários...</div>';
-    loadAllUsers();
-  } else {
-    // Esconder barra e carregar feed normal
-    if (searchBar) searchBar.style.display = 'none';
-    loadFeed();
-  }
+  STATE.feedFilter=f;
+  document.querySelectorAll('.feed-filter-btn').forEach(b=>{b.style.background='white'; b.style.color='#555';});
+  if(btn){ btn.style.background='#6C5CE7'; btn.style.color='white'; }
+  if(f==='usuarios'){ show('search-users-bar'); loadAllUsers(); }
+  else { hide('search-users-bar'); loadFeed(); }
 }
 
-// ========== CARREGAR TODOS OS USUÁRIOS ==========
-async function loadAllUsers() {
-  const container = $('descobrir-feed');
-  if (!container) return;
-  
+async function loadAllUsers(){
+  const c = $('descobrir-feed'); if(!c) return;
   const snap = await db.ref('usuarios').once('value');
   const users = snap.val();
-  
-  if (!users) {
-    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">👥 Nenhum usuário encontrado</div>';
-    return;
-  }
-  
+  if(!users){ c.innerHTML='<div style="text-align:center;color:#888;padding:20px;">Nenhum usuário</div>'; return; }
   renderUserList(users);
 }
 
-// ========== PESQUISAR USUÁRIOS ==========
-async function searchUsers() {
-  const term = ($('search-users-input')?.value || '').toLowerCase().trim();
-  const container = $('descobrir-feed');
-  if (!container) return;
-  
+async function searchUsers(){
+  const term = ($('search-users-input')?.value||'').toLowerCase().trim();
   const snap = await db.ref('usuarios').once('value');
   const users = snap.val();
-  
-  if (!users) {
-    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">👥 Nenhum usuário encontrado</div>';
-    return;
-  }
-  
-  if (!term) {
-    renderUserList(users);
-    return;
-  }
-  
-  // Filtrar usuários pelo termo
+  if(!users) return;
+  if(!term){ renderUserList(users); return; }
   const filtered = {};
-  Object.entries(users).forEach(([uid, u]) => {
-    if (
-      (u.username || '').toLowerCase().includes(term) ||
-      (u.email || '').toLowerCase().includes(term) ||
-      (u.bio || '').toLowerCase().includes(term)
-    ) {
-      filtered[uid] = u;
-    }
+  Object.entries(users).forEach(([uid,u])=>{
+    if((u.username||'').toLowerCase().includes(term)||(u.email||'').toLowerCase().includes(term)||(u.bio||'').toLowerCase().includes(term)) filtered[uid]=u;
   });
-  
   renderUserList(filtered);
 }
 
-// ========== RENDERIZAR LISTA DE USUÁRIOS ==========
-function renderUserList(users) {
-  const container = $('descobrir-feed');
-  if (!container) return;
-  
-  const arr = Object.entries(users).map(([uid, u]) => ({ uid, ...u }));
-  
-  // Ordenar por pontos (mais pontos primeiro)
-  arr.sort((a, b) => (b.points || 0) - (a.points || 0));
-  
-  if (!arr.length) {
-    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">🔍 Nenhum usuário encontrado</div>';
-    return;
-  }
-  
-  container.innerHTML = arr.map(u => {
-    const isMe = u.uid === STATE.user?.uid;
-    const level = getLevelName(u.points || 0);
-    
+function renderUserList(users){
+  const c = $('descobrir-feed'); if(!c) return;
+  const arr = Object.entries(users).map(([uid,u])=>({uid,...u})).sort((a,b)=>(b.points||0)-(a.points||0));
+  if(!arr.length){ c.innerHTML='<div style="text-align:center;color:#888;padding:20px;">🔍 Nenhum encontrado</div>'; return; }
+  c.innerHTML = arr.map(u=>{
+    const isMe = u.uid===STATE.user?.uid;
+    const level = getLevelName(u.points||0);
     return `
-      <div onclick="${isMe ? "showScreen('perfil')" : "verPerfil('" + u.uid + "')"}" 
-           style="background:white; border-radius:15px; padding:15px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:0.2s;"
-           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)';"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)';">
-        
-        <!-- Avatar -->
-        <div style="width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg, #6C5CE7, #a855f7); color:white; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; flex-shrink:0; position:relative;">
-          ${u.avatar || '🎓'}
-          ${u.isAdmin ? '<span style="position:absolute; bottom:-2px; right:-2px; font-size:14px;">⚙️</span>' : ''}
+      <div onclick="${isMe?"showScreen('perfil')":"verPerfil('"+u.uid+"')"}" style="background:white; border-radius:15px; padding:15px; margin-bottom:10px; cursor:pointer; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#6C5CE7,#a855f7);color:white;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;">${u.avatar||'🎓'}${u.isAdmin?'<span style="font-size:14px;">⚙️</span>':''}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;">${esc(u.username||'?')} ${isMe?'<span style="background:#6C5CE7;color:white;padding:2px 8px;border-radius:10px;font-size:10px;">Você</span>':''}</div>
+          <div style="font-size:12px;color:#888;">${esc(u.bio||'Sem bio')}</div>
+          <div style="font-size:11px;color:#888;">⭐ ${fmt(u.points||0)} · ${level} · 👥 ${u.seguidores||0} seguidores</div>
         </div>
-        
-        <!-- Info -->
-        <div style="flex:1; min-width:0;">
-          <div style="font-weight:700; font-size:15px; display:flex; align-items:center; gap:5px;">
-            ${esc(u.username || 'Usuário')}
-            ${isMe ? '<span style="background:#6C5CE7; color:white; padding:2px 8px; border-radius:10px; font-size:10px;">Você</span>' : ''}
-            ${u.isAdmin ? '<span style="color:#f59e0b; font-size:12px;">⚙️</span>' : ''}
-          </div>
-          <div style="font-size:12px; color:#888; margin-top:3px;">
-            ${esc(u.bio || 'Sem bio')}
-          </div>
-          <div style="display:flex; gap:10px; margin-top:5px; font-size:11px; color:#888;">
-            <span>⭐ ${fmt(u.points || 0)} pts</span>
-            <span>🏆 ${level}</span>
-            <span>👥 ${u.seguidores || 0} seguidores</span>
-          </div>
-        </div>
-        
-        <!-- Botão Seguir -->
-        ${!isMe ? `
-          <button onclick="event.stopPropagation(); toggleFollowFromList('${u.uid}', this)" 
-                  class="btn-follow-list"
-                  data-uid="${u.uid}"
-                  style="background:#6C5CE7; color:white; border:none; padding:8px 16px; border-radius:20px; font-weight:700; cursor:pointer; font-size:13px; white-space:nowrap; flex-shrink:0;">
-            👥 Seguir
-          </button>
-        ` : ''}
+        ${!isMe?`<button onclick="event.stopPropagation();toggleFollowUser('${u.uid}', this)" style="background:#6C5CE7;color:white;border:none;padding:8px 16px;border-radius:20px;font-weight:700;cursor:pointer;font-size:13px;">👥 Seguir</button>`:''}
       </div>
     `;
   }).join('');
-  
-  // Verificar quem já está seguindo
   updateFollowButtons();
 }
 
-// ========== ATUALIZAR BOTÕES DE SEGUIR NA LISTA ==========
-async function updateFollowButtons() {
-  if (!STATE.user) return;
-  
-  const buttons = document.querySelectorAll('.btn-follow-list');
-  
-  for (const btn of buttons) {
-    const uid = btn.getAttribute('data-uid');
-    if (!uid) continue;
-    
-    const snap = await db.ref('seguidores/' + STATE.user.uid + '/' + uid).once('value');
-    
-    if (snap.val()) {
-      btn.textContent = '✅ Seguindo';
-      btn.style.background = '#10b981';
-    } else {
-      btn.textContent = '👥 Seguir';
-      btn.style.background = '#6C5CE7';
-    }
+async function updateFollowButtons(){
+  if(!STATE.user) return;
+  const btns = document.querySelectorAll('#descobrir-feed button');
+  for(const btn of btns){
+    const onclick = btn.getAttribute('onclick')||'';
+    const match = onclick.match(/'([^']+)'/);
+    if(!match) continue;
+    const uid = match[1];
+    const snap = await db.ref('seguidores/'+STATE.user.uid+'/'+uid).once('value');
+    if(snap.val()){ btn.textContent='✅ Seguindo'; btn.style.background='#10b981'; }
   }
 }
 
-// ========== SEGUIR/DESSEGUIR DA LISTA ==========
-async function toggleFollowFromList(uid, btn) {
-  if (!STATE.user) return toast('Faça login primeiro!', 'error');
-  if (uid === STATE.user.uid) return;
-  
-  const ref = db.ref('seguidores/' + STATE.user.uid + '/' + uid);
+async function toggleFollowUser(uid, btn){
+  if(!STATE.user) return;
+  const ref = db.ref('seguidores/'+STATE.user.uid+'/'+uid);
   const snap = await ref.once('value');
-  
-  if (snap.val()) {
-    // Deixar de seguir
+  if(snap.val()){
     await ref.remove();
-    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).remove();
-    
-    // Atualizar contagem
-    const uSnap = await db.ref('usuarios/' + uid).once('value');
+    await db.ref('seguindo/'+uid+'/'+STATE.user.uid).remove();
+    const uSnap = await db.ref('usuarios/'+uid).once('value');
     const u = uSnap.val();
-    if (u) await db.ref('usuarios/' + uid).update({ seguidores: Math.max((u.seguidores || 1) - 1, 0) });
-    
-    if (btn) {
-      btn.textContent = '👥 Seguir';
-      btn.style.background = '#6C5CE7';
-    }
-    toast('Deixou de seguir', 'info');
+    if(u) await db.ref('usuarios/'+uid).update({seguidores:Math.max((u.seguidores||1)-1,0)});
+    if(btn){ btn.textContent='👥 Seguir'; btn.style.background='#6C5CE7'; }
   } else {
-    // Seguir
     await ref.set(true);
-    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).set(true);
-    
-    // Atualizar contagem
-    const uSnap = await db.ref('usuarios/' + uid).once('value');
+    await db.ref('seguindo/'+uid+'/'+STATE.user.uid).set(true);
+    const uSnap = await db.ref('usuarios/'+uid).once('value');
     const u = uSnap.val();
-    if (u) await db.ref('usuarios/' + uid).update({ seguidores: (u.seguidores || 0) + 1 });
-    
-    // Notificar
-    await db.ref('notificacoes/' + uid).push({
-      mensagem: '👥 ' + STATE.userData.username + ' começou a te seguir!',
-      tipo: 'follow',
-      lida: false,
-      createdAt: Date.now()
-    });
-    
-    if (btn) {
-      btn.textContent = '✅ Seguindo';
-      btn.style.background = '#10b981';
-    }
-    toast('Seguindo! 👥', 'success');
+    if(u) await db.ref('usuarios/'+uid).update({seguidores:(u.seguidores||0)+1});
+    await db.ref('notificacoes/'+uid).push({ mensagem:'👥 '+STATE.userData.username+' começou a te seguir!', tipo:'follow', lida:false, createdAt:Date.now() });
+    if(btn){ btn.textContent='✅ Seguindo'; btn.style.background='#10b981'; }
   }
 }
 
-// ========== PEGAR NOME DO NÍVEL ==========
-function getLevelName(pts) {
-  const levels = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
-  const names = ['🌱 Iniciante', '📚 Aprendiz', '📖 Estudante', '🎓 Dedicado', '🏅 Scholar', 
-                 '⭐ Mestre', '🌟 Especialista', '👨‍🏫 Professor', '🧙 Guru', '💎 Sábio', '👑 Lenda'];
-  let lvl = 0;
-  for (let i = 0; i < levels.length; i++) {
-    if (pts >= levels[i]) lvl = i;
-  }
-  return names[lvl];
-}
-  document.querySelectorAll('.feed-filter-btn').forEach(b=>{b.style.background='white'; b.style.color='#555';});
-  if(btn){ btn.style.background='#6C5CE7'; btn.style.color='white'; }
-  loadFeed();
+function getLevelName(pts){
+  const levels=[0,100,250,500,1000,2000,3500,5500,8000,12000,20000];
+  const names=['🌱 Iniciante','📚 Aprendiz','📖 Estudante','🎓 Dedicado','🏅 Scholar','⭐ Mestre','🌟 Especialista','👨‍🏫 Professor','🧙 Guru','💎 Sábio','👑 Lenda'];
+  let l=0; for(let i=0;i<levels.length;i++){ if(pts>=levels[i]) l=i; } return names[l];
 }
 
 async function createPost(){
@@ -815,14 +596,10 @@ async function createPost(){
 }
 
 async function criarPostModal(){
-  const t = $('post-texto-modal')?.value?.trim();
-  const tp = $('post-tipo-modal')?.value||'post';
+  const t=$('post-texto-modal')?.value?.trim(), tp=$('post-tipo-modal')?.value||'post';
   if(!t){ toast('Escreva algo','error'); return; }
   await db.ref('posts').push({ texto:t, tipo:tp, autorId:STATE.user.uid, autorNome:STATE.userData.username, avatar:STATE.userData.avatar, createdAt:Date.now() });
-  closeModal('modal-post');
-  $('post-texto-modal').value='';
-  addPts(5);
-  toast('Publicado!','success');
+  closeModal('modal-post'); $('post-texto-modal').value=''; addPts(5); toast('Publicado!','success');
 }
 
 async function likePost(id){
@@ -830,53 +607,36 @@ async function likePost(id){
   const ref = db.ref('posts/'+id+'/likes/'+STATE.user.uid);
   const s = await ref.once('value');
   if(s.val()){ await ref.remove(); }
-  else {
-    await ref.set(true);
-    const ps = await db.ref('posts/'+id).once('value');
-    const p = ps.val();
-    if(p&&p.autorId!==STATE.user.uid){
-      await db.ref('notificacoes/'+p.autorId).push({
-        mensagem:'❤️ '+STATE.userData.username+' curtiu seu post!', tipo:'like', lida:false, createdAt:Date.now()
-      });
-    }
-  }
+  else { await ref.set(true); }
 }
 
-async function deletePost(id){
-  if(!confirm('Excluir?')) return;
-  await db.ref('posts/'+id).remove();
-  toast('Excluído','info');
-}
+async function deletePost(id){ if(!confirm('Excluir?')) return; await db.ref('posts/'+id).remove(); toast('Excluído','info'); }
 
 // ========== CHAT ==========
 function loadChat(){
   db.ref('chat_rooms').on('value',(snap)=>{
-    const rooms = snap.val();
-    const c = $('rooms-list'); if(!c) return;
+    const rooms=snap.val();
+    const c=$('rooms-list'); if(!c) return;
     if(!rooms){ c.innerHTML='<div style="padding:12px;color:#888;">Nenhuma sala</div>'; return; }
-    c.innerHTML = Object.entries(rooms).map(([id,r])=>`
-      <div onclick="joinRoom('${id}')" style="padding:12px; cursor:pointer; border-bottom:1px solid #eee; font-weight:600; ${STATE.currentRoom===id?'background:#ede9fe;':''}"># ${esc(r.nome)}</div>
+    c.innerHTML=Object.entries(rooms).map(([id,r])=>`
+      <div onclick="joinRoom('${id}')" style="padding:12px; cursor:pointer; border-bottom:1px solid #eee; font-weight:600;"># ${esc(r.nome)}</div>
     `).join('');
   });
 }
 
 function joinRoom(id){
   STATE.currentRoom=id;
-  db.ref('chat_rooms/'+id).once('value').then(s=>{
-    const r = s.val(); if(r) txt('chat-room-name','# '+r.nome);
-  });
+  db.ref('chat_rooms/'+id).once('value').then(s=>{ const r=s.val(); if(r) txt('chat-room-name','# '+r.nome); });
   hide('chat-no-room'); show('chat-room-view');
   db.ref('chat_messages/'+id).on('value',(snap)=>{
-    const msgs = snap.val();
-    const c = $('chat-messages'); if(!c) return;
+    const msgs=snap.val();
+    const c=$('chat-messages'); if(!c) return;
     if(!msgs){ c.innerHTML='<div style="color:#888;padding:15px;">Sem mensagens</div>'; return; }
-    const arr = Object.entries(msgs).map(([id,m])=>({id,...m})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
-    c.innerHTML = arr.map(m=>`
+    const arr=Object.entries(msgs).map(([id,m])=>({id,...m})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    c.innerHTML=arr.map(m=>`
       <div style="margin-bottom:8px; display:flex; flex-direction:${m.autorId===STATE.user?.uid?'row-reverse':'row'}; gap:8px;">
         <div style="width:28px;height:28px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${esc(m.avatar||'?')}</div>
-        <div style="max-width:70%; background:${m.autorId===STATE.user?.uid?'#6C5CE7':'#f0f0f0'}; color:${m.autorId===STATE.user?.uid?'white':'#333'}; padding:10px 14px; border-radius:15px; font-size:14px;">
-          ${esc(m.texto)}
-        </div>
+        <div style="max-width:70%; background:${m.autorId===STATE.user?.uid?'#6C5CE7':'#f0f0f0'}; color:${m.autorId===STATE.user?.uid?'white':'#333'}; padding:10px 14px; border-radius:15px; font-size:14px;">${esc(m.texto)}</div>
       </div>
     `).join('');
     c.scrollTop=c.scrollHeight;
@@ -884,38 +644,31 @@ function joinRoom(id){
 }
 
 async function sendChatMsg(){
-  const t = $('chat-msg-input')?.value?.trim();
+  const t=$('chat-msg-input')?.value?.trim();
   if(!t||!STATE.currentRoom) return;
-  await db.ref('chat_messages/'+STATE.currentRoom).push({
-    texto:t, autorId:STATE.user.uid, autorNome:STATE.userData.username, avatar:STATE.userData.avatar, createdAt:Date.now()
-  });
-  await db.ref('chat_rooms/'+STATE.currentRoom).update({lastMessage:t.substring(0,50), lastMessageAt:Date.now()});
+  await db.ref('chat_messages/'+STATE.currentRoom).push({ texto:t, autorId:STATE.user.uid, autorNome:STATE.userData.username, avatar:STATE.userData.avatar, createdAt:Date.now() });
   $('chat-msg-input').value='';
 }
 
 async function criarSala(){
-  const n = $('ns-nome')?.value?.trim();
+  const n=$('ns-nome')?.value?.trim();
   if(!n){ toast('Nome obrigatório','error'); return; }
-  const d = $('ns-desc')?.value?.trim();
-  const ref = await db.ref('chat_rooms').push({ nome:n, descricao:d, criadorId:STATE.user.uid, createdAt:Date.now() });
-  closeModal('modal-sala');
-  $('ns-nome').value=''; $('ns-desc').value='';
-  joinRoom(ref.key);
+  const ref=await db.ref('chat_rooms').push({ nome:n, descricao:$('ns-desc')?.value?.trim()||'', criadorId:STATE.user.uid, createdAt:Date.now() });
+  closeModal('modal-sala'); $('ns-nome').value=''; $('ns-desc').value=''; joinRoom(ref.key);
 }
 
 // ========== RANKING ==========
 function loadRanking(){
   db.ref('usuarios').on('value',(snap)=>{
-    const u = snap.val(); if(!u) return;
-    const arr = Object.values(u).sort((a,b)=>(b.points||0)-(a.points||0));
-    const setP=(n,u)=>{ if(!u)return; txt('podio'+n+'-av', u.avatar||'?'); txt('podio'+n+'-name',(u.username||'').split(' ')[0]); txt('podio'+n+'-pts', fmt(u.points)); };
+    const u=snap.val(); if(!u) return;
+    const arr=Object.values(u).sort((a,b)=>(b.points||0)-(a.points||0));
+    const setP=(n,u)=>{ if(!u)return; txt('podio'+n+'-av',u.avatar||'?'); txt('podio'+n+'-name',(u.username||'').split(' ')[0]); txt('podio'+n+'-pts',fmt(u.points)); };
     setP(1,arr[0]); setP(2,arr[1]); setP(3,arr[2]);
-    const pos = arr.findIndex(u=>u.uid===STATE.user?.uid);
-    txt('my-rank-num', pos>=0?'#'+(pos+1):'#--');
-    txt('my-rank-pts', fmt(arr[pos]?.points||0));
-    const c = $('ranking-list'); if(!c) return;
-    c.innerHTML = arr.slice(0,50).map((u,i)=>`
-      <div style="background:white; border-radius:10px; padding:12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; box-shadow:0 1px 4px rgba(0,0,0,0.04); ${u.uid===STATE.user?.uid?'background:#ede9fe;':''}">
+    const pos=arr.findIndex(u=>u.uid===STATE.user?.uid);
+    txt('my-rank-num',pos>=0?'#'+(pos+1):'#--'); txt('my-rank-pts',fmt(arr[pos]?.points||0));
+    const c=$('ranking-list'); if(!c) return;
+    c.innerHTML=arr.slice(0,50).map((u,i)=>`
+      <div onclick="verPerfil('${u.uid}')" style="background:white; border-radius:10px; padding:12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.04); ${u.uid===STATE.user?.uid?'background:#ede9fe;':''}">
         <span style="font-weight:800; color:#888; width:24px;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>
         <div style="width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${esc(u.avatar||'?')}</div>
         <div style="flex:1;"><strong>${esc(u.username||'?')}</strong> ${u.uid===STATE.user?.uid?'(Você)':''}</div>
@@ -926,34 +679,97 @@ function loadRanking(){
 }
 
 // ========== PERFIL ==========
+let viewingUserId=null;
+
+async function verPerfil(uid){
+  if(uid===STATE.user?.uid){ showScreen('perfil'); return; }
+  viewingUserId=uid;
+  const snap=await db.ref('usuarios/'+uid).once('value');
+  const u=snap.val(); if(!u) return;
+  const c=$('user-profile-content'); if(!c) return;
+  c.innerHTML=`
+    <div style="text-align:center;">
+      <div style="font-size:60px;">${u.avatar||'🎓'}</div>
+      <h3>${esc(u.username||'?')}</h3>
+      <p style="color:#888;">${esc(u.bio||'Sem bio')}</p>
+      <div style="margin:10px 0;"><span style="background:#f0f0f0;padding:5px 12px;border-radius:15px;">⭐ ${fmt(u.points)}</span> <span style="background:#f0f0f0;padding:5px 12px;border-radius:15px;">👥 ${u.seguidores||0}</span></div>
+      <button id="btn-follow-modal" onclick="toggleFollowUser('${uid}', this)" style="background:#6C5CE7;color:white;border:none;padding:10px 25px;border-radius:25px;cursor:pointer;font-weight:700;">Carregando...</button>
+    </div>`;
+  showModal('modal-user-profile');
+  const fSnap=await db.ref('seguidores/'+STATE.user.uid+'/'+uid).once('value');
+  const btn=$('btn-follow-modal');
+  if(btn){ btn.textContent=fSnap.val()?'✅ Seguindo':'👥 Seguir'; btn.style.background=fSnap.val()?'#10b981':'#6C5CE7'; }
+}
+
+async function showFollowers(){
+  const uid=viewingUserId||STATE.user?.uid; if(!uid) return;
+  const snap=await db.ref('seguindo/'+uid).once('value');
+  const data=snap.val();
+  const c=$('seguidores-list'); if(!c) return;
+  if(!data){ c.innerHTML='<div style="color:#888;padding:20px;">Nenhum seguidor</div>'; }
+  else {
+    let html='';
+    for(const sid of Object.keys(data)){
+      const uSnap=await db.ref('usuarios/'+sid).once('value');
+      const u=uSnap.val();
+      if(u) html+=`<div onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #eee;cursor:pointer;"><div style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;">${u.avatar||'?'}</div><div><strong>${esc(u.username||'?')}</strong></div></div>`;
+    }
+    c.innerHTML=html||'<div style="color:#888;padding:20px;">Nenhum</div>';
+  }
+  showModal('modal-seguidores');
+}
+
+async function showFollowing(){
+  const uid=viewingUserId||STATE.user?.uid; if(!uid) return;
+  const snap=await db.ref('seguidores/'+uid).once('value');
+  const data=snap.val();
+  const c=$('seguindo-list'); if(!c) return;
+  if(!data){ c.innerHTML='<div style="color:#888;padding:20px;">Não segue ninguém</div>'; }
+  else {
+    let html='';
+    for(const fid of Object.keys(data)){
+      const uSnap=await db.ref('usuarios/'+fid).once('value');
+      const u=uSnap.val();
+      if(u) html+=`<div onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #eee;cursor:pointer;"><div style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;">${u.avatar||'?'}</div><div><strong>${esc(u.username||'?')}</strong></div></div>`;
+    }
+    c.innerHTML=html||'<div style="color:#888;padding:20px;">Nenhum</div>';
+  }
+  showModal('modal-seguindo');
+}
+
 async function loadPerfil(){
   if(!STATE.userData) return;
-  const s = await db.ref('usuarios/'+STATE.user.uid).once('value');
-  if(s.val()) STATE.userData = s.val();
+  const s=await db.ref('usuarios/'+STATE.user.uid).once('value');
+  if(s.val()) STATE.userData=s.val();
   updateUI();
-  const u = STATE.userData;
-  txt('pstat-pts', fmt(u.points)); txt('pstat-quizzes', u.quizzesPlayed||0);
-  txt('pstat-materias', u.materiasCreated||0); txt('pstat-seguidores', u.seguidores||0);
+  viewingUserId=null; hide('follow-section');
+  const u=STATE.userData;
+  txt('pstat-pts',fmt(u.points)); txt('pstat-quizzes',u.quizzesPlayed||0);
+  txt('pstat-materias',u.materiasCreated||0); txt('pstat-seguidores',u.seguidores||0);
   
-  const badges = [];
+  const segSnap=await db.ref('seguindo/'+STATE.user.uid).once('value');
+  const segData=segSnap.val(); const segCount=segData?Object.keys(segData).length:0;
+  const seguSnap=await db.ref('seguidores/'+STATE.user.uid).once('value');
+  const seguData=seguSnap.val(); const seguCount=seguData?Object.keys(seguData).length:0;
+  txt('count-seguidores',segCount); txt('count-seguindo',seguCount);
+  
+  const badges=[];
   if((u.points||0)>=1000) badges.push('<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin:2px;">⭐ 1K</span>');
   if((u.quizzesPlayed||0)>=10) badges.push('<span style="background:#dbeafe;color:#1d4ed8;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin:2px;">🎮 Gamer</span>');
   if(u.isAdmin) badges.push('<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin:2px;">⚙️ Admin</span>');
   if(!badges.length) badges.push('<span style="background:#f0f0f0;color:#666;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin:2px;">🌱 Novato</span>');
-  $('perfil-badges').innerHTML = badges.join('');
+  $('perfil-badges').innerHTML=badges.join('');
   
-  const hs = await db.ref('historico/'+STATE.user.uid).once('value');
-  const h = hs.val();
-  const c = $('perfil-historico');
-  if(c){
-    if(!h){ c.innerHTML='<div style="color:#888;padding:10px;">Nenhum quiz</div>'; return; }
-    const arr = Object.entries(h).map(([id,x])=>({id,...x})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    c.innerHTML = arr.map(x=>`
-      <div style="background:white; border-radius:10px; padding:12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-        <span>🎮</span>
-        <div style="flex:1;"><strong>${esc(x.quizNome||'Quiz')}</strong><br><span style="font-size:12px;color:#888;">${x.acertos}/${x.total} · ${x.pct}% · ${ago(x.createdAt)}</span></div>
-        <span style="font-weight:800;color:#10b981;">+${fmt(x.score)}</span>
-      </div>
+  const hs=await db.ref('historico/'+STATE.user.uid).once('value');
+  const h=hs.val();
+  const pc=$('perfil-historico');
+  if(pc){
+    if(!h){ pc.innerHTML='<div style="color:#888;padding:10px;">Nenhum quiz</div>'; return; }
+    const arr=Object.entries(h).map(([id,x])=>({id,...x})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    pc.innerHTML=arr.map(x=>`
+      <div style="background:white; border-radius:10px; padding:12px; margin-bottom:6px; display:flex; align-items:center; gap:10px;">
+        <span>🎮</span><div style="flex:1;"><strong>${esc(x.quizNome||'Quiz')}</strong><br><span style="font-size:12px;color:#888;">${x.acertos}/${x.total} · ${x.pct}% · ${ago(x.createdAt)}</span></div>
+        <span style="font-weight:800;color:#10b981;">+${fmt(x.score)}</span></div>
     `).join('');
   }
 }
@@ -962,42 +778,35 @@ async function loadPerfil(){
 function listenNotifs(){
   if(!STATE.user) return;
   db.ref('notificacoes/'+STATE.user.uid).on('value',(snap)=>{
-    const n = snap.val();
-    const badge = $('notif-badge');
+    const n=snap.val();
+    const badge=$('notif-badge');
     if(!badge) return;
-    if(n){
-      const unread = Object.values(n).filter(x=>!x.lida).length;
+    if(n){ const unread=Object.values(n).filter(x=>!x.lida).length;
       if(unread>0){ badge.textContent=unread>9?'9+':unread; badge.style.display='flex'; }
-      else { badge.style.display='none'; }
-    } else { badge.style.display='none'; }
+      else{badge.style.display='none';}
+    }else{badge.style.display='none';}
   });
 }
 
 async function loadNotifs(){
   if(!STATE.user) return;
-  const s = await db.ref('notificacoes/'+STATE.user.uid).orderByChild('createdAt').limitToLast(30).once('value');
-  const n = s.val();
-  const c = $('notificacoes-list'); if(!c) return;
+  const s=await db.ref('notificacoes/'+STATE.user.uid).orderByChild('createdAt').limitToLast(30).once('value');
+  const n=s.val(); const c=$('notificacoes-list'); if(!c) return;
   if(!n){ c.innerHTML='<div style="color:#888;padding:20px;text-align:center;">🔔 Nenhuma notificação</div>'; return; }
-  const arr = Object.entries(n).map(([id,x])=>({id,...x})).reverse();
-  c.innerHTML = arr.map(x=>`
-    <div style="background:white; border-radius:12px; padding:15px; margin-bottom:8px; box-shadow:0 1px 4px rgba(0,0,0,0.04); ${!x.lida?'border-left:3px solid #6C5CE7;':''}">
-      <div style="font-weight:600; font-size:14px;">${esc(x.mensagem)}</div>
-      <div style="font-size:12px;color:#888;">${ago(x.createdAt)}</div>
-    </div>
+  const arr=Object.entries(n).map(([id,x])=>({id,...x})).reverse();
+  c.innerHTML=arr.map(x=>`
+    <div style="background:white; border-radius:12px; padding:15px; margin-bottom:8px; ${!x.lida?'border-left:3px solid #6C5CE7;':''}">
+      <div style="font-weight:600;">${esc(x.mensagem)}</div><div style="font-size:12px;color:#888;">${ago(x.createdAt)}</div></div>
   `).join('');
-  
-  const updates = {};
-  arr.forEach(x=>{ if(!x.lida) updates[x.id+'/lida']=true; });
+  const updates={}; arr.forEach(x=>{ if(!x.lida) updates[x.id+'/lida']=true; });
   if(Object.keys(updates).length) await db.ref('notificacoes/'+STATE.user.uid).update(updates);
 }
 
 async function marcarLidas(){
   if(!STATE.user) return;
-  const s = await db.ref('notificacoes/'+STATE.user.uid).once('value');
-  const n = s.val(); if(!n) return;
-  const u = {};
-  Object.keys(n).forEach(id=>{ u[id+'/lida']=true; });
+  const s=await db.ref('notificacoes/'+STATE.user.uid).once('value');
+  const n=s.val(); if(!n) return;
+  const u={}; Object.keys(n).forEach(id=>{ u[id+'/lida']=true; });
   await db.ref('notificacoes/'+STATE.user.uid).update(u);
   toast('Todas lidas ✓','info');
 }
@@ -1005,21 +814,17 @@ async function marcarLidas(){
 // ========== PONTOS ==========
 async function addPts(pts){
   if(!STATE.user) return;
-  const s = await db.ref('usuarios/'+STATE.user.uid+'/points').once('value');
-  const cur = s.val()||0;
-  const nw = cur+pts;
+  const s=await db.ref('usuarios/'+STATE.user.uid+'/points').once('value');
+  const cur=s.val()||0, nw=cur+pts;
   await db.ref('usuarios/'+STATE.user.uid).update({points:nw});
-  STATE.userData.points=nw;
-  updateUI();
+  STATE.userData.points=nw; updateUI();
 }
 
 // ========== ADM ==========
 async function loadAdm(){
   if(!STATE.userData?.isAdmin){ toast('Acesso negado','error'); return; }
-  const us = await db.ref('usuarios').once('value');
-  const u = us.val(); txt('adm-users', u?Object.keys(u).length:0);
-  const ps = await db.ref('posts').once('value');
-  const p = ps.val(); txt('adm-posts', p?Object.keys(p).length:0);
+  const us=await db.ref('usuarios').once('value'); const u=us.val(); txt('adm-users',u?Object.keys(u).length:0);
+  const ps=await db.ref('posts').once('value'); const p=ps.val(); txt('adm-posts',p?Object.keys(p).length:0);
   admLoad('materias');
 }
 
@@ -1027,318 +832,41 @@ async function admLoad(tab, btn){
   STATE.admTab=tab;
   document.querySelectorAll('.adm-tab-btn').forEach(b=>{b.style.background='white'; b.style.color='#555';});
   if(btn){ btn.style.background='#6C5CE7'; btn.style.color='white'; }
-  const c = $('adm-content-list'); if(!c) return;
+  const c=$('adm-content-list'); if(!c) return;
   c.innerHTML='<div style="color:#888;padding:15px;">⏳ Carregando...</div>';
   
-  let data;
   if(tab==='materias'){
-    const s = await db.ref('materias').once('value'); data=s.val();
-    if(data) c.innerHTML = Object.entries(data).map(([id,m])=>`
-      <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:6px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-        <div><strong>${m.icone||'📚'} ${esc(m.nome)}</strong><br><span style="font-size:11px;color:#888;">${esc(m.autorNome||'?')} · ${ago(m.createdAt)}</span></div>
-        <button onclick="admDel('materias','${id}')" style="background:#fee2e2; color:#dc2626; border:none; padding:6px 12px; border-radius:8px; font-weight:700; cursor:pointer;">🗑</button>
-      </div>
+    const s=await db.ref('materias').once('value'); const data=s.val();
+    if(data) c.innerHTML=Object.entries(data).map(([id,m])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;background:white;padding:12px;border-radius:10px;margin-bottom:6px;">
+        <div><strong>${m.icone||'📚'} ${esc(m.nome)}</strong></div>
+        <button onclick="admDel('materias','${id}')" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer;">🗑</button></div>
     `).join('');
     else c.innerHTML='<div style="color:#888;padding:15px;">Nenhuma</div>';
   } else if(tab==='posts'){
-    const s = await db.ref('posts').once('value'); data=s.val();
-    if(data) c.innerHTML = Object.entries(data).map(([id,p])=>`
-      <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:6px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-        <div><strong>${esc(p.autorNome||'?')}</strong>: ${esc((p.texto||'').substring(0,50))}<br><span style="font-size:11px;color:#888;">${ago(p.createdAt)}</span></div>
-        <button onclick="admDel('posts','${id}')" style="background:#fee2e2; color:#dc2626; border:none; padding:6px 12px; border-radius:8px; font-weight:700; cursor:pointer;">🗑</button>
-      </div>
+    const s=await db.ref('posts').once('value'); const data=s.val();
+    if(data) c.innerHTML=Object.entries(data).map(([id,p])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;background:white;padding:12px;border-radius:10px;margin-bottom:6px;">
+        <div><strong>${esc(p.autorNome||'?')}</strong>: ${esc((p.texto||'').substring(0,50))}</div>
+        <button onclick="admDel('posts','${id}')" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer;">🗑</button></div>
     `).join('');
     else c.innerHTML='<div style="color:#888;padding:15px;">Nenhum</div>';
   } else if(tab==='usuarios'){
-    const s = await db.ref('usuarios').once('value'); data=s.val();
-    if(data) c.innerHTML = Object.values(data).map(u=>`
-      <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:6px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-        <div><strong>${u.avatar||'?'} ${esc(u.username||'?')}</strong> · ${fmt(u.points)} pts ${u.isAdmin?'⚙️':''}</div>
-        ${!u.isAdmin&&u.uid!==STATE.user?.uid?`<button onclick="admDelUser('${u.uid}')" style="background:#fee2e2; color:#dc2626; border:none; padding:6px 12px; border-radius:8px; font-weight:700; cursor:pointer;">🗑</button>`:''}
-      </div>
+    const s=await db.ref('usuarios').once('value'); const data=s.val();
+    if(data) c.innerHTML=Object.values(data).map(u=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;background:white;padding:12px;border-radius:10px;margin-bottom:6px;">
+        <div><strong>${u.avatar||'?'} ${esc(u.username||'?')}</strong> · ${fmt(u.points)} pts</div>
+        ${!u.isAdmin&&u.uid!==STATE.user?.uid?`<button onclick="admDelUser('${u.uid}')" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;border-radius:8px;font-weight:700;cursor:pointer;">🗑</button>`:''}</div>
     `).join('');
     else c.innerHTML='<div style="color:#888;padding:15px;">Nenhum</div>';
-  } else {
-    // quizzes, topicos
-    c.innerHTML = '<div style="color:#888;padding:15px;">Use matérias/posts/usuários</div>';
-  }
+  } else { c.innerHTML='<div style="color:#888;padding:15px;">Use matérias/posts/usuários</div>'; }
 }
 
-async function admDel(path, id){
-  if(!confirm('Excluir?')) return;
-  await db.ref(path+'/'+id).remove();
-  toast('Excluído','info');
-  admLoad(STATE.admTab);
-}
-
-async function admDelUser(uid){
-  if(!confirm('Excluir usuário permanentemente?')) return;
-  await db.ref('usuarios/'+uid).remove();
-  await db.ref('historico/'+uid).remove();
-  await db.ref('notificacoes/'+uid).remove();
-  toast('Usuário excluído','info');
-  admLoad('usuarios');
-}
-
-async function admAddPts(){
-  const pts = parseInt($('adm-add-pts')?.value);
-  if(!pts||pts<=0){ toast('Valor inválido','error'); return; }
-  if(pts>1000000){ toast('Máximo 1M','warning'); return; }
-  await addPts(pts);
-  $('adm-add-pts').value='';
-  toast('+'+fmt(pts)+' pontos!','success');
-}
+async function admDel(path, id){ if(!confirm('Excluir?')) return; await db.ref(path+'/'+id).remove(); toast('Excluído','info'); admLoad(STATE.admTab); }
+async function admDelUser(uid){ if(!confirm('Excluir permanentemente?')) return; await db.ref('usuarios/'+uid).remove(); await db.ref('historico/'+uid).remove(); await db.ref('notificacoes/'+uid).remove(); toast('Excluído','info'); admLoad('usuarios'); }
+async function admAddPts(){ const pts=parseInt($('adm-add-pts')?.value); if(!pts||pts<=0){ toast('Valor inválido','error'); return; } await addPts(pts); $('adm-add-pts').value=''; toast('+'+fmt(pts)+' pontos!','success'); }
 
 // ========== CLOSE MODALS ==========
-document.addEventListener('keydown',(e)=>{
-  if(e.key==='Escape'){
-    document.querySelectorAll('[id^="modal-"]').forEach(m=>{ if(m.style.display==='flex') m.style.display='none'; });
-  }
-});
-// ============================================================
-// SISTEMA DE AMIZADE / SEGUIDORES
-// ============================================================
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ document.querySelectorAll('[id^="modal-"]').forEach(m=>{ if(m.style.display==='flex') m.style.display='none'; }); } });
 
-// Variável para guardar o perfil que está sendo visto (outro usuário)
-let viewingUserId = null;
-
-// Quando clicar no nome de alguém no ranking ou feed, ver perfil
-async function verPerfil(uid) {
-  if (uid === STATE.user?.uid) {
-    showScreen('perfil');
-    return;
-  }
-  
-  viewingUserId = uid;
-  const snap = await db.ref('usuarios/' + uid).once('value');
-  const u = snap.val();
-  if (!u) return toast('Usuário não encontrado', 'error');
-  
-  const content = $('user-profile-content');
-  if (!content) return;
-  
-  content.innerHTML = `
-    <div style="text-align:center;">
-      <div style="font-size:60px;">${u.avatar || '🎓'}</div>
-      <h3 style="margin:10px 0;">${esc(u.username || '?')}</h3>
-      <p style="color:#888; font-size:14px;">${esc(u.bio || 'Sem bio')}</p>
-      <div style="margin:10px 0;">
-        <span style="background:#f0f0f0; padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px;">⭐ ${fmt(u.points || 0)} pts</span>
-        <span style="background:#f0f0f0; padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px; margin-left:5px;">👥 ${u.seguidores || 0} seguidores</span>
-      </div>
-      <button id="btn-follow-modal" onclick="toggleFollowUser('${uid}')" style="background:#6C5CE7; color:white; border:none; padding:10px 25px; border-radius:25px; font-weight:700; cursor:pointer; font-size:15px; margin-top:10px;">
-        Carregando...
-      </button>
-    </div>
-  `;
-  
-  showModal('modal-user-profile');
-  
-  // Verificar se já segue
-  const fSnap = await db.ref('seguidores/' + STATE.user.uid + '/' + uid).once('value');
-  const btn = $('btn-follow-modal');
-  if (btn) {
-    if (fSnap.val()) {
-      btn.textContent = '✅ Seguindo';
-      btn.style.background = '#10b981';
-    } else {
-      btn.textContent = '👥 Seguir';
-      btn.style.background = '#6C5CE7';
-    }
-  }
-}
-
-// Seguir/Desseguir do modal
-async function toggleFollowUser(uid) {
-  if (!STATE.user) return toast('Faça login', 'error');
-  if (uid === STATE.user.uid) return;
-  
-  const ref = db.ref('seguidores/' + STATE.user.uid + '/' + uid);
-  const snap = await ref.once('value');
-  
-  if (snap.val()) {
-    // Deixar de seguir
-    await ref.remove();
-    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).remove();
-    
-    // Atualizar contagem
-    const uSnap = await db.ref('usuarios/' + uid).once('value');
-    const u = uSnap.val();
-    if (u) await db.ref('usuarios/' + uid).update({ seguidores: Math.max((u.seguidores || 1) - 1, 0) });
-    
-    const btn = $('btn-follow-modal');
-    if (btn) { btn.textContent = '👥 Seguir'; btn.style.background = '#6C5CE7'; }
-    toast('Deixou de seguir', 'info');
-  } else {
-    // Seguir
-    await ref.set(true);
-    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).set(true);
-    
-    // Atualizar contagem
-    const uSnap = await db.ref('usuarios/' + uid).once('value');
-    const u = uSnap.val();
-    if (u) await db.ref('usuarios/' + uid).update({ seguidores: (u.seguidores || 0) + 1 });
-    
-    // Notificar
-    await db.ref('notificacoes/' + uid).push({
-      mensagem: '👥 ' + STATE.userData.username + ' começou a te seguir!',
-      tipo: 'follow',
-      lida: false,
-      createdAt: Date.now()
-    });
-    
-    const btn = $('btn-follow-modal');
-    if (btn) { btn.textContent = '✅ Seguindo'; btn.style.background = '#10b981'; }
-    toast('Seguindo! 👥', 'success');
-  }
-}
-
-// Mostrar lista de seguidores
-async function showFollowers() {
-  const uid = viewingUserId || STATE.user?.uid;
-  if (!uid) return;
-  
-  const snap = await db.ref('seguindo/' + uid).once('value');
-  const data = snap.val();
-  const container = $('seguidores-list');
-  if (!container) return;
-  
-  if (!data) {
-    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Nenhum seguidor ainda</div>';
-  } else {
-    const seguidores = Object.keys(data);
-    let html = '';
-    for (const sid of seguidores) {
-      const uSnap = await db.ref('usuarios/' + sid).once('value');
-      const u = uSnap.val();
-      if (u) {
-        html += `
-          <div onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #eee;cursor:pointer;">
-            <div style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${u.avatar || '?'}</div>
-            <div style="flex:1;"><strong>${esc(u.username || '?')}</strong><br><span style="font-size:11px;color:#888;">${fmt(u.points || 0)} pts</span></div>
-            <span style="color:#888;">→</span>
-          </div>
-        `;
-      }
-    }
-    container.innerHTML = html || '<div style="text-align:center;color:#888;padding:20px;">Nenhum seguidor</div>';
-  }
-  
-  showModal('modal-seguidores');
-}
-
-// Mostrar lista de quem está seguindo
-async function showFollowing() {
-  const uid = viewingUserId || STATE.user?.uid;
-  if (!uid) return;
-  
-  const snap = await db.ref('seguidores/' + uid).once('value');
-  const data = snap.val();
-  const container = $('seguindo-list');
-  if (!container) return;
-  
-  if (!data) {
-    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Não segue ninguém</div>';
-  } else {
-    const seguindo = Object.keys(data);
-    let html = '';
-    for (const fid of seguindo) {
-      const uSnap = await db.ref('usuarios/' + fid).once('value');
-      const u = uSnap.val();
-      if (u) {
-        html += `
-          <div onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #eee;cursor:pointer;">
-            <div style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${u.avatar || '?'}</div>
-            <div style="flex:1;"><strong>${esc(u.username || '?')}</strong><br><span style="font-size:11px;color:#888;">${fmt(u.points || 0)} pts</span></div>
-            <span style="color:#888;">→</span>
-          </div>
-        `;
-      }
-    }
-    container.innerHTML = html || '<div style="text-align:center;color:#888;padding:20px;">Não segue ninguém</div>';
-  }
-  
-  showModal('modal-seguindo');
-}
-
-// Atualizar contagem de seguidores no perfil
-async function updateFollowCounts() {
-  if (!STATE.userData) return;
-  
-  const segSnap = await db.ref('seguindo/' + STATE.user.uid).once('value');
-  const segData = segSnap.val();
-  const segCount = segData ? Object.keys(segData).length : 0;
-  
-  const seguSnap = await db.ref('seguidores/' + STATE.user.uid).once('value');
-  const seguData = seguSnap.val();
-  const seguCount = seguData ? Object.keys(seguData).length : 0;
-  
-  txt('count-seguidores', segCount);
-  txt('count-seguindo', seguCount);
-  txt('pstat-seguidores', segCount);
-  
-  // Atualizar no banco
-  await db.ref('usuarios/' + STATE.user.uid).update({ seguidores: segCount });
-}
-
-// Modificar loadPerfil para carregar contagens
-const originalLoadPerfil = loadPerfil;
-loadPerfil = async function() {
-  await originalLoadPerfil();
-  viewingUserId = null;
-  hide('follow-section');
-  await updateFollowCounts();
-};
-
-// Adicionar clique nos nomes do ranking
-const originalLoadRanking = loadRanking;
-loadRanking = async function() {
-  await originalLoadRanking();
-  // Adicionar onclick nos itens do ranking
-  setTimeout(() => {
-    document.querySelectorAll('#ranking-list > div').forEach(el => {
-      if (!el.onclick) {
-        el.style.cursor = 'pointer';
-        el.addEventListener('click', function() {
-          const uid = this.getAttribute('data-uid');
-          if (uid) verPerfil(uid);
-        });
-      }
-    });
-  }, 500);
-};
-
-// Adicionar data-uid nos itens do ranking
-const originalRenderRanking = loadRanking;
-loadRanking = async function() {
-  db.ref('usuarios').on('value', async (snap) => {
-    const u = snap.val(); if (!u) return;
-    const arr = Object.values(u).sort((a,b)=>(b.points||0)-(a.points||0));
-    
-    // Pódio (mantém igual)
-    const setP = (n, u) => {
-      if (!u) return;
-      txt('podio'+n+'-av', u.avatar||'?');
-      txt('podio'+n+'-name', (u.username||'').split(' ')[0]);
-      txt('podio'+n+'-pts', fmt(u.points));
-    };
-    setP(1,arr[0]); setP(2,arr[1]); setP(3,arr[2]);
-    
-    const pos = arr.findIndex(u=>u.uid===STATE.user?.uid);
-    txt('my-rank-num', pos>=0?'#'+(pos+1):'#--');
-    txt('my-rank-pts', fmt(arr[pos]?.points||0));
-    
-    const c = $('ranking-list'); if (!c) return;
-    c.innerHTML = arr.slice(0,50).map((u,i) => `
-      <div data-uid="${u.uid}" onclick="verPerfil('${u.uid}')" style="background:white; border-radius:10px; padding:12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.04); ${u.uid===STATE.user?.uid?'background:#ede9fe;':''}">
-        <span style="font-weight:800; color:#888; width:24px;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>
-        <div style="width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${esc(u.avatar||'?')}</div>
-        <div style="flex:1;"><strong>${esc(u.username||'?')}</strong> ${u.uid===STATE.user?.uid?'(Você)':''}</div>
-        <span style="font-weight:700;color:#6C5CE7;">${fmt(u.points)} pts</span>
-      </div>
-    `).join('');
-  });
-};
-
-console.log('✅ Sistema de amizade adicionado!');
 console.log('✅ Sexta-Feira Studies PRONTO!');
