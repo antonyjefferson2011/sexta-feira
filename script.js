@@ -1,4 +1,7 @@
 // ==================== FIREBASE CONFIG ====================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getDatabase, ref, push, set, get, update, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
 const firebaseConfig = {
     apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
     authDomain: "sexta-feira-fb01a.firebaseapp.com",
@@ -10,40 +13,10 @@ const firebaseConfig = {
     measurementId: "G-DEZ5ZESQH7"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// ==================== LOCALSTORAGE MANAGER ====================
-class StorageManager {
-    constructor() {
-        this.initializeStorage();
-    }
-
-    initializeStorage() {
-        if (!localStorage.getItem('currentUser')) {
-            localStorage.setItem('currentUser', JSON.stringify(null));
-        }
-    }
-
-    getCurrentUser() {
-        return JSON.parse(localStorage.getItem('currentUser'));
-    }
-
-    setCurrentUser(user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-    }
-
-    clearCurrentUser() {
-        localStorage.setItem('currentUser', JSON.stringify(null));
-    }
-
-    generateId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
-}
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // ==================== GLOBAL STATE ====================
-const storage = new StorageManager();
 let currentUser = null;
 let currentSubject = null;
 let currentQuiz = null;
@@ -65,12 +38,11 @@ let notificationsListener = null;
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ App iniciado com Firebase');
     setupAuthEventListeners();
-    setupAppEventListeners();
     setupNavigationListeners();
     
-    const savedUser = storage.getCurrentUser();
+    const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
-        currentUser = savedUser;
+        currentUser = JSON.parse(savedUser);
         showApp();
         updateUserDisplay();
         loadHomeData();
@@ -159,10 +131,11 @@ async function handleLogin() {
     btn.textContent = 'Entrando...';
 
     try {
-        const snapshot = await db.ref('users').orderByChild('name').equalTo(username).once('value');
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
         
         if (!snapshot.exists()) {
-            showAuthError('Usuário não encontrado');
+            showAuthError('Nenhum usuário cadastrado');
             btn.disabled = false;
             btn.textContent = 'Entrar na Plataforma';
             return;
@@ -172,21 +145,22 @@ async function handleLogin() {
         let userId = null;
 
         snapshot.forEach(child => {
-            if (child.val().password === password) {
-                userData = child.val();
+            const user = child.val();
+            if (user.name.toLowerCase() === username.toLowerCase() && user.password === password) {
+                userData = user;
                 userId = child.key;
             }
         });
 
         if (!userData) {
-            showAuthError('Senha incorreta');
+            showAuthError('Usuário ou senha incorretos');
             btn.disabled = false;
             btn.textContent = 'Entrar na Plataforma';
             return;
         }
 
         currentUser = { id: userId, ...userData };
-        storage.setCurrentUser(currentUser);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
         console.log('✅ Login realizado com sucesso:', userId);
 
         document.getElementById('login-email').value = '';
@@ -218,17 +192,6 @@ async function handleSignup() {
         return;
     }
 
-    // Verificar se nome já existe
-    try {
-        const snapshot = await db.ref('users').orderByChild('name').equalTo(name).once('value');
-        if (snapshot.exists()) {
-            showAuthNameError('Este nome já está em uso. Escolha outro');
-            return;
-        }
-    } catch (error) {
-        console.error('❌ Erro ao verificar nome:', error);
-    }
-
     if (password.length < 6) {
         showAuthError('Senha deve ter pelo menos 6 caracteres', true);
         return;
@@ -244,6 +207,18 @@ async function handleSignup() {
     btn.textContent = 'Criando...';
 
     try {
+        // Verificar se nome já existe
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
+        
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                if (child.val().name.toLowerCase() === name.toLowerCase()) {
+                    throw new Error('Nome já existe');
+                }
+            });
+        }
+
         const newUser = {
             name: name,
             password: password,
@@ -251,11 +226,12 @@ async function handleSignup() {
             points: 0,
             friends: [],
             followers: [],
+            following: [],
             createdAt: new Date().toISOString()
         };
 
-        const userRef = db.ref('users').push();
-        await userRef.set(newUser);
+        const userRef = push(ref(db, 'users'));
+        await set(userRef, newUser);
 
         console.log('✅ Usuário criado com sucesso:', userRef.key);
 
@@ -270,7 +246,11 @@ async function handleSignup() {
         }, 1500);
     } catch (error) {
         console.error('❌ Erro de cadastro:', error);
-        showAuthError('Erro ao criar conta', true);
+        if (error.message === 'Nome já existe') {
+            showAuthNameError('Este nome já está em uso. Escolha outro');
+        } else {
+            showAuthError('Erro ao criar conta', true);
+        }
     } finally {
         btn.disabled = false;
         btn.textContent = 'Criar Conta';
@@ -279,12 +259,11 @@ async function handleSignup() {
 
 function handleLogout() {
     currentUser = null;
-    storage.clearCurrentUser();
+    localStorage.removeItem('currentUser');
     admLoggedIn = false;
     
-    // Remover listener de notificações
     if (notificationsListener) {
-        notificationsListener.off();
+        notificationsListener();
     }
     
     console.log('✅ Logout realizado com sucesso');
@@ -312,8 +291,6 @@ function updateUserDisplay() {
 function showScreen(screenName) {
     document.querySelectorAll('.screen').forEach(s => {
         s.classList.remove('active');
-        const containers = s.querySelectorAll('[id$="-container"], [id$="-list"], [id$="-grid"]');
-        containers.forEach(c => c.innerHTML = '');
     });
 
     document.getElementById('screen-' + screenName).classList.add('active');
@@ -330,8 +307,6 @@ function showScreen(screenName) {
         loadRanking();
     } else if (screenName === 'discover') {
         loadDiscover();
-    } else if (screenName === 'chat') {
-        loadChats();
     } else if (screenName === 'profile') {
         loadProfile();
     } else if (screenName === 'adm') {
@@ -343,13 +318,13 @@ function showScreen(screenName) {
 function setupNotificationsListener() {
     if (!currentUser) return;
 
-    const notificationsRef = db.ref(`notifications/${currentUser.id}`);
+    const notificationsRef = ref(db, `notifications/${currentUser.id}`);
     
-    notificationsListener = notificationsRef.on('child_added', (snapshot) => {
-        const notification = snapshot.val();
-        notificationsCount++;
-        updateNotificationBell();
-        console.log('🔔 Nova notificação:', notification);
+    notificationsListener = onValue(notificationsRef, (snapshot) => {
+        if (snapshot.exists()) {
+            notificationsCount = Object.keys(snapshot.val()).length;
+            updateNotificationBell();
+        }
     });
 }
 
@@ -357,7 +332,7 @@ function updateNotificationBell() {
     const bellIcon = document.querySelector('.notification-bell');
     if (bellIcon) {
         if (notificationsCount > 0) {
-            bellIcon.innerHTML = `🔔 <span class="notification-badge">${notificationsCount}</span>`;
+            bellIcon.innerHTML = `🔔 <span class="notification-badge" style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;">${notificationsCount}</span>`;
         } else {
             bellIcon.innerHTML = '🔔';
         }
@@ -368,15 +343,18 @@ async function loadNotifications() {
     if (!currentUser) return;
 
     try {
-        const snapshot = await db.ref(`notifications/${currentUser.id}`).once('value');
+        const notificationsRef = ref(db, `notifications/${currentUser.id}`);
+        const snapshot = await get(notificationsRef);
         const notifications = [];
 
-        snapshot.forEach(child => {
-            notifications.push({
-                id: child.key,
-                ...child.val()
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                notifications.push({
+                    id: child.key,
+                    ...child.val()
+                });
             });
-        });
+        }
 
         displayNotifications(notifications);
     } catch (error) {
@@ -404,9 +382,10 @@ function displayNotifications(notifications) {
     } else {
         let html = '<div style="padding: 16px;">';
         notifications.forEach(notif => {
+            const icon = notif.type === 'like' ? '❤️' : '👤';
             html += `
                 <div style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
-                    <strong>${notif.type === 'like' ? '❤️' : '👤'}</strong> ${notif.message}
+                    <strong>${icon}</strong> ${notif.message}
                     <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">${new Date(notif.timestamp).toLocaleString('pt-BR')}</div>
                 </div>
             `;
@@ -415,7 +394,6 @@ function displayNotifications(notifications) {
         modal.innerHTML = html;
     }
 
-    // Remover modal anterior se existir
     const oldModal = document.querySelector('.notifications-modal');
     if (oldModal) oldModal.remove();
 
@@ -434,17 +412,22 @@ async function loadHomeData() {
     document.getElementById('welcome-points').textContent = currentUser.points || 0;
 
     try {
-        const snapshot = await db.ref('subjects').limitToFirst(3).once('value');
+        const subjectsRef = ref(db, 'subjects');
+        const snapshot = await get(subjectsRef);
         const subjectsList = document.getElementById('home-subjects');
         subjectsList.innerHTML = '';
 
         if (!snapshot.exists()) {
             subjectsList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Nenhuma matéria disponível</p>';
         } else {
+            let count = 0;
             snapshot.forEach(child => {
-                const subject = child.val();
-                const card = createSubjectCard(child.key, subject);
-                subjectsList.appendChild(card);
+                if (count < 3) {
+                    const subject = child.val();
+                    const card = createSubjectCard(child.key, subject);
+                    subjectsList.appendChild(card);
+                    count++;
+                }
             });
         }
     } catch (error) {
@@ -455,15 +438,18 @@ async function loadHomeData() {
 // ==================== LOAD ALL DATA ====================
 async function loadAllUsers() {
     try {
-        const snapshot = await db.ref('users').once('value');
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
         allUsers = [];
 
-        snapshot.forEach(child => {
-            allUsers.push({
-                id: child.key,
-                ...child.val()
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                allUsers.push({
+                    id: child.key,
+                    ...child.val()
+                });
             });
-        });
+        }
 
         console.log('✅ Usuários carregados:', allUsers.length);
     } catch (error) {
@@ -473,15 +459,18 @@ async function loadAllUsers() {
 
 async function loadAllSubjects() {
     try {
-        const snapshot = await db.ref('subjects').once('value');
+        const subjectsRef = ref(db, 'subjects');
+        const snapshot = await get(subjectsRef);
         allSubjects = [];
 
-        snapshot.forEach(child => {
-            allSubjects.push({
-                id: child.key,
-                ...child.val()
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                allSubjects.push({
+                    id: child.key,
+                    ...child.val()
+                });
             });
-        });
+        }
 
         console.log('✅ Matérias carregadas:', allSubjects.length);
     } catch (error) {
@@ -519,7 +508,7 @@ async function createSubject() {
             likes: 0
         };
 
-        await db.ref('subjects').push().set(newSubject);
+        await push(ref(db, 'subjects'), newSubject);
 
         console.log('✅ Matéria criada com sucesso');
         closeCreateSubject();
@@ -534,7 +523,8 @@ async function createSubject() {
 
 async function loadSubjects() {
     try {
-        const snapshot = await db.ref('subjects').once('value');
+        const subjectsRef = ref(db, 'subjects');
+        const snapshot = await get(subjectsRef);
         const container = document.getElementById('subjects-container');
         const detail = document.getElementById('subject-detail');
 
@@ -569,7 +559,7 @@ function createSubjectCard(id, subject) {
         <h3>${subject.title}</h3>
         <p>${subject.description || 'Sem descrição'}</p>
         <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
-            <button class="btn btn-icon" onclick="likeSubject('${id}')" style="font-size: 16px;">❤️</button>
+            <button type="button" class="btn btn-icon" style="font-size: 16px;" onclick="likeSubject('${id}')">❤️</button>
             <span style="font-size: 12px; color: #64748b;">${subject.likes || 0}</span>
         </div>
     `;
@@ -584,15 +574,15 @@ function createSubjectCard(id, subject) {
 
 async function likeSubject(subjectId) {
     try {
-        const snapshot = await db.ref(`subjects/${subjectId}`).once('value');
+        const subjectRef = ref(db, `subjects/${subjectId}`);
+        const snapshot = await get(subjectRef);
         const subject = snapshot.val();
         const newLikes = (subject.likes || 0) + 1;
 
-        await db.ref(`subjects/${subjectId}/likes`).set(newLikes);
+        await update(subjectRef, { likes: newLikes });
 
-        // Criar notificação para o criador
         if (subject.createdBy !== currentUser.id) {
-            await db.ref(`notifications/${subject.createdBy}`).push().set({
+            await push(ref(db, `notifications/${subject.createdBy}`), {
                 type: 'like',
                 message: `${currentUser.name} curtiu seu quiz "${subject.title}"`,
                 timestamp: new Date().toISOString(),
@@ -600,11 +590,11 @@ async function likeSubject(subjectId) {
             });
         }
 
-        console.log('✅ Quiz curtido com sucesso');
+        console.log('✅ Matéria curtida com sucesso');
         loadSubjects();
-        showNotification('Quiz curtido!', 'success');
+        showNotification('Matéria curtida!', 'success');
     } catch (error) {
-        console.error('❌ Erro ao curtir quiz:', error);
+        console.error('❌ Erro ao curtir matéria:', error);
     }
 }
 
@@ -647,11 +637,11 @@ async function saveTopic() {
             likes: 0
         };
 
-        await db.ref('topics').push().set(newTopic);
+        await push(ref(db, 'topics'), newTopic);
 
         console.log('✅ Tópico criado com sucesso');
         closeCreateTopic();
-        loadTopics();
+        await loadTopics();
         showNotification('Tópico criado com sucesso!', 'success');
     } catch (error) {
         console.error('❌ Erro ao salvar tópico:', error);
@@ -661,22 +651,26 @@ async function saveTopic() {
 
 async function loadTopics() {
     try {
-        const snapshot = await db.ref('topics').orderByChild('subjectId').equalTo(currentSubject.id).once('value');
+        const topicsRef = ref(db, 'topics');
+        const snapshot = await get(topicsRef);
         const topicsList = document.getElementById('topics-list');
         topicsList.innerHTML = '';
 
         if (!snapshot.exists()) {
             topicsList.innerHTML = '<p style="color: #64748b;">Nenhum tópico nesta matéria</p>';
-        } else {
-            snapshot.forEach(child => {
-                const topic = child.val();
+            return;
+        }
+
+        snapshot.forEach(child => {
+            const topic = child.val();
+            if (topic.subjectId === currentSubject.id) {
                 const item = document.createElement('div');
                 item.className = 'topic-item';
                 item.innerHTML = `
                     <h5>${topic.title}</h5>
                     <p>${topic.content.substring(0, 100)}...</p>
                     <div style="margin-top: 8px; display: flex; gap: 8px; align-items: center;">
-                        <button class="btn btn-icon" onclick="likeTopic('${child.key}')" style="font-size: 14px;">❤️</button>
+                        <button type="button" class="btn btn-icon" style="font-size: 14px;" onclick="likeTopic('${child.key}')">❤️</button>
                         <span style="font-size: 12px; color: #64748b;">${topic.likes || 0}</span>
                     </div>
                 `;
@@ -687,8 +681,8 @@ async function loadTopics() {
                     }
                 });
                 topicsList.appendChild(item);
-            });
-        }
+            }
+        });
     } catch (error) {
         console.error('❌ Erro ao carregar tópicos:', error);
     }
@@ -696,15 +690,15 @@ async function loadTopics() {
 
 async function likeTopic(topicId) {
     try {
-        const snapshot = await db.ref(`topics/${topicId}`).once('value');
+        const topicRef = ref(db, `topics/${topicId}`);
+        const snapshot = await get(topicRef);
         const topic = snapshot.val();
         const newLikes = (topic.likes || 0) + 1;
 
-        await db.ref(`topics/${topicId}/likes`).set(newLikes);
+        await update(topicRef, { likes: newLikes });
 
-        // Criar notificação para o criador
         if (topic.createdBy !== currentUser.id) {
-            await db.ref(`notifications/${topic.createdBy}`).push().set({
+            await push(ref(db, `notifications/${topic.createdBy}`), {
                 type: 'like',
                 message: `${currentUser.name} curtiu seu tópico "${topic.title}"`,
                 timestamp: new Date().toISOString(),
@@ -713,7 +707,7 @@ async function likeTopic(topicId) {
         }
 
         console.log('✅ Tópico curtido com sucesso');
-        loadTopics();
+        await loadTopics();
         showNotification('Tópico curtido!', 'success');
     } catch (error) {
         console.error('❌ Erro ao curtir tópico:', error);
@@ -820,11 +814,11 @@ async function saveQuiz() {
             likes: 0
         };
 
-        await db.ref('quizzes').push().set(newQuiz);
+        await push(ref(db, 'quizzes'), newQuiz);
 
         console.log('✅ Quiz criado com sucesso');
         closeCreateQuiz();
-        loadQuizzes();
+        await loadQuizzes();
         showNotification('Quiz criado com sucesso!', 'success');
     } catch (error) {
         console.error('❌ Erro ao salvar quiz:', error);
@@ -834,29 +828,32 @@ async function saveQuiz() {
 
 async function loadQuizzes() {
     try {
-        const snapshot = await db.ref('quizzes').orderByChild('subjectId').equalTo(currentSubject.id).once('value');
+        const quizzesRef = ref(db, 'quizzes');
+        const snapshot = await get(quizzesRef);
         const quizzesList = document.getElementById('quizzes-list');
         quizzesList.innerHTML = '';
 
         if (!snapshot.exists()) {
             quizzesList.innerHTML = '<p style="color: #64748b;">Nenhum quiz nesta matéria</p>';
-        } else {
-            snapshot.forEach(child => {
-                const quiz = child.val();
+            return;
+        }
+
+        snapshot.forEach(child => {
+            const quiz = child.val();
+            if (quiz.subjectId === currentSubject.id) {
                 const item = document.createElement('div');
                 item.className = 'quiz-item';
                 item.innerHTML = `
                     <span class="quiz-item-name">${quiz.title}</span>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <button class="btn btn-icon" onclick="likeQuiz('${child.key}')" style="font-size: 14px;">❤️</button>
+                        <button type="button" class="btn btn-icon" style="font-size: 14px;" onclick="likeQuiz('${child.key}')">❤️</button>
                         <span style="font-size: 12px; color: #64748b;">${quiz.likes || 0}</span>
-                        <button class="btn btn-primary btn-small">Jogar</button>
+                        <button type="button" class="btn btn-primary btn-small" onclick="startQuiz('${child.key}')">Jogar</button>
                     </div>
                 `;
-                item.querySelector('.btn-primary').addEventListener('click', () => startQuiz(child.key));
                 quizzesList.appendChild(item);
-            });
-        }
+            }
+        });
     } catch (error) {
         console.error('❌ Erro ao carregar quizzes:', error);
     }
@@ -864,15 +861,15 @@ async function loadQuizzes() {
 
 async function likeQuiz(quizId) {
     try {
-        const snapshot = await db.ref(`quizzes/${quizId}`).once('value');
+        const quizRef = ref(db, `quizzes/${quizId}`);
+        const snapshot = await get(quizRef);
         const quiz = snapshot.val();
         const newLikes = (quiz.likes || 0) + 1;
 
-        await db.ref(`quizzes/${quizId}/likes`).set(newLikes);
+        await update(quizRef, { likes: newLikes });
 
-        // Criar notificação para o criador
         if (quiz.createdBy !== currentUser.id) {
-            await db.ref(`notifications/${quiz.createdBy}`).push().set({
+            await push(ref(db, `notifications/${quiz.createdBy}`), {
                 type: 'like',
                 message: `${currentUser.name} curtiu seu quiz "${quiz.title}"`,
                 timestamp: new Date().toISOString(),
@@ -881,7 +878,7 @@ async function likeQuiz(quizId) {
         }
 
         console.log('✅ Quiz curtido com sucesso');
-        loadQuizzes();
+        await loadQuizzes();
         showNotification('Quiz curtido!', 'success');
     } catch (error) {
         console.error('❌ Erro ao curtir quiz:', error);
@@ -890,7 +887,8 @@ async function likeQuiz(quizId) {
 
 async function startQuiz(quizId) {
     try {
-        const snapshot = await db.ref(`quizzes/${quizId}`).once('value');
+        const quizRef = ref(db, `quizzes/${quizId}`);
+        const snapshot = await get(quizRef);
         const quiz = snapshot.val();
 
         if (!quiz) {
@@ -931,6 +929,7 @@ function showQuestion() {
 
     question.alternatives.forEach((alt, index) => {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = 'answer-btn';
         btn.textContent = alt;
         btn.addEventListener('click', () => selectAnswer(index, btn));
@@ -974,12 +973,11 @@ function nextQuestion() {
 
 async function finishQuiz() {
     try {
-        // Atualizar pontos do usuário no Firebase
         const newPoints = (currentUser.points || 0) + currentScore;
-        await db.ref(`users/${currentUser.id}/points`).set(newPoints);
+        await update(ref(db, `users/${currentUser.id}`), { points: newPoints });
 
         currentUser.points = newPoints;
-        storage.setCurrentUser(currentUser);
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
         document.getElementById('result-score').textContent = currentScore;
         document.getElementById('result-correct').textContent = currentCorrect;
@@ -1001,7 +999,7 @@ async function finishQuiz() {
         console.log('✅ Quiz finalizado com sucesso. Pontuação:', currentScore);
         showScreen('result');
         updateUserDisplay();
-        loadAllUsers();
+        await loadAllUsers();
     } catch (error) {
         console.error('❌ Erro ao finalizar quiz:', error);
     }
@@ -1018,17 +1016,19 @@ function backToSubjects() {
 // ==================== RANKING ====================
 async function loadRanking() {
     try {
-        const snapshot = await db.ref('users').orderByChild('points').once('value');
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
         const users = [];
 
-        snapshot.forEach(child => {
-            users.push({
-                id: child.key,
-                ...child.val()
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                users.push({
+                    id: child.key,
+                    ...child.val()
+                });
             });
-        });
+        }
 
-        // Ordenar do maior para o menor
         users.sort((a, b) => (b.points || 0) - (a.points || 0));
 
         const rankingContainer = document.getElementById('ranking-container');
@@ -1110,15 +1110,18 @@ function handleDiscoverSearch(e) {
 
 async function displayDiscoverSubjects(query) {
     try {
-        const snapshot = await db.ref('subjects').once('value');
+        const subjectsRef = ref(db, 'subjects');
+        const snapshot = await get(subjectsRef);
         let subjects = [];
 
-        snapshot.forEach(child => {
-            subjects.push({
-                id: child.key,
-                ...child.val()
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                subjects.push({
+                    id: child.key,
+                    ...child.val()
+                });
             });
-        });
+        }
 
         if (query) {
             subjects = subjects.filter(s => 
@@ -1144,7 +1147,7 @@ async function displayDiscoverSubjects(query) {
                     <p style="font-size: 12px; color: #94a3b8; margin-top: 8px;">Por ${subject.createdByName || 'Anônimo'}</p>
                 </div>
                 <div class="discover-item-actions">
-                    <button class="btn btn-primary btn-small" onclick="selectSubjectFromDiscover('${subject.id}')">Acessar</button>
+                    <button type="button" class="btn btn-primary btn-small" onclick="selectSubjectFromDiscover('${subject.id}')">Acessar</button>
                 </div>
             `;
             list.appendChild(item);
@@ -1156,17 +1159,20 @@ async function displayDiscoverSubjects(query) {
 
 async function displayDiscoverPeople(query) {
     try {
-        const snapshot = await db.ref('users').once('value');
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
         let people = [];
 
-        snapshot.forEach(child => {
-            if (child.key !== currentUser.id) {
-                people.push({
-                    id: child.key,
-                    ...child.val()
-                });
-            }
-        });
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                if (child.key !== currentUser.id) {
+                    people.push({
+                        id: child.key,
+                        ...child.val()
+                    });
+                }
+            });
+        }
 
         if (query) {
             people = people.filter(u => 
@@ -1193,7 +1199,7 @@ async function displayDiscoverPeople(query) {
                     <p>${person.class || 'Não definida'} • ${person.points || 0} pontos</p>
                 </div>
                 <div class="discover-item-actions">
-                    <button class="btn ${isFollowing ? 'btn-secondary' : 'btn-primary'} btn-small" onclick="followUser('${person.id}', this)" ${isFollowing ? 'disabled' : ''}>
+                    <button type="button" class="btn ${isFollowing ? 'btn-secondary' : 'btn-primary'} btn-small" onclick="followUser('${person.id}', this)" ${isFollowing ? 'disabled' : ''}>
                         ${isFollowing ? '✓ Seguindo' : '👤 Seguir'}
                     </button>
                 </div>
@@ -1225,17 +1231,15 @@ async function followUser(userId, btn) {
         }
 
         currentUser.following.push(userId);
-        await db.ref(`users/${currentUser.id}/following`).set(currentUser.following);
-        storage.setCurrentUser(currentUser);
+        await update(ref(db, `users/${currentUser.id}`), { following: currentUser.following });
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-        // Adicionar seguidor para o outro usuário
-        const snapshot = await db.ref(`users/${userId}/followers`).once('value');
-        let followers = snapshot.val() || [];
+        const userSnapshot = await get(ref(db, `users/${userId}`));
+        let followers = userSnapshot.val().followers || [];
         followers.push(currentUser.id);
-        await db.ref(`users/${userId}/followers`).set(followers);
+        await update(ref(db, `users/${userId}`), { followers: followers });
 
-        // Criar notificação
-        await db.ref(`notifications/${userId}`).push().set({
+        await push(ref(db, `notifications/${userId}`), {
             type: 'follow',
             message: `${currentUser.name} começou a te seguir`,
             timestamp: new Date().toISOString(),
@@ -1253,76 +1257,6 @@ async function followUser(userId, btn) {
         console.error('❌ Erro ao seguir usuário:', error);
         showNotification('Erro ao seguir usuário', 'error');
     }
-}
-
-// ==================== CHAT ====================
-async function loadChats() {
-    const chatList = document.getElementById('chat-list');
-    const chatWindow = document.getElementById('chat-window');
-
-    if (currentChat) {
-        chatList.style.display = 'none';
-        chatWindow.style.display = 'flex';
-        await loadChatMessages();
-    } else {
-        chatList.style.display = 'grid';
-        chatWindow.style.display = 'none';
-
-        const friends = currentUser.friends || [];
-        chatList.innerHTML = '';
-
-        if (friends.length === 0) {
-            chatList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhum amigo para conversar. Adicione amigos na aba Descobrir!</p>';
-        } else {
-            for (const friendId of friends) {
-                try {
-                    const snapshot = await db.ref(`users/${friendId}`).once('value');
-                    const friend = snapshot.val();
-                    if (friend) {
-                        const item = document.createElement('div');
-                        item.className = 'chat-item';
-                        item.innerHTML = `
-                            <div class="chat-item-info">
-                                <h3>${friend.name}</h3>
-                                <p>${friend.class}</p>
-                            </div>
-                            <span class="chat-item-time">💬</span>
-                        `;
-                        item.addEventListener('click', () => {
-                            currentChat = { id: friendId, name: friend.name };
-                            loadChats();
-                        });
-                        chatList.appendChild(item);
-                    }
-                } catch (error) {
-                    console.error('❌ Erro ao carregar amigo:', error);
-                }
-            }
-        }
-    }
-}
-
-async function loadChatMessages() {
-    document.getElementById('chat-title').textContent = currentChat.name;
-    const messagesContainer = document.getElementById('messages-container');
-    messagesContainer.innerHTML = '';
-    messagesContainer.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma mensagem ainda. Comece a conversa!</p>';
-}
-
-function backToChats() {
-    currentChat = null;
-    loadChats();
-}
-
-function sendMessage() {
-    const input = document.getElementById('message-input');
-    const message = input.value.trim();
-
-    if (!message) return;
-
-    console.log('✅ Mensagem enviada');
-    input.value = '';
-    loadChatMessages();
 }
 
 // ==================== PROFILE ====================
@@ -1351,8 +1285,8 @@ async function loadFriends(friendIds) {
 
     for (const friendId of friendIds) {
         try {
-            const snapshot = await db.ref(`users/${friendId}`).once('value');
-            const friend = snapshot.val();
+            const friendSnapshot = await get(ref(db, `users/${friendId}`));
+            const friend = friendSnapshot.val();
             if (friend) {
                 const item = document.createElement('div');
                 item.className = 'friend-item';
@@ -1362,7 +1296,7 @@ async function loadFriends(friendIds) {
                         <p>${friend.class}</p>
                     </div>
                     <div class="friend-actions">
-                        <button class="btn btn-primary btn-small" onclick="removeFriend('${friendId}')">Remover</button>
+                        <button type="button" class="btn btn-primary btn-small" onclick="removeFriend('${friendId}')">Remover</button>
                     </div>
                 `;
                 friendsList.appendChild(item);
@@ -1378,8 +1312,8 @@ function openEditProfile() {
     
     if (newClass !== null && newClass.trim() !== '') {
         currentUser.class = newClass.trim();
-        db.ref(`users/${currentUser.id}/class`).set(currentUser.class);
-        storage.setCurrentUser(currentUser);
+        update(ref(db, `users/${currentUser.id}`), { class: currentUser.class });
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
         console.log('✅ Perfil atualizado com sucesso');
         loadProfile();
@@ -1398,8 +1332,8 @@ function openChangePassword() {
         }
 
         currentUser.password = newPassword;
-        db.ref(`users/${currentUser.id}/password`).set(currentUser.password);
-        storage.setCurrentUser(currentUser);
+        update(ref(db, `users/${currentUser.id}`), { password: currentUser.password });
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
         
         console.log('✅ Senha alterada com sucesso');
         showNotification('Senha alterada com sucesso!', 'success');
@@ -1410,8 +1344,7 @@ function openAddFriend() {
     const friendName = prompt('Digite o nome do amigo que deseja adicionar:');
     
     if (friendName !== null && friendName.trim() !== '') {
-        // Buscar usuário pelo nome
-        db.ref('users').orderByChild('name').equalTo(friendName.trim()).once('value', async (snapshot) => {
+        get(ref(db, 'users')).then(snapshot => {
             if (!snapshot.exists()) {
                 showNotification('Usuário não encontrado', 'error');
                 return;
@@ -1421,9 +1354,16 @@ function openAddFriend() {
             let friendId = null;
 
             snapshot.forEach(child => {
-                friend = child.val();
-                friendId = child.key;
+                if (child.val().name.toLowerCase() === friendName.trim().toLowerCase()) {
+                    friend = child.val();
+                    friendId = child.key;
+                }
             });
+
+            if (!friend) {
+                showNotification('Usuário não encontrado', 'error');
+                return;
+            }
 
             if (friendId === currentUser.id) {
                 showNotification('Você não pode adicionar a si mesmo', 'error');
@@ -1440,8 +1380,8 @@ function openAddFriend() {
             }
 
             currentUser.friends.push(friendId);
-            await db.ref(`users/${currentUser.id}/friends`).set(currentUser.friends);
-            storage.setCurrentUser(currentUser);
+            update(ref(db, `users/${currentUser.id}`), { friends: currentUser.friends });
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
             console.log('✅ Amigo adicionado com sucesso');
             showNotification('Amigo adicionado com sucesso!', 'success');
@@ -1453,8 +1393,8 @@ function openAddFriend() {
 function removeFriend(friendId) {
     if (confirm('Tem certeza que deseja remover este amigo?')) {
         currentUser.friends = currentUser.friends.filter(id => id !== friendId);
-        db.ref(`users/${currentUser.id}/friends`).set(currentUser.friends);
-        storage.setCurrentUser(currentUser);
+        update(ref(db, `users/${currentUser.id}`), { friends: currentUser.friends });
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
         console.log('✅ Amigo removido com sucesso');
         loadProfile();
@@ -1480,13 +1420,17 @@ async function populateSubjectSelect() {
     select.innerHTML = '<option value="">-- Escolha uma matéria --</option>';
     
     try {
-        const snapshot = await db.ref('subjects').once('value');
-        snapshot.forEach(child => {
-            const option = document.createElement('option');
-            option.value = child.key;
-            option.textContent = child.val().title;
-            select.appendChild(option);
-        });
+        const subjectsRef = ref(db, 'subjects');
+        const snapshot = await get(subjectsRef);
+        
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                const option = document.createElement('option');
+                option.value = child.key;
+                option.textContent = child.val().title;
+                select.appendChild(option);
+            });
+        }
     } catch (error) {
         console.error('❌ Erro ao carregar matérias:', error);
     }
@@ -1525,14 +1469,14 @@ async function depositPoints() {
 
     try {
         currentUser.points = (currentUser.points || 0) + amount;
-        await db.ref(`users/${currentUser.id}/points`).set(currentUser.points);
-        storage.setCurrentUser(currentUser);
+        await update(ref(db, `users/${currentUser.id}`), { points: currentUser.points });
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
         document.getElementById('adm-points-amount').value = '';
         showNotification(`${amount} pontos depositados com sucesso!`, 'success');
         updateUserDisplay();
         loadHomeData();
-        loadAllUsers();
+        await loadAllUsers();
     } catch (error) {
         console.error('❌ Erro ao depositar pontos:', error);
         showNotification('Erro ao depositar pontos', 'error');
@@ -1562,7 +1506,6 @@ async function createQuizFromCode() {
         for (const line of lines) {
             const trimmed = line.trim();
 
-            // Comando /n para nome do quiz
             if (trimmed.startsWith('/n')) {
                 quizTitle = trimmed.substring(2).trim() || 'Quiz Importado';
             } else if (trimmed.startsWith('/q1')) {
@@ -1599,7 +1542,6 @@ async function createQuizFromCode() {
             return;
         }
 
-        // Validar perguntas
         for (const q of questions) {
             if (!q.text || q.alternatives.length < 4) {
                 showNotification('Cada pergunta deve ter 4 alternativas', 'error');
@@ -1607,7 +1549,6 @@ async function createQuizFromCode() {
             }
         }
 
-        // Salvar quiz no Firebase
         const newQuiz = {
             title: quizTitle,
             subjectId: subjectId,
@@ -1618,13 +1559,13 @@ async function createQuizFromCode() {
             likes: 0
         };
 
-        await db.ref('quizzes').push().set(newQuiz);
+        await push(ref(db, 'quizzes'), newQuiz);
 
         console.log('✅ Quiz criado via código com sucesso');
         document.getElementById('adm-quiz-code').value = '';
         document.getElementById('adm-quiz-subject').value = '';
         showNotification('Quiz criado com sucesso!', 'success');
-        loadAdmData();
+        await loadAdmData();
     } catch (error) {
         console.error('❌ Erro ao criar quiz via código:', error);
         showNotification('Erro ao criar quiz. Verifique o formato do código', 'error');
@@ -1634,53 +1575,94 @@ async function createQuizFromCode() {
 async function loadAdmData() {
     try {
         // Carregar matérias
-        const subjectsSnapshot = await db.ref('subjects').once('value');
+        const subjectsRef = ref(db, 'subjects');
+        const subjectsSnapshot = await get(subjectsRef);
         const admSubjects = document.getElementById('adm-subjects');
         admSubjects.innerHTML = '';
 
-        subjectsSnapshot.forEach(child => {
-            const subject = child.val();
-            const item = document.createElement('div');
-            item.className = 'adm-item';
-            item.innerHTML = `
-                <div class="adm-item-info">
-                    <h4>${subject.title}</h4>
-                    <p>${subject.description || 'Sem descrição'}</p>
-                </div>
-                <div class="adm-item-actions">
-                    <button class="btn btn-danger btn-small" onclick="deleteSubject('${child.key}')">Deletar</button>
-                </div>
-            `;
-            admSubjects.appendChild(item);
-        });
+        if (subjectsSnapshot.exists()) {
+            subjectsSnapshot.forEach(child => {
+                const subject = child.val();
+                const item = document.createElement('div');
+                item.className = 'adm-item';
+                item.innerHTML = `
+                    <div class="adm-item-info">
+                        <h4>${subject.title}</h4>
+                        <p>${subject.description || 'Sem descrição'}</p>
+                    </div>
+                    <div class="adm-item-actions">
+                        <button type="button" class="btn btn-danger btn-small" onclick="deleteSubject('${child.key}')">Deletar</button>
+                    </div>
+                `;
+                admSubjects.appendChild(item);
+            });
+        }
 
         // Carregar quizzes
-        const quizzesSnapshot = await db.ref('quizzes').once('value');
+        const quizzesRef = ref(db, 'quizzes');
+        const quizzesSnapshot = await get(quizzesRef);
         const admQuizzes = document.getElementById('adm-quizzes');
         admQuizzes.innerHTML = '';
 
-        quizzesSnapshot.forEach(child => {
-            const quiz = child.val();
-            const item = document.createElement('div');
-            item.className = 'adm-item';
-            item.innerHTML = `
-                <div class="adm-item-info">
-                    <h4>${quiz.title}</h4>
-                    <p>${quiz.questions.length} perguntas</p>
-                </div>
-                <div class="adm-item-actions">
-                    <button class="btn btn-danger btn-small" onclick="deleteQuiz('${child.key}')">Deletar</button>
-                </div>
-            `;
-            admQuizzes.appendChild(item);
-        });
+        if (quizzesSnapshot.exists()) {
+            quizzesSnapshot.forEach(child => {
+                const quiz = child.val();
+                const item = document.createElement('div');
+                item.className = 'adm-item';
+                item.innerHTML = `
+                    <div class="adm-item-info">
+                        <h4>${quiz.title}</h4>
+                        <p>${quiz.questions.length} perguntas</p>
+                    </div>
+                    <div class="adm-item-actions">
+                        <button type="button" class="btn btn-danger btn-small" onclick="deleteQuiz('${child.key}')">Deletar</button>
+                    </div>
+                `;
+                admQuizzes.appendChild(item);
+            });
+        }
 
         // Carregar usuários
-        const usersSnapshot = await db.ref('users').once('value');
+        const usersRef = ref(db, 'users');
+        const usersSnapshot = await get(usersRef);
         const admUsers = document.getElementById('adm-users');
         admUsers.innerHTML = '';
 
-        usersSnapshot.forEach(child => {
-            const user = child.val();
-            const item = document.createElement('div');
-            
+        if (usersSnapshot.exists()) {
+            usersSnapshot.forEach(child => {
+                const user = child.val();
+                const item = document.createElement('div');
+                item.className = 'adm-item';
+                item.innerHTML = `
+                    <div class="adm-item-info">
+                        <h4>${user.name}</h4>
+                        <p>${user.class} • ${user.points || 0} pontos</p>
+                    </div>
+                    <div class="adm-item-actions">
+                        <button type="button" class="btn btn-danger btn-small" onclick="deleteUser('${child.key}')">Deletar</button>
+                    </div>
+                `;
+                admUsers.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados ADM:', error);
+    }
+}
+
+async function deleteSubject(id) {
+    if (confirm('Tem certeza que deseja deletar esta matéria?')) {
+        try {
+            await set(ref(db, `subjects/${id}`), null);
+            console.log('✅ Matéria deletada');
+            await loadAdmData();
+            await loadAllSubjects();
+            showNotification('Matéria deletada', 'success');
+        } catch (error) {
+            console.error('❌ Erro ao deletar matéria:', error);
+        }
+    }
+}
+
+async function deleteQuiz(id) {
+    if (confirm('
