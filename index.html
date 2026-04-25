@@ -18,7 +18,7 @@
                 <input type="password" id="loginPassword" placeholder="Senha" class="auth-input">
                 <button id="loginBtn" class="auth-button">Entrar</button>
                 <button id="googleLoginBtn" class="auth-button google-btn">🔐 Entrar com Google</button>
-                <p class="auth-toggle">Não tem conta? <a href="#" onclick="toggleAuthForm()">Cadastre-se</a></p>
+                <p class="auth-toggle">Não tem conta? <a href="#" onclick="toggleAuthForm(event)">Cadastre-se</a></p>
             </div>
 
             <div id="signupForm" class="auth-form" style="display:none;">
@@ -29,7 +29,7 @@
                 <input type="text" id="signupClass" placeholder="Sala (ex: 9A)" class="auth-input">
                 <button id="signupBtn" class="auth-button">Criar Conta</button>
                 <button id="googleSignupBtn" class="auth-button google-btn">🔐 Cadastrar com Google</button>
-                <p class="auth-toggle">Já tem conta? <a href="#" onclick="toggleAuthForm()">Faça login</a></p>
+                <p class="auth-toggle">Já tem conta? <a href="#" onclick="toggleAuthForm(event)">Faça login</a></p>
             </div>
 
             <div id="authError" class="auth-error"></div>
@@ -41,7 +41,7 @@
         <!-- HEADER -->
         <header class="app-header">
             <div class="header-left">
-                <h1>📚 Sexta-Feira Studies</h1>
+                <h1>📚 Sexta-Feira</h1>
             </div>
             <div class="header-right">
                 <span id="userNameHeader" class="user-name"></span>
@@ -51,10 +51,10 @@
 
         <!-- NAVEGAÇÃO -->
         <nav class="app-nav">
-            <button class="nav-btn active" onclick="showScreen('home')">🏠 Home</button>
-            <button class="nav-btn" onclick="showScreen('subjects')">📚 Matérias</button>
-            <button class="nav-btn" onclick="showScreen('ranking')">🏆 Ranking</button>
-            <button class="nav-btn" onclick="showScreen('history')">📜 Histórico</button>
+            <button class="nav-btn active" data-screen="home" onclick="showScreen('home', event)">🏠 Home</button>
+            <button class="nav-btn" data-screen="subjects" onclick="showScreen('subjects', event)">📚 Matérias</button>
+            <button class="nav-btn" data-screen="ranking" onclick="showScreen('ranking', event)">🏆 Ranking</button>
+            <button class="nav-btn" data-screen="history" onclick="showScreen('history', event)">📜 Histórico</button>
         </nav>
 
         <!-- CONTEÚDO -->
@@ -67,17 +67,17 @@
                     <p>Pontos: <span id="homePoints">0</span></p>
                 </div>
                 <div class="home-cards">
-                    <div class="home-card" onclick="showScreen('subjects')">
+                    <div class="home-card" onclick="showScreen('subjects', event)">
                         <div class="card-icon">📚</div>
                         <div class="card-title">Matérias</div>
                         <div class="card-desc">Estude seus tópicos</div>
                     </div>
-                    <div class="home-card" onclick="showScreen('ranking')">
+                    <div class="home-card" onclick="showScreen('ranking', event)">
                         <div class="card-icon">🏆</div>
                         <div class="card-title">Ranking</div>
                         <div class="card-desc">Veja sua posição</div>
                     </div>
-                    <div class="home-card" onclick="showScreen('history')">
+                    <div class="home-card" onclick="showScreen('history', event)">
                         <div class="card-icon">📜</div>
                         <div class="card-title">Histórico</div>
                         <div class="card-desc">Seus quizzes</div>
