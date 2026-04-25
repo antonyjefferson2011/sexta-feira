@@ -81,12 +81,12 @@ p {
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
 }
 
-.btn:active {
+.btn:active:not(:disabled) {
     transform: translateY(4px);
     box-shadow: 0 0px 0 rgba(0, 0, 0, 0.15);
 }
@@ -103,11 +103,11 @@ p {
     box-shadow: 0 4px 0 var(--primary-dark);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     box-shadow: 0 6px 0 var(--primary-dark);
 }
 
-.btn-primary:active {
+.btn-primary:active:not(:disabled) {
     box-shadow: 0 0px 0 var(--primary-dark);
 }
 
@@ -118,12 +118,12 @@ p {
     box-shadow: 0 4px 0 var(--border-dark);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
     background: var(--border);
     box-shadow: 0 6px 0 var(--border-dark);
 }
 
-.btn-secondary:active {
+.btn-secondary:active:not(:disabled) {
     box-shadow: 0 0px 0 var(--border-dark);
 }
 
@@ -133,11 +133,11 @@ p {
     box-shadow: 0 4px 0 var(--danger-dark);
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
     box-shadow: 0 6px 0 var(--danger-dark);
 }
 
-.btn-danger:active {
+.btn-danger:active:not(:disabled) {
     box-shadow: 0 0px 0 var(--danger-dark);
 }
 
@@ -147,25 +147,27 @@ p {
     box-shadow: 0 4px 0 var(--success-dark);
 }
 
-.btn-success:hover {
+.btn-success:hover:not(:disabled) {
     box-shadow: 0 6px 0 var(--success-dark);
 }
 
-.btn-success:active {
+.btn-success:active:not(:disabled) {
     box-shadow: 0 0px 0 var(--success-dark);
 }
 
 .btn-large {
     width: 100%;
     height: 48px;
-    padding: 0;
+    padding: 0 24px;
     font-size: 16px;
+    margin-bottom: 12px;
 }
 
 .btn-small {
     padding: 8px 16px;
     font-size: 13px;
     height: auto;
+    margin-bottom: 0;
 }
 
 .btn-back {
@@ -176,9 +178,10 @@ p {
     font-size: 14px;
     margin-bottom: 20px;
     box-shadow: none;
+    width: auto;
 }
 
-.btn-back:hover {
+.btn-back:hover:not(:disabled) {
     background: var(--border);
     box-shadow: none;
 }
@@ -186,6 +189,8 @@ p {
 /* ==================== INPUTS ====================*/
 .form-group {
     margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
 }
 
 .form-label {
@@ -301,6 +306,7 @@ textarea.form-input {
     text-align: center;
     margin-bottom: 8px;
     color: var(--primary);
+    font-size: 28px;
 }
 
 .auth-subtitle {
@@ -322,6 +328,7 @@ textarea.form-input {
 .auth-form h2 {
     margin-bottom: 24px;
     color: var(--text-dark);
+    font-size: 22px;
 }
 
 .auth-toggle {
@@ -345,14 +352,13 @@ textarea.form-input {
 
 .form-buttons {
     display: flex;
+    flex-direction: column;
     gap: 12px;
     margin-top: 16px;
-    flex-wrap: wrap;
 }
 
 .form-buttons .btn {
-    flex: 1;
-    min-width: 120px;
+    width: 100%;
 }
 
 /* ==================== APP ====================*/
@@ -1145,6 +1151,7 @@ textarea.form-input {
     .btn-large {
         height: 48px;
         font-size: 15px;
+        margin-bottom: 12px;
     }
 
     .app-header {
