@@ -612,51 +612,311 @@ async function likePost(id){
 
 async function deletePost(id){ if(!confirm('Excluir?')) return; await db.ref('posts/'+id).remove(); toast('Excluído','info'); }
 
-// ========== CHAT ==========
-function loadChat(){
-  db.ref('chat_rooms').on('value',(snap)=>{
-    const rooms=snap.val();
-    const c=$('rooms-list'); if(!c) return;
-    if(!rooms){ c.innerHTML='<div style="padding:12px;color:#888;">Nenhuma sala</div>'; return; }
-    c.innerHTML=Object.entries(rooms).map(([id,r])=>`
-      <div onclick="joinRoom('${id}')" style="padding:12px; cursor:pointer; border-bottom:1px solid #eee; font-weight:600;"># ${esc(r.nome)}</div>
-    `).join('');
-  });
-}
+// ============================================================
+// CHAT - VERSÃO COMPLETA COM SALAS E PV
+// ============================================================
+let pvChatUser = null;
+let pvChatListener = null;
+let roomListener = null;
 
-function joinRoom(id){
-  STATE.currentRoom=id;
-  db.ref('chat_rooms/'+id).once('value').then(s=>{ const r=s.val(); if(r) txt('chat-room-name','# '+r.nome); });
-  hide('chat-no-room'); show('chat-room-view');
-  db.ref('chat_messages/'+id).on('value',(snap)=>{
-    const msgs=snap.val();
-    const c=$('chat-messages'); if(!c) return;
-    if(!msgs){ c.innerHTML='<div style="color:#888;padding:15px;">Sem mensagens</div>'; return; }
-    const arr=Object.entries(msgs).map(([id,m])=>({id,...m})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
-    c.innerHTML=arr.map(m=>`
-      <div style="margin-bottom:8px; display:flex; flex-direction:${m.autorId===STATE.user?.uid?'row-reverse':'row'}; gap:8px;">
-        <div style="width:28px;height:28px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${esc(m.avatar||'?')}</div>
-        <div style="max-width:70%; background:${m.autorId===STATE.user?.uid?'#6C5CE7':'#f0f0f0'}; color:${m.autorId===STATE.user?.uid?'white':'#333'}; padding:10px 14px; border-radius:15px; font-size:14px;">${esc(m.texto)}</div>
+// Carregar salas e PVs
+function loadChat() {
+  // Carregar salas
+  db.ref('chat_rooms').on('value', (snap) => {
+    const rooms = snap.val();
+    const container = document.getElementById('rooms-list');
+    if (!container) return;
+    
+    if (!rooms) {
+      container.innerHTML = '<div style="padding:12px; color:var(--text3); font-size:12px; text-align:center;">Nenhuma sala</div>';
+      return;
+    }
+    
+    const arr = Object.entries(rooms).map(([id, r]) => ({ id, ...r }));
+    container.innerHTML = arr.map(r => `
+      <div onclick="joinRoom('${r.id}')" 
+           style="padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:0.2s;
+                  background:${STATE.currentRoom === r.id ? 'var(--hover)' : 'transparent'};"
+           onmouseover="this.style.background='var(--hover)'" 
+           onmouseout="this.style.background='${STATE.currentRoom === r.id ? 'var(--hover)' : 'transparent'}'">
+        <div style="font-weight:600; font-size:13px; color:var(--text);"># ${esc(r.nome)}</div>
+        <div style="font-size:11px; color:var(--text3);">${esc(r.descricao || '')}</div>
       </div>
     `).join('');
-    c.scrollTop=c.scrollHeight;
+  });
+
+  // Carregar PVs recentes
+  loadPVList();
+}
+
+async function loadPVList() {
+  const container = document.getElementById('pv-list');
+  if (!container || !STATE.user) return;
+  
+  // Buscar todas as conversas privadas do usuário
+  const snap = await db.ref('private_chats').once('value');
+  const chats = snap.val();
+  
+  if (!chats) {
+    container.innerHTML = '<div style="padding:12px; color:var(--text3); font-size:12px; text-align:center;">Nenhuma conversa</div>';
+    return;
+  }
+  
+  // Filtrar chats que incluem o usuário atual
+  const userChats = Object.entries(chats).filter(([chatId]) => {
+    const parts = chatId.split('_');
+    return parts.includes(STATE.user.uid);
+  });
+  
+  if (!userChats.length) {
+    container.innerHTML = '<div style="padding:12px; color:var(--text3); font-size:12px; text-align:center;">Nenhuma conversa</div>';
+    return;
+  }
+  
+  // Pegar informações dos outros usuários
+  let html = '';
+  for (const [chatId, msgs] of userChats) {
+    const parts = chatId.split('_');
+    const otherUid = parts.find(p => p !== STATE.user.uid);
+    if (!otherUid) continue;
+    
+    const userSnap = await db.ref('usuarios/' + otherUid).once('value');
+    const u = userSnap.val();
+    if (!u) continue;
+    
+    // Última mensagem
+    const msgsArr = Object.values(msgs || {}).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    const lastMsg = msgsArr[0];
+    
+    html += `
+      <div onclick="openPVinChat('${otherUid}')" 
+           style="padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:0.2s;"
+           onmouseover="this.style.background='var(--hover)'" 
+           onmouseout="this.style.background='transparent'">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:30px; height:30px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0;">${u.avatar || '?'}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:600; font-size:12px; color:var(--text);">${esc(u.username || '?')}</div>
+            <div style="font-size:10px; color:var(--text3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(lastMsg?.texto || 'Nova conversa')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  container.innerHTML = html || '<div style="padding:12px; color:var(--text3); font-size:12px; text-align:center;">Nenhuma conversa</div>';
+}
+
+// Entrar em sala
+function joinRoom(id) {
+  // Limpar PV se estiver aberto
+  closePrivateChatInRoom(false);
+  
+  STATE.currentRoom = id;
+  
+  db.ref('chat_rooms/' + id).once('value').then(s => {
+    const r = s.val();
+    if (r) document.getElementById('chat-room-name').textContent = '# ' + r.nome;
+  });
+  
+  document.getElementById('chat-no-room').style.display = 'none';
+  document.getElementById('chat-room-view').style.display = 'flex';
+  document.getElementById('pv-chat-view').style.display = 'none';
+  
+  // Remover listener antigo
+  if (roomListener) { try { roomListener(); } catch(e) {} }
+  
+  // Ouvir mensagens da sala
+  roomListener = db.ref('chat_messages/' + id).on('value', (snap) => {
+    const msgs = snap.val();
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    
+    if (!msgs) {
+      container.innerHTML = '<div style="text-align:center; color:var(--text3); padding:30px;">💬 Nenhuma mensagem ainda. Diga olá!</div>';
+      return;
+    }
+    
+    const arr = Object.entries(msgs).map(([mid, m]) => ({ id: mid, ...m }))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    
+    container.innerHTML = arr.map(m => {
+      const isMine = m.autorId === STATE.user?.uid;
+      return `
+        <div style="display:flex; flex-direction:${isMine ? 'row-reverse' : 'row'}; gap:8px; align-items:flex-end;">
+          <div style="width:28px; height:28px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;"
+               onclick="${!isMine ? "openPVinChat('" + m.autorId + "')" : ''}" 
+               title="${!isMine ? 'Enviar mensagem privada' : ''}">
+            ${esc(m.avatar || '?')}
+          </div>
+          <div style="max-width:70%;">
+            ${!isMine ? `<div style="font-size:10px; color:var(--text3); margin-bottom:2px;">${esc(m.autorNome || '?')}</div>` : ''}
+            <div style="padding:10px 14px; border-radius:18px; font-size:14px; 
+                        background:${isMine ? '#6C5CE7' : 'var(--input-bg)'}; 
+                        color:${isMine ? 'white' : 'var(--text)'}; 
+                        border-radius:${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};">
+              ${esc(m.texto)}
+            </div>
+            <div style="font-size:9px; color:var(--text3); margin-top:2px; text-align:${isMine ? 'right' : 'left'};">${ago(m.createdAt)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    container.scrollTop = container.scrollHeight;
   });
 }
 
-async function sendChatMsg(){
-  const t=$('chat-msg-input')?.value?.trim();
-  if(!t||!STATE.currentRoom) return;
-  await db.ref('chat_messages/'+STATE.currentRoom).push({ texto:t, autorId:STATE.user.uid, autorNome:STATE.userData.username, avatar:STATE.userData.avatar, createdAt:Date.now() });
-  $('chat-msg-input').value='';
+// Sair da sala
+function leaveRoom() {
+  if (roomListener) { try { roomListener(); } catch(e) {} }
+  STATE.currentRoom = null;
+  
+  document.getElementById('chat-no-room').style.display = 'flex';
+  document.getElementById('chat-room-view').style.display = 'none';
 }
 
-async function criarSala(){
-  const n=$('ns-nome')?.value?.trim();
-  if(!n){ toast('Nome obrigatório','error'); return; }
-  const ref=await db.ref('chat_rooms').push({ nome:n, descricao:$('ns-desc')?.value?.trim()||'', criadorId:STATE.user.uid, createdAt:Date.now() });
-  closeModal('modal-sala'); $('ns-nome').value=''; $('ns-desc').value=''; joinRoom(ref.key);
+// Abrir PV dentro do chat
+function openPVinChat(uid) {
+  if (uid === STATE.user?.uid) return;
+  
+  pvChatUser = uid;
+  
+  db.ref('usuarios/' + uid).once('value').then(snap => {
+    const u = snap.val();
+    if (u) {
+      document.getElementById('pv-chat-avatar').textContent = u.avatar || '?';
+      document.getElementById('pv-chat-name').textContent = u.username || 'Usuário';
+    }
+  });
+  
+  document.getElementById('chat-room-view').style.display = 'none';
+  document.getElementById('chat-no-room').style.display = 'none';
+  document.getElementById('pv-chat-view').style.display = 'flex';
+  
+  const chatId = [STATE.user.uid, uid].sort().join('_');
+  
+  if (pvChatListener) { try { pvChatListener(); } catch(e) {} }
+  
+  pvChatListener = db.ref('private_chats/' + chatId).on('value', (snap) => {
+    const msgs = snap.val();
+    const container = document.getElementById('pv-chat-messages');
+    if (!container) return;
+    
+    if (!msgs) {
+      container.innerHTML = '<div style="text-align:center; color:var(--text3); padding:30px;">💬 Envie a primeira mensagem!</div>';
+      return;
+    }
+    
+    const arr = Object.entries(msgs).map(([mid, m]) => ({ id: mid, ...m }))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    
+    container.innerHTML = arr.map(m => {
+      const isMine = m.autorId === STATE.user?.uid;
+      return `
+        <div style="display:flex; flex-direction:${isMine ? 'row-reverse' : 'row'}; gap:8px; align-items:flex-end;">
+          <div style="width:24px; height:24px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; flex-shrink:0;">
+            ${esc(m.avatar || '?')}
+          </div>
+          <div style="max-width:75%; padding:10px 14px; border-radius:18px; font-size:14px;
+                      background:${isMine ? '#6C5CE7' : 'var(--input-bg)'}; 
+                      color:${isMine ? 'white' : 'var(--text)'}; 
+                      border-radius:${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};">
+            ${esc(m.texto)}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    container.scrollTop = container.scrollHeight;
+  });
+  
+  document.getElementById('pv-chat-input').value = '';
+  setTimeout(() => document.getElementById('pv-chat-input')?.focus(), 300);
 }
 
+// Fechar PV
+function closePrivateChatInRoom(showRoom = true) {
+  if (pvChatListener) { try { pvChatListener(); } catch(e) {} }
+  pvChatListener = null;
+  pvChatUser = null;
+  
+  document.getElementById('pv-chat-view').style.display = 'none';
+  
+  if (showRoom && STATE.currentRoom) {
+    document.getElementById('chat-room-view').style.display = 'flex';
+  } else if (showRoom) {
+    document.getElementById('chat-no-room').style.display = 'flex';
+  }
+}
+
+// Enviar mensagem na sala
+async function sendChatMsg() {
+  const texto = document.getElementById('chat-msg-input')?.value?.trim();
+  if (!texto || !STATE.currentRoom) return;
+  
+  await db.ref('chat_messages/' + STATE.currentRoom).push({
+    texto,
+    autorId: STATE.user.uid,
+    autorNome: STATE.userData.username,
+    avatar: STATE.userData.avatar || '?',
+    createdAt: Date.now()
+  });
+  
+  await db.ref('chat_rooms/' + STATE.currentRoom).update({
+    lastMessage: texto.substring(0, 50),
+    lastMessageAt: Date.now()
+  });
+  
+  document.getElementById('chat-msg-input').value = '';
+}
+
+// Enviar mensagem PV
+async function sendPvChatMsg() {
+  const texto = document.getElementById('pv-chat-input')?.value?.trim();
+  if (!texto || !pvChatUser) return;
+  
+  const chatId = [STATE.user.uid, pvChatUser].sort().join('_');
+  
+  await db.ref('private_chats/' + chatId).push({
+    texto,
+    autorId: STATE.user.uid,
+    autorNome: STATE.userData.username,
+    avatar: STATE.userData.avatar || '?',
+    createdAt: Date.now()
+  });
+  
+  // Notificar
+  await db.ref('notificacoes/' + pvChatUser).push({
+    mensagem: '💬 ' + STATE.userData.username + ' te enviou uma mensagem privada!',
+    tipo: 'message',
+    lida: false,
+    chatId: chatId,
+    fromUid: STATE.user.uid,
+    createdAt: Date.now()
+  });
+  
+  document.getElementById('pv-chat-input').value = '';
+}
+
+// Criar sala
+async function criarSala() {
+  const nome = document.getElementById('ns-nome')?.value?.trim();
+  const desc = document.getElementById('ns-desc')?.value?.trim();
+  if (!nome) { showToast('Nome obrigatório', 'error'); return; }
+  
+  const ref = await db.ref('chat_rooms').push({
+    nome, descricao: desc,
+    criadorId: STATE.user.uid,
+    createdAt: Date.now()
+  });
+  
+  closeModal('modal-sala');
+  document.getElementById('ns-nome').value = '';
+  document.getElementById('ns-desc').value = '';
+  joinRoom(ref.key);
+  showToast('Sala criada! 💬', 'success');
+}
 // ========== RANKING ==========
 function loadRanking(){
   db.ref('usuarios').on('value',(snap)=>{
@@ -1032,4 +1292,336 @@ function showModal(id) {
     }
   }
 }
+// ============================================================
+// CHAT PRIVADO (PV)
+// ============================================================
+let privateChatUser = null;
+let privateChatListener = null;
+
+async function openPrivateChat(uid) {
+  if (uid === STATE.user?.uid) {
+    showToast('Não pode enviar mensagem para si mesmo', 'info');
+    return;
+  }
+
+  privateChatUser = uid;
+  
+  // Buscar dados do usuário
+  const snap = await db.ref('usuarios/' + uid).once('value');
+  const u = snap.val();
+  if (!u) return;
+
+  // Atualizar cabeçalho
+  document.getElementById('pv-avatar').textContent = u.avatar || '?';
+  document.getElementById('pv-name').textContent = u.username || 'Usuário';
+  
+  // Criar ID único da conversa (ordem alfabética dos UIDs)
+  const chatId = [STATE.user.uid, uid].sort().join('_');
+  
+  // Remover listener antigo
+  if (privateChatListener) {
+    try { privateChatListener(); } catch(e) {}
+  }
+
+  // Ouvir mensagens
+  privateChatListener = db.ref('private_chats/' + chatId).on('value', (snap) => {
+    const msgs = snap.val();
+    const container = document.getElementById('pv-messages');
+    if (!container) return;
+
+    if (!msgs) {
+      container.innerHTML = '<div style="text-align:center; color:var(--text3); padding:20px;">💬 Diga olá!</div>';
+      return;
+    }
+
+    const arr = Object.entries(msgs).map(([id, m]) => ({ id, ...m }))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+    container.innerHTML = arr.map(m => `
+      <div style="display:flex; flex-direction:${m.autorId === STATE.user?.uid ? 'row-reverse' : 'row'}; gap:8px; margin-bottom:8px; align-items:flex-end;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">
+          ${esc(m.avatar || '?')}
+        </div>
+        <div style="max-width:75%; padding:10px 14px; border-radius:18px; font-size:14px; 
+                    background:${m.autorId === STATE.user?.uid ? '#6C5CE7' : 'var(--input-bg)'}; 
+                    color:${m.autorId === STATE.user?.uid ? 'white' : 'var(--text)'}; 
+                    border-radius:${m.autorId === STATE.user?.uid ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};">
+          ${esc(m.texto)}
+          <div style="font-size:9px; opacity:0.7; margin-top:3px; text-align:${m.autorId === STATE.user?.uid ? 'right' : 'left'};">${ago(m.createdAt)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    container.scrollTop = container.scrollHeight;
+  });
+
+  document.getElementById('pv-input').value = '';
+  document.getElementById('pv-messages').innerHTML = '<div style="text-align:center; color:var(--text3); padding:20px;">⏳ Carregando...</div>';
+  
+  showModal('modal-private-chat');
+  
+  // Focar no input
+  setTimeout(() => document.getElementById('pv-input')?.focus(), 300);
+}
+
+async function sendPrivateMsg() {
+  const texto = document.getElementById('pv-input')?.value?.trim();
+  if (!texto || !privateChatUser) return;
+
+  const chatId = [STATE.user.uid, privateChatUser].sort().join('_');
+
+  await db.ref('private_chats/' + chatId).push({
+    texto,
+    autorId: STATE.user.uid,
+    autorNome: STATE.userData.username,
+    avatar: STATE.userData.avatar || '?',
+    createdAt: Date.now()
+  });
+
+  // Notificar o outro usuário
+  await db.ref('notificacoes/' + privateChatUser).push({
+    mensagem: '💬 ' + STATE.userData.username + ' te enviou uma mensagem!',
+    tipo: 'message',
+    lida: false,
+    chatId: chatId,
+    createdAt: Date.now()
+  });
+
+  document.getElementById('pv-input').value = '';
+}
+
+// Fechar listener ao fechar modal
+const originalCloseModal = closeModal;
+closeModal = function(id) {
+  if (id === 'modal-private-chat') {
+    if (privateChatListener) {
+      try { privateChatListener(); } catch(e) {}
+      privateChatListener = null;
+    }
+    privateChatUser = null;
+  }
+  originalCloseModal(id);
+};
+
+// ============================================================
+// CONVIDAR USUÁRIOS PARA SALA DE CHAT
+// ============================================================
+let selectedInviteUsers = [];
+
+async function showInviteModal() {
+  if (!STATE.currentRoom) {
+    showToast('Entre em uma sala primeiro!', 'info');
+    return;
+  }
+  
+  selectedInviteUsers = [];
+  document.getElementById('invite-search').value = '';
+  updateInviteSelected();
+  await loadUsersToInvite();
+  showModal('modal-invite');
+}
+
+async function loadUsersToInvite(filter = '') {
+  const container = document.getElementById('invite-users-list');
+  if (!container) return;
+
+  const snap = await db.ref('usuarios').once('value');
+  const users = snap.val();
+  if (!users) {
+    container.innerHTML = '<div style="color:var(--text3); padding:15px;">Nenhum usuário</div>';
+    return;
+  }
+
+  let arr = Object.entries(users).map(([uid, u]) => ({ uid, ...u }))
+    .filter(u => u.uid !== STATE.user?.uid);
+
+  if (filter) {
+    const term = filter.toLowerCase();
+    arr = arr.filter(u => (u.username || '').toLowerCase().includes(term));
+  }
+
+  if (!arr.length) {
+    container.innerHTML = '<div style="color:var(--text3); padding:15px;">Nenhum encontrado</div>';
+    return;
+  }
+
+  container.innerHTML = arr.map(u => `
+    <div onclick="toggleInviteUser('${u.uid}', this)" 
+         style="display:flex; align-items:center; gap:10px; padding:10px; cursor:pointer; border-radius:10px; margin-bottom:4px;
+                background:${selectedInviteUsers.includes(u.uid) ? 'var(--hover)' : 'transparent'};">
+      <div style="width:35px; height:35px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-weight:700;">${u.avatar || '?'}</div>
+      <div style="flex:1; color:var(--text);">
+        <strong>${esc(u.username || '?')}</strong>
+        <div style="font-size:11px; color:var(--text3);">⭐ ${fmt(u.points || 0)} pts</div>
+      </div>
+      <span style="font-size:20px; color:${selectedInviteUsers.includes(u.uid) ? '#10b981' : 'var(--text3)'};">
+        ${selectedInviteUsers.includes(u.uid) ? '✅' : '○'}
+      </span>
+    </div>
+  `).join('');
+}
+
+function toggleInviteUser(uid, element) {
+  const index = selectedInviteUsers.indexOf(uid);
+  if (index > -1) {
+    selectedInviteUsers.splice(index, 1);
+    element.style.background = 'transparent';
+    const check = element.querySelector('span:last-child');
+    if (check) { check.textContent = '○'; check.style.color = 'var(--text3)'; }
+  } else {
+    selectedInviteUsers.push(uid);
+    element.style.background = 'var(--hover)';
+    const check = element.querySelector('span:last-child');
+    if (check) { check.textContent = '✅'; check.style.color = '#10b981'; }
+  }
+  updateInviteSelected();
+}
+
+function updateInviteSelected() {
+  const el = document.getElementById('invite-selected');
+  if (el) {
+    el.innerHTML = selectedInviteUsers.length > 0
+      ? `<span style="font-size:13px; color:var(--text);">✅ ${selectedInviteUsers.length} usuário(s) selecionado(s)</span>`
+      : '<span style="font-size:12px; color:var(--text3);">Selecionados: 0</span>';
+  }
+}
+
+function searchUsersToInvite() {
+  const term = document.getElementById('invite-search')?.value || '';
+  loadUsersToInvite(term);
+}
+
+async function sendInvites() {
+  if (!selectedInviteUsers.length) {
+    showToast('Selecione pelo menos 1 usuário', 'info');
+    return;
+  }
+
+  if (!STATE.currentRoom) {
+    showToast('Entre em uma sala primeiro!', 'error');
+    return;
+  }
+
+  // Pegar nome da sala
+  const roomSnap = await db.ref('chat_rooms/' + STATE.currentRoom).once('value');
+  const room = roomSnap.val();
+  const roomName = room?.nome || 'Sala';
+
+  // Enviar notificação para cada usuário
+  for (const uid of selectedInviteUsers) {
+    await db.ref('notificacoes/' + uid).push({
+      mensagem: '👥 ' + STATE.userData.username + ' te convidou para a sala: ' + roomName + '!',
+      tipo: 'invite',
+      lida: false,
+      roomId: STATE.currentRoom,
+      roomName: roomName,
+      createdAt: Date.now()
+    });
+  }
+
+  showToast('Convites enviados para ' + selectedInviteUsers.length + ' pessoa(s)! 📨', 'success');
+  closeModal('modal-invite');
+  selectedInviteUsers = [];
+}
+
+// ============================================================
+// ATUALIZAR verPerfil PARA INCLUIR BOTÃO DE CHAT
+// ============================================================
+const originalVerPerfil = verPerfil;
+verPerfil = async function(uid) {
+  await originalVerPerfil(uid);
+  
+  // Adicionar botão de chat no modal
+  setTimeout(() => {
+    const content = document.getElementById('user-profile-content');
+    if (content && uid !== STATE.user?.uid) {
+      // Verificar se já tem botão de chat
+      if (!content.querySelector('#btn-chat-pv')) {
+        const btnContainer = content.querySelector('div');
+        if (btnContainer) {
+          const chatBtn = document.createElement('button');
+          chatBtn.id = 'btn-chat-pv';
+          chatBtn.textContent = '💬 Enviar Mensagem';
+          chatBtn.style.cssText = 'width:100%; padding:10px; background:#6C5CE7; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:8px;';
+          chatBtn.onclick = function() {
+            closeModal('modal-user-profile');
+            openPrivateChat(uid);
+          };
+          btnContainer.appendChild(chatBtn);
+        }
+      }
+    }
+  }, 100);
+};
+
+// ============================================================
+// NOTIFICAÇÃO DE CONVITE - ABRIR SALA AO CLICAR
+// ============================================================
+// Modificar loadNotifs para tornar convites clicáveis
+const originalLoadNotifs = loadNotifs;
+loadNotifs = async function() {
+  await originalLoadNotifs();
+  
+  // Adicionar onclick nos convites
+  setTimeout(() => {
+    document.querySelectorAll('#notificacoes-list > div').forEach(el => {
+      const text = el.textContent || '';
+      if (text.includes('convidou para a sala')) {
+        el.style.cursor = 'pointer';
+        el.style.background = 'var(--hover)';
+        el.onclick = function() {
+          // Extrair roomId da notificação (armazenado no data)
+          const roomId = this.getAttribute('data-room');
+          if (roomId) {
+            showScreen('chat');
+            setTimeout(() => joinRoom(roomId), 500);
+          }
+        };
+      }
+      // Mensagem privada
+      if (text.includes('enviou uma mensagem')) {
+        el.style.cursor = 'pointer';
+        el.style.background = 'var(--hover)';
+        el.onclick = function() {
+          const chatId = this.getAttribute('data-chat');
+          if (chatId) {
+            // Extrair o outro UID do chatId
+            const parts = chatId.split('_');
+            const otherUid = parts.find(p => p !== STATE.user?.uid);
+            if (otherUid) openPrivateChat(otherUid);
+          }
+        };
+      }
+    });
+  }, 300);
+};
+
+// Também atualizar como as notificações são renderizadas para incluir data attributes
+const originalNotifRender = loadNotifs;
+loadNotifs = async function() {
+  if (!STATE.user) return;
+  const s = await db.ref('notificacoes/' + STATE.user.uid).orderByChild('createdAt').limitToLast(30).once('value');
+  const n = s.val(); 
+  const c = document.getElementById('notificacoes-list'); 
+  if (!c) return;
+  
+  if (!n) { 
+    c.innerHTML = '<div style="color:var(--text3); padding:20px; text-align:center;">🔔 Nenhuma notificação</div>'; 
+    return; 
+  }
+  
+  const arr = Object.entries(n).map(([id, x]) => ({ id, ...x })).reverse();
+  c.innerHTML = arr.map(x => `
+    <div data-room="${x.roomId || ''}" data-chat="${x.chatId || ''}" 
+         style="background:var(--card); border-radius:12px; padding:15px; margin-bottom:8px; cursor:${(x.roomId || x.chatId) ? 'pointer' : 'default'}; 
+                ${!x.lida ? 'border-left:3px solid #6C5CE7;' : ''} ${(x.roomId || x.chatId) ? 'background:var(--hover);' : ''}">
+      <div style="font-weight:600; font-size:14px; color:var(--text);">${esc(x.mensagem)}</div>
+      <div style="font-size:12px; color:var(--text3);">${ago(x.createdAt)}</div>
+    </div>
+  `).join('');
+  
+  const updates = {}; 
+  arr.forEach(x => { if (!x.lida) updates[x.id + '/lida'] = true; });
+  if (Object.keys(updates).length) await db.ref('notificacoes/' + STATE.user.uid).update(updates);
+};
 console.log('✅ Sexta-Feira Studies PRONTO!');
