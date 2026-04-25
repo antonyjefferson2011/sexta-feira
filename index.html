@@ -1,140 +1,839 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sexta-Feira Studies</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduConnect — Aprenda. Conecte. Evolua.</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+      authDomain: "sexta-feira-fb01a.firebaseapp.com",
+      databaseURL: "https://sexta-feira-fb01a-default-rtdb.firebaseio.com",
+      projectId: "sexta-feira-fb01a",
+      storageBucket: "sexta-feira-fb01a.firebasestorage.app",
+      messagingSenderId: "82809140147",
+      appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6",
+      measurementId: "G-DEZ5ZESQH7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    window._firebase = { auth, db, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile };
+  </script>
 </head>
 <body>
-    <!-- TELA DE LOGIN -->
-    <div id="auth-screen" class="auth-screen">
-        <div class="auth-container">
-            <h1>📚 Sexta-Feira Studies</h1>
-            <p>Plataforma de Aprendizado</p>
 
-            <form id="login-form" class="auth-form active">
-                <h2>Login</h2>
-                <input type="text" id="login-name" placeholder="Nome de usuário" required>
-                <input type="password" id="login-password" placeholder="Senha" required>
-                <div id="login-error" class="error-msg"></div>
-                <button type="submit" class="btn btn-primary">Entrar</button>
-                <p>Não tem conta? <a href="#" id="toggle-signup-link">Criar</a></p>
-            </form>
+<!-- ==================== SPLASH SCREEN ==================== -->
+<div id="splash-screen" class="splash">
+  <div class="splash-logo">
+    <div class="splash-icon">⚡</div>
+    <h1>EduConnect</h1>
+    <p>Carregando plataforma...</p>
+    <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+  </div>
+</div>
 
-            <form id="signup-form" class="auth-form">
-                <h2>Cadastro</h2>
-                <input type="text" id="signup-name" placeholder="Nome de usuário" required>
-                <input type="password" id="signup-password" placeholder="Senha" required>
-                <input type="password" id="signup-password-confirm" placeholder="Confirmar senha" required>
-                <input type="text" id="signup-class" placeholder="Série/Sala" required>
-                <div id="signup-error" class="error-msg"></div>
-                <button type="submit" class="btn btn-primary">Criar Conta</button>
-                <p>Já tem conta? <a href="#" id="toggle-login-link">Login</a></p>
-            </form>
+<!-- ==================== AUTH SCREEN ==================== -->
+<div id="auth-screen" class="screen hidden">
+  <div class="auth-bg">
+    <div class="auth-blob b1"></div>
+    <div class="auth-blob b2"></div>
+    <div class="auth-blob b3"></div>
+  </div>
+  <div class="auth-container">
+    <div class="auth-brand">
+      <span class="brand-icon">⚡</span>
+      <h1>EduConnect</h1>
+      <p>Aprenda. Conecte. Evolua.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Entrar</button>
+      <button class="auth-tab" data-tab="register">Cadastrar</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form" class="auth-form">
+      <div class="field-group">
+        <label>E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" />
         </div>
+      </div>
+      <div class="field-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+          <button class="toggle-pw" onclick="togglePw('login-password', this)">👁</button>
+        </div>
+      </div>
+      <div id="login-error" class="auth-error hidden"></div>
+      <button class="btn-primary btn-full" id="btn-login" onclick="doLogin()">
+        <span>Entrar na plataforma</span>
+        <div class="btn-loader hidden"></div>
+      </button>
+      <p class="auth-hint">Novo aqui? <a href="#" onclick="switchTab('register')">Crie sua conta grátis →</a></p>
     </div>
 
-    <!-- APP PRINCIPAL -->
-    <div id="app-screen" class="app-screen" style="display: none;">
-        <header class="app-header">
-            <h1>📚 Sexta-Feira</h1>
-            <div class="header-right">
-                <span id="user-name"></span>
-                <button id="btn-logout" class="btn btn-small">Sair</button>
+    <!-- Register Form -->
+    <div id="register-form" class="auth-form hidden">
+      <div class="field-group">
+        <label>Nome completo</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="reg-name" placeholder="Seu nome" autocomplete="name" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+          <button class="toggle-pw" onclick="togglePw('reg-password', this)">👁</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Confirmar senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-confirm" placeholder="Repita a senha" autocomplete="new-password" />
+        </div>
+      </div>
+      <div id="reg-error" class="auth-error hidden"></div>
+      <button class="btn-primary btn-full" id="btn-register" onclick="doRegister()">
+        <span>Criar minha conta</span>
+        <div class="btn-loader hidden"></div>
+      </button>
+      <p class="auth-hint">Já tem conta? <a href="#" onclick="switchTab('login')">Fazer login →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="app" class="hidden">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <span class="topbar-brand">⚡ EduConnect</span>
+    </div>
+    <div class="topbar-right">
+      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn">
+        🔔 <span class="notif-badge hidden" id="notif-count">0</span>
+      </button>
+      <div class="topbar-avatar" onclick="showScreen('perfil')" id="topbar-avatar">?</div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+      <div>
+        <div class="sidebar-name" id="sidebar-name">Carregando...</div>
+        <div class="sidebar-pts" id="sidebar-pts">0 pts</div>
+      </div>
+    </div>
+    <div class="sidebar-menu">
+      <a class="nav-item active" data-screen="home" onclick="showScreen('home')">🏠 <span>Home</span></a>
+      <a class="nav-item" data-screen="materias" onclick="showScreen('materias')">📚 <span>Matérias</span></a>
+      <a class="nav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍 <span>Descobrir</span></a>
+      <a class="nav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆 <span>Ranking</span></a>
+      <a class="nav-item" data-screen="chat" onclick="showScreen('chat')">💬 <span>Chat</span></a>
+      <a class="nav-item" data-screen="perfil" onclick="showScreen('perfil')">👤 <span>Perfil</span></a>
+      <a class="nav-item" data-screen="adm" id="nav-adm" onclick="showScreen('adm')" style="display:none">⚙️ <span>ADM</span></a>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="btn-logout" onclick="doLogout()">🚪 Sair</button>
+    </div>
+  </nav>
+  <div class="sidebar-overlay hidden" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="main-content">
+
+    <!-- ===== HOME ===== -->
+    <section id="screen-home" class="screen-section">
+      <div class="screen-header">
+        <div>
+          <h2 id="home-greeting">Olá! 👋</h2>
+          <p class="screen-subtitle">Continue de onde parou</p>
+        </div>
+        <div class="home-xp-badge" id="home-xp-badge">Nível 1</div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card stat-blue">
+          <div class="stat-icon">📚</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-materias">0</div>
+            <div class="stat-label">Matérias</div>
+          </div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-icon">🎮</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-quizzes">0</div>
+            <div class="stat-label">Quizzes feitos</div>
+          </div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-pontos">0</div>
+            <div class="stat-label">Pontos</div>
+          </div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-info">
+            <div class="stat-val" id="stat-rank">#--</div>
+            <div class="stat-label">Ranking</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="card progress-card">
+        <div class="progress-header">
+          <span>Progresso para o próximo nível</span>
+          <span id="progress-text">0 / 100 pts</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-title">Ações rápidas</div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="showScreen('materias')">
+          <span class="qb-icon">📚</span>
+          <span>Ver Matérias</span>
+        </button>
+        <button class="quick-btn" onclick="showScreen('descobrir')">
+          <span class="qb-icon">🌍</span>
+          <span>Descobrir</span>
+        </button>
+        <button class="quick-btn" onclick="showScreen('ranking')">
+          <span class="qb-icon">🏆</span>
+          <span>Ranking</span>
+        </button>
+        <button class="quick-btn" onclick="showModal('modal-nova-materia')">
+          <span class="qb-icon">➕</span>
+          <span>Nova Matéria</span>
+        </button>
+      </div>
+
+      <!-- Feed Recente -->
+      <div class="section-title">Atividade recente</div>
+      <div id="home-feed" class="feed-list">
+        <div class="empty-state">Carregando atividades...</div>
+      </div>
+    </section>
+
+    <!-- ===== MATÉRIAS ===== -->
+    <section id="screen-materias" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>📚 Matérias</h2>
+          <p class="screen-subtitle">Organize seu aprendizado</p>
+        </div>
+        <button class="btn-primary btn-sm" onclick="showModal('modal-nova-materia')">+ Nova</button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" id="search-materias" placeholder="Buscar matérias..." oninput="filterMaterias()" />
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="setMateriaFilter('all', this)">Todas</button>
+        <button class="filter-tab" data-filter="mine" onclick="setMateriaFilter('mine', this)">Minhas</button>
+        <button class="filter-tab" data-filter="public" onclick="setMateriaFilter('public', this)">Públicas</button>
+      </div>
+
+      <div id="materias-grid" class="materias-grid">
+        <div class="empty-state">Carregando matérias...</div>
+      </div>
+    </section>
+
+    <!-- ===== DETALHE MATÉRIA ===== -->
+    <section id="screen-materia-detalhe" class="screen-section hidden">
+      <div class="screen-header">
+        <button class="btn-back" onclick="showScreen('materias')">← Voltar</button>
+        <button class="btn-primary btn-sm" onclick="showModal('modal-novo-topico')">+ Tópico</button>
+      </div>
+
+      <div class="materia-hero" id="materia-hero">
+        <div class="materia-hero-icon" id="materia-hero-icon">📚</div>
+        <div>
+          <h2 id="materia-hero-nome">Matéria</h2>
+          <p id="materia-hero-desc">Descrição</p>
+          <div class="materia-hero-meta">
+            <span id="materia-hero-autor">Por: --</span>
+            <span id="materia-hero-topicos">0 tópicos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Tópicos</div>
+      <div id="topicos-list" class="topicos-list">
+        <div class="empty-state">Nenhum tópico ainda. Crie o primeiro!</div>
+      </div>
+
+      <div class="section-title">Quizzes desta matéria</div>
+      <div id="quizzes-materia" class="quizzes-list">
+        <div class="empty-state">Nenhum quiz ainda.</div>
+      </div>
+      <button class="btn-secondary btn-full mt-2" onclick="showModal('modal-novo-quiz')">+ Criar Quiz</button>
+    </section>
+
+    <!-- ===== DETALHE TÓPICO ===== -->
+    <section id="screen-topico-detalhe" class="screen-section hidden">
+      <div class="screen-header">
+        <button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar</button>
+      </div>
+      <div class="topico-content card" id="topico-content">
+        <h2 id="topico-title">Tópico</h2>
+        <div class="topico-meta" id="topico-meta"></div>
+        <div class="topico-body" id="topico-body"></div>
+      </div>
+      <div class="section-title">Comentários</div>
+      <div id="topico-comentarios" class="comentarios-list"></div>
+      <div class="comentario-form">
+        <input type="text" id="new-comment" placeholder="Escreva um comentário..." />
+        <button class="btn-primary" onclick="addComment()">Enviar</button>
+      </div>
+    </section>
+
+    <!-- ===== QUIZ ===== -->
+    <section id="screen-quiz" class="screen-section hidden">
+      <div class="quiz-header">
+        <button class="btn-back" onclick="exitQuiz()">← Sair</button>
+        <div class="quiz-progress-wrap">
+          <div class="quiz-q-counter" id="quiz-q-counter">1/10</div>
+          <div class="quiz-progress-track">
+            <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+          </div>
+        </div>
+        <div class="quiz-timer" id="quiz-timer">⏱ 30s</div>
+      </div>
+
+      <div class="quiz-body">
+        <div class="quiz-card" id="quiz-card">
+          <div class="quiz-q-num" id="quiz-q-num">Questão 1</div>
+          <div class="quiz-question" id="quiz-question">Carregando pergunta...</div>
+          <div class="quiz-options" id="quiz-options"></div>
+        </div>
+      </div>
+
+      <div class="quiz-footer">
+        <div class="quiz-score-live">⭐ <span id="quiz-score-live">0</span> pts</div>
+      </div>
+    </section>
+
+    <!-- ===== RESULTADO ===== -->
+    <section id="screen-resultado" class="screen-section hidden">
+      <div class="resultado-container">
+        <div class="resultado-emoji" id="resultado-emoji">🎉</div>
+        <h2 id="resultado-titulo">Parabéns!</h2>
+        <p id="resultado-subtitulo">Quiz finalizado</p>
+
+        <div class="resultado-stats">
+          <div class="res-stat">
+            <div class="res-val" id="res-acertos">0</div>
+            <div class="res-label">Acertos</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-total">0</div>
+            <div class="res-label">Total</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-pontos">+0</div>
+            <div class="res-label">Pontos</div>
+          </div>
+          <div class="res-stat">
+            <div class="res-val" id="res-tempo">0s</div>
+            <div class="res-label">Tempo</div>
+          </div>
+        </div>
+
+        <div class="resultado-barra">
+          <div class="resultado-barra-fill" id="resultado-barra-fill"></div>
+        </div>
+        <p class="resultado-pct" id="resultado-pct">0% de acerto</p>
+
+        <div class="resultado-review" id="resultado-review"></div>
+
+        <div class="resultado-actions">
+          <button class="btn-primary" onclick="showScreen('home')">🏠 Voltar ao início</button>
+          <button class="btn-secondary" onclick="showScreen('ranking')">🏆 Ver Ranking</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RANKING ===== -->
+    <section id="screen-ranking" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>🏆 Ranking</h2>
+          <p class="screen-subtitle">Top 50 usuários</p>
+        </div>
+      </div>
+
+      <div class="podio" id="podio">
+        <div class="podio-item p2">
+          <div class="podio-avatar" id="podio2-av">?</div>
+          <div class="podio-name" id="podio2-name">--</div>
+          <div class="podio-pts" id="podio2-pts">0</div>
+          <div class="podio-place">2°</div>
+        </div>
+        <div class="podio-item p1">
+          <div class="podio-crown">👑</div>
+          <div class="podio-avatar" id="podio1-av">?</div>
+          <div class="podio-name" id="podio1-name">--</div>
+          <div class="podio-pts" id="podio1-pts">0</div>
+          <div class="podio-place">1°</div>
+        </div>
+        <div class="podio-item p3">
+          <div class="podio-avatar" id="podio3-av">?</div>
+          <div class="podio-name" id="podio3-name">--</div>
+          <div class="podio-pts" id="podio3-pts">0</div>
+          <div class="podio-place">3°</div>
+        </div>
+      </div>
+
+      <div class="my-rank-card" id="my-rank-card">
+        <span>Sua posição:</span>
+        <span class="my-rank-num" id="my-rank-num">#--</span>
+        <span id="my-rank-pts">0 pts</span>
+      </div>
+
+      <div id="ranking-list" class="ranking-list">
+        <div class="empty-state">Carregando ranking...</div>
+      </div>
+    </section>
+
+    <!-- ===== DESCOBRIR ===== -->
+    <section id="screen-descobrir" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>🌍 Descobrir</h2>
+          <p class="screen-subtitle">Feed global da comunidade</p>
+        </div>
+      </div>
+
+      <!-- Post Creator -->
+      <div class="post-creator card">
+        <div class="post-creator-row">
+          <div class="pc-avatar" id="pc-avatar">?</div>
+          <input type="text" id="new-post-text" placeholder="Compartilhe algo com a comunidade..." class="post-input" />
+        </div>
+        <div class="post-creator-actions">
+          <div class="post-type-btns">
+            <button class="ptype-btn active" data-type="post" onclick="setPostType('post', this)">💬 Post</button>
+            <button class="ptype-btn" data-type="dica" onclick="setPostType('dica', this)">💡 Dica</button>
+            <button class="ptype-btn" data-type="duvida" onclick="setPostType('duvida', this)">❓ Dúvida</button>
+          </div>
+          <button class="btn-primary btn-sm" onclick="createPost()">Publicar</button>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="setFeedFilter('all', this)">Todos</button>
+        <button class="filter-tab" data-filter="post" onclick="setFeedFilter('post', this)">Posts</button>
+        <button class="filter-tab" data-filter="dica" onclick="setFeedFilter('dica', this)">Dicas</button>
+        <button class="filter-tab" data-filter="duvida" onclick="setFeedFilter('duvida', this)">Dúvidas</button>
+      </div>
+
+      <div id="descobrir-feed" class="feed-list">
+        <div class="empty-state">Carregando feed...</div>
+      </div>
+    </section>
+
+    <!-- ===== CHAT ===== -->
+    <section id="screen-chat" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>💬 Chat</h2>
+          <p class="screen-subtitle">Converse com a comunidade</p>
+        </div>
+      </div>
+
+      <div class="chat-layout">
+        <!-- Rooms list -->
+        <div class="chat-rooms" id="chat-rooms">
+          <div class="chat-rooms-header">
+            <span>Salas</span>
+            <button class="btn-sm btn-primary" onclick="showModal('modal-nova-sala')">+</button>
+          </div>
+          <div id="rooms-list"></div>
+        </div>
+
+        <!-- Chat window -->
+        <div class="chat-window" id="chat-window">
+          <div class="chat-no-room" id="chat-no-room">
+            <div class="empty-state">Selecione uma sala para começar a conversar</div>
+          </div>
+          <div class="chat-room-view hidden" id="chat-room-view">
+            <div class="chat-room-header">
+              <div class="chat-room-info">
+                <strong id="chat-room-name">Sala</strong>
+                <span id="chat-room-members">0 membros</span>
+              </div>
             </div>
-        </header>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input-row">
+              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
+              <button class="btn-primary" onclick="sendChatMessage()">Enviar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <main class="app-main">
-            <!-- HOME -->
-            <section id="screen-home" class="screen active">
-                <div class="welcome">
-                    <h2>Bem-vindo, <span id="welcome-name"></span>!</h2>
-                    <p>Pontos: <strong id="welcome-points">0</strong></p>
-                </div>
+    <!-- ===== PERFIL ===== -->
+    <section id="screen-perfil" class="screen-section hidden">
+      <div class="perfil-hero">
+        <div class="perfil-avatar-wrap">
+          <div class="perfil-avatar" id="perfil-avatar">?</div>
+          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')">✏️</button>
+        </div>
+        <h2 id="perfil-name">--</h2>
+        <p id="perfil-email">--</p>
+        <div class="perfil-badges" id="perfil-badges"></div>
+      </div>
 
-                <div class="quick-menu">
-                    <button class="quick-btn" data-screen="subjects">📚 Matérias</button>
-                    <button class="quick-btn" data-screen="ranking">🏆 Ranking</button>
-                    <button class="quick-btn" data-screen="discover">🔍 Descobrir</button>
-                    <button class="quick-btn" data-screen="profile">👤 Perfil</button>
-                </div>
-            </section>
+      <div class="perfil-stats">
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-pts">0</div>
+          <div class="pstat-label">Pontos</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-quizzes">0</div>
+          <div class="pstat-label">Quizzes</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-materias">0</div>
+          <div class="pstat-label">Matérias</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val" id="pstat-seguidores">0</div>
+          <div class="pstat-label">Seguidores</div>
+        </div>
+      </div>
 
-            <!-- MATÉRIAS -->
-            <section id="screen-subjects" class="screen">
-                <h2>📚 Matérias</h2>
-                <button class="btn btn-primary" onclick="openCreateSubject()">+ Nova Matéria</button>
+      <!-- Edit Profile -->
+      <div class="card mt-2">
+        <div class="section-title">Editar perfil</div>
+        <div class="field-group">
+          <label>Nome</label>
+          <div class="input-wrap">
+            <input type="text" id="edit-name" placeholder="Seu nome" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Bio</label>
+          <textarea id="edit-bio" placeholder="Fale sobre você..." rows="3"></textarea>
+        </div>
+        <button class="btn-primary btn-full" onclick="saveProfile()">💾 Salvar perfil</button>
+      </div>
 
-                <div id="create-subject-form" style="display: none; margin: 20px 0; padding: 20px; background: #f0f0f0; border-radius: 8px;">
-                    <input type="text" id="subject-title" placeholder="Nome da matéria" required>
-                    <textarea id="subject-desc" placeholder="Descrição" style="width: 100%; margin-top: 10px; padding: 10px;"></textarea>
-                    <button class="btn btn-primary" onclick="createSubject()" style="margin-top: 10px;">Criar</button>
-                    <button class="btn btn-secondary" onclick="closeCreateSubject()" style="margin-top: 10px;">Cancelar</button>
-                </div>
+      <!-- Histórico -->
+      <div class="section-title">Histórico de quizzes</div>
+      <div id="perfil-historico" class="historico-list">
+        <div class="empty-state">Nenhum quiz realizado ainda</div>
+      </div>
+    </section>
 
-                <div id="subjects-list" class="list"></div>
-            </section>
+    <!-- ===== NOTIFICAÇÕES ===== -->
+    <section id="screen-notificacoes" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>🔔 Notificações</h2>
+        </div>
+        <button class="btn-sm btn-secondary" onclick="markAllRead()">Marcar lidas</button>
+      </div>
+      <div id="notificacoes-list" class="notif-list">
+        <div class="empty-state">Sem notificações</div>
+      </div>
+    </section>
 
-            <!-- RANKING -->
-            <section id="screen-ranking" class="screen">
-                <h2>🏆 Ranking</h2>
-                <div id="ranking-list" class="list"></div>
-            </section>
+    <!-- ===== ADM ===== -->
+    <section id="screen-adm" class="screen-section hidden">
+      <div class="screen-header">
+        <div>
+          <h2>⚙️ Painel ADM</h2>
+          <p class="screen-subtitle">Controle total da plataforma</p>
+        </div>
+      </div>
 
-            <!-- DESCOBRIR -->
-            <section id="screen-discover" class="screen">
-                <h2>🔍 Descobrir</h2>
-                <input type="text" id="discover-search" placeholder="Pesquisar..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
-                <div id="discover-list" class="list"></div>
-            </section>
+      <!-- ADM Stats -->
+      <div class="stats-grid">
+        <div class="stat-card stat-blue">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-users">0</div>
+            <div class="stat-label">Usuários</div>
+          </div>
+        </div>
+        <div class="stat-card stat-purple">
+          <div class="stat-icon">📚</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-materias">0</div>
+            <div class="stat-label">Matérias</div>
+          </div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-icon">🎮</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-quizzes">0</div>
+            <div class="stat-label">Quizzes</div>
+          </div>
+        </div>
+        <div class="stat-card stat-orange">
+          <div class="stat-icon">💬</div>
+          <div class="stat-info">
+            <div class="stat-val" id="adm-total-posts">0</div>
+            <div class="stat-label">Posts</div>
+          </div>
+        </div>
+      </div>
 
-            <!-- PERFIL -->
-            <section id="screen-profile" class="screen">
-                <h2>👤 Meu Perfil</h2>
-                <div class="profile-info">
-                    <p>Nome: <strong id="profile-name"></strong></p>
-                    <p>Sala: <strong id="profile-class"></strong></p>
-                    <p>Pontos: <strong id="profile-points"></strong></p>
-                </div>
-                <button class="btn btn-primary" onclick="openEditProfile()">Editar Sala</button>
-                <button class="btn btn-primary" onclick="openChangePassword()">Alterar Senha</button>
-                <button class="btn btn-danger" onclick="openAdmPanel()">Painel ADM</button>
-            </section>
+      <!-- Tabs ADM -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setAdmTab('usuarios', this)">Usuários</button>
+        <button class="filter-tab" onclick="setAdmTab('conteudo', this)">Conteúdo</button>
+        <button class="filter-tab" onclick="setAdmTab('denuncias', this)">Denúncias</button>
+      </div>
 
-            <!-- ADM -->
-            <section id="screen-adm" class="screen">
-                <h2>⚙️ Painel ADM</h2>
-                <div id="adm-login" style="display: none;">
-                    <input type="password" id="adm-password" placeholder="Senha do ADM">
-                    <button class="btn btn-primary" onclick="admLogin()">Entrar</button>
-                </div>
-                <div id="adm-panel" style="display: none;">
-                    <h3>Depositar Pontos</h3>
-                    <input type="number" id="adm-points" placeholder="Quantidade" min="1">
-                    <button class="btn btn-primary" onclick="depositPoints()">Depositar</button>
+      <div id="adm-usuarios" class="adm-tab">
+        <div class="search-bar">
+          <span>🔍</span>
+          <input type="text" id="adm-search-user" placeholder="Buscar usuário..." oninput="admSearchUser()" />
+        </div>
+        <div id="adm-users-list" class="adm-list"></div>
+      </div>
+      <div id="adm-conteudo" class="adm-tab hidden">
+        <div id="adm-content-list" class="adm-list"></div>
+      </div>
+      <div id="adm-denuncias" class="adm-tab hidden">
+        <div id="adm-reports-list" class="adm-list">
+          <div class="empty-state">Nenhuma denúncia</div>
+        </div>
+      </div>
+    </section>
 
-                    <h3 style="margin-top: 20px;">Criar Quiz</h3>
-                    <select id="adm-subject" style="width: 100%; padding: 10px; margin-bottom: 10px;"></select>
-                    <textarea id="adm-code" placeholder="/n Nome do Quiz&#10;/q1 Pergunta&#10;/a1 Opção 1&#10;/a2 Opção 2&#10;/a3 Opção 3&#10;/a4 Opção 4&#10;/c 1" style="width: 100%; height: 150px; padding: 10px; margin-bottom: 10px;"></textarea>
-                    <button class="btn btn-primary" onclick="createQuizFromCode()">Criar Quiz</button>
+  </main><!-- /main-content -->
 
-                    <button class="btn btn-danger" onclick="admLogout()" style="margin-top: 20px;">Sair do ADM</button>
-                </div>
-            </section>
-        </main>
+  <!-- BOTTOM NAV (mobile) -->
+  <nav class="bottom-nav">
+    <a class="bnav-item active" data-screen="home" onclick="showScreen('home')">🏠<span>Home</span></a>
+    <a class="bnav-item" data-screen="materias" onclick="showScreen('materias')">📚<span>Matérias</span></a>
+    <a class="bnav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍<span>Descobrir</span></a>
+    <a class="bnav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆<span>Ranking</span></a>
+    <a class="bnav-item" data-screen="chat" onclick="showScreen('chat')">💬<span>Chat</span></a>
+  </nav>
 
-        <nav class="bottom-nav">
-            <button class="nav-item active" data-screen="home">🏠 Home</button>
-            <button class="nav-item" data-screen="subjects">📚 Matérias</button>
-            <button class="nav-item" data-screen="ranking">🏆 Ranking</button>
-            <button class="nav-item" data-screen="discover">🔍 Descobrir</button>
-            <button class="nav-item" data-screen="profile">👤 Perfil</button>
-        </nav>
+</div><!-- /app -->
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal: Nova Matéria -->
+<div class="modal hidden" id="modal-nova-materia">
+  <div class="modal-backdrop" onclick="closeModal('modal-nova-materia')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📚 Nova Matéria</h3>
+      <button class="modal-close" onclick="closeModal('modal-nova-materia')">✕</button>
     </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Nome da matéria *</label>
+        <input type="text" id="nm-nome" placeholder="Ex: Matemática, História..." />
+      </div>
+      <div class="field-group">
+        <label>Descrição</label>
+        <textarea id="nm-desc" placeholder="Descreva o que será estudado..." rows="3"></textarea>
+      </div>
+      <div class="field-group">
+        <label>Ícone</label>
+        <div class="emoji-picker" id="emoji-picker-materia">
+          <button class="emoji-opt selected" data-emoji="📚" onclick="selectEmoji('materia','📚',this)">📚</button>
+          <button class="emoji-opt" data-emoji="🔬" onclick="selectEmoji('materia','🔬',this)">🔬</button>
+          <button class="emoji-opt" data-emoji="🧮" onclick="selectEmoji('materia','🧮',this)">🧮</button>
+          <button class="emoji-opt" data-emoji="🎨" onclick="selectEmoji('materia','🎨',this)">🎨</button>
+          <button class="emoji-opt" data-emoji="🌍" onclick="selectEmoji('materia','🌍',this)">🌍</button>
+          <button class="emoji-opt" data-emoji="💻" onclick="selectEmoji('materia','💻',this)">💻</button>
+          <button class="emoji-opt" data-emoji="📖" onclick="selectEmoji('materia','📖',this)">📖</button>
+          <button class="emoji-opt" data-emoji="⚗️" onclick="selectEmoji('materia','⚗️',this)">⚗️</button>
+          <button class="emoji-opt" data-emoji="🎵" onclick="selectEmoji('materia','🎵',this)">🎵</button>
+          <button class="emoji-opt" data-emoji="🏃" onclick="selectEmoji('materia','🏃',this)">🏃</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Visibilidade</label>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="nm-vis" value="public" checked /> 🌍 Pública</label>
+          <label class="radio-opt"><input type="radio" name="nm-vis" value="private" /> 🔒 Privada</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-nova-materia')">Cancelar</button>
+      <button class="btn-primary" onclick="criarMateria()">Criar Matéria</button>
+    </div>
+  </div>
+</div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-    <script src="script.js"></script>
+<!-- Modal: Novo Tópico -->
+<div class="modal hidden" id="modal-novo-topico">
+  <div class="modal-backdrop" onclick="closeModal('modal-novo-topico')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📝 Novo Tópico</h3>
+      <button class="modal-close" onclick="closeModal('modal-novo-topico')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Título *</label>
+        <input type="text" id="nt-titulo" placeholder="Título do tópico" />
+      </div>
+      <div class="field-group">
+        <label>Conteúdo *</label>
+        <textarea id="nt-conteudo" placeholder="Escreva o conteúdo aqui..." rows="6"></textarea>
+      </div>
+      <div class="field-group">
+        <label>Tags (separadas por vírgula)</label>
+        <input type="text" id="nt-tags" placeholder="ex: fórmulas, teoria, prática" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-novo-topico')">Cancelar</button>
+      <button class="btn-primary" onclick="criarTopico()">Criar Tópico</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Novo Quiz -->
+<div class="modal hidden" id="modal-novo-quiz">
+  <div class="modal-backdrop" onclick="closeModal('modal-novo-quiz')"></div>
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3>🎮 Criar Quiz</h3>
+      <button class="modal-close" onclick="closeModal('modal-novo-quiz')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Nome do quiz *</label>
+        <input type="text" id="nq-nome" placeholder="Ex: Quiz de Álgebra" />
+      </div>
+      <div class="field-group">
+        <label>Tempo por questão (segundos)</label>
+        <input type="number" id="nq-tempo" value="30" min="10" max="120" />
+      </div>
+      <div class="section-title">Questões <button class="btn-sm btn-secondary" onclick="addQuizQuestion()">+ Adicionar</button></div>
+      <div id="quiz-questions-builder" class="qbuilder">
+        <!-- Questions added dynamically -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-novo-quiz')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarQuiz()">💾 Salvar Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nova Sala de Chat -->
+<div class="modal hidden" id="modal-nova-sala">
+  <div class="modal-backdrop" onclick="closeModal('modal-nova-sala')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>💬 Nova Sala</h3>
+      <button class="modal-close" onclick="closeModal('modal-nova-sala')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Nome da sala *</label>
+        <input type="text" id="ns-nome" placeholder="Ex: Matemática Avançada" />
+      </div>
+      <div class="field-group">
+        <label>Descrição</label>
+        <input type="text" id="ns-desc" placeholder="Sobre o que é essa sala?" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-nova-sala')">Cancelar</button>
+      <button class="btn-primary" onclick="criarSala()">Criar Sala</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Avatar -->
+<div class="modal hidden" id="modal-edit-avatar">
+  <div class="modal-backdrop" onclick="closeModal('modal-edit-avatar')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✏️ Escolher Avatar</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-avatar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="avatar-grid" id="avatar-grid">
+        <!-- Generated dynamically -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="saveAvatar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ver Perfil de Outro Usuário -->
+<div class="modal hidden" id="modal-user-profile">
+  <div class="modal-backdrop" onclick="closeModal('modal-user-profile')"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>👤 Perfil</h3>
+      <button class="modal-close" onclick="closeModal('modal-user-profile')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-user-profile-body">
+      <!-- Loaded dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- CONFETTI -->
+<canvas id="confetti-canvas" class="confetti-canvas hidden"></canvas>
+
+<script src="app.js"></script>
 </body>
 </html>
