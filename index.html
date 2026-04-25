@@ -6,77 +6,129 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2563eb">
-    <title>Sexta-Feira Studies</title>
+    <title>Sexta-Feira Studies - Plataforma de Aprendizado</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- TELA DE AUTENTICAÇÃO -->
     <div id="auth-screen" class="auth-screen">
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="auth-logo">📚</div>
-                <h1>Sexta-Feira Studies</h1>
-                <p>Aprenda estudando com diversão</p>
+        <div class="auth-wrapper">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="auth-logo-large">📚</div>
+                    <h1>Sexta-Feira Studies</h1>
+                    <p class="auth-tagline">Aprenda estudando com diversão e interatividade</p>
+                </div>
+
+                <!-- FORMULÁRIO DE LOGIN -->
+                <form id="login-form" class="auth-form active">
+                    <h2>Bem-vindo de volta</h2>
+                    <p class="form-subtitle">Faça login para continuar seus estudos</p>
+
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">✉️</span>
+                            <input type="email" id="login-email" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Senha</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="login-password" placeholder="Sua senha segura" required>
+                        </div>
+                    </div>
+
+                    <div id="login-error" class="error-message"></div>
+
+                    <button type="submit" class="btn btn-primary btn-large">
+                        <span class="btn-text">Entrar na Plataforma</span>
+                    </button>
+
+                    <div class="divider">
+                        <span>ou</span>
+                    </div>
+
+                    <button type="button" id="btn-google-login" class="btn btn-google btn-large">
+                        <span class="btn-icon">🔐</span>
+                        <span class="btn-text">Continuar com Google</span>
+                    </button>
+
+                    <p class="auth-toggle">
+                        Não tem conta? 
+                        <a href="#" id="toggle-signup" class="toggle-link">Criar nova conta</a>
+                    </p>
+                </form>
+
+                <!-- FORMULÁRIO DE CADASTRO -->
+                <form id="signup-form" class="auth-form">
+                    <h2>Crie sua conta</h2>
+                    <p class="form-subtitle">Junte-se à comunidade de aprendizado</p>
+
+                    <div class="form-group">
+                        <label for="signup-name">Nome completo</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="signup-name" placeholder="Seu nome completo" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">✉️</span>
+                            <input type="email" id="signup-email" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-password">Senha</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="signup-password" placeholder="Mínimo 6 caracteres" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-password-confirm">Confirmar Senha</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="signup-password-confirm" placeholder="Confirme sua senha" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="signup-class">Série/Sala (ex: 9A, 1º Ano)</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🏫</span>
+                            <input type="text" id="signup-class" placeholder="Sua série/sala" required>
+                        </div>
+                    </div>
+
+                    <div id="signup-error" class="error-message"></div>
+                    <div id="signup-success" class="success-message"></div>
+
+                    <button type="submit" class="btn btn-primary btn-large">
+                        <span class="btn-text">Criar Conta</span>
+                    </button>
+
+                    <div class="divider">
+                        <span>ou</span>
+                    </div>
+
+                    <button type="button" id="btn-google-signup" class="btn btn-google btn-large">
+                        <span class="btn-icon">🔐</span>
+                        <span class="btn-text">Cadastrar com Google</span>
+                    </button>
+
+                    <p class="auth-toggle">
+                        Já tem conta? 
+                        <a href="#" id="toggle-login" class="toggle-link">Fazer login</a>
+                    </p>
+                </form>
             </div>
-
-            <!-- FORMULÁRIO DE LOGIN -->
-            <form id="login-form" class="auth-form active">
-                <h2>Bem-vindo de volta</h2>
-
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" placeholder="seu@email.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="login-password">Senha</label>
-                    <input type="password" id="login-password" placeholder="••••••••" required>
-                </div>
-
-                <div id="login-error" class="error-message"></div>
-
-                <button type="submit" class="btn btn-primary btn-large">Entrar</button>
-                <button type="button" id="btn-google-login" class="btn btn-secondary btn-large">🔐 Google</button>
-
-                <p class="auth-toggle">
-                    Não tem conta? <a href="#" id="toggle-signup">Cadastre-se</a>
-                </p>
-            </form>
-
-            <!-- FORMULÁRIO DE CADASTRO -->
-            <form id="signup-form" class="auth-form">
-                <h2>Crie sua conta</h2>
-
-                <div class="form-group">
-                    <label for="signup-name">Nome completo</label>
-                    <input type="text" id="signup-name" placeholder="Seu nome" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-email">Email</label>
-                    <input type="email" id="signup-email" placeholder="seu@email.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-password">Senha</label>
-                    <input type="password" id="signup-password" placeholder="••••••••" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="signup-class">Sala (ex: 9A)</label>
-                    <input type="text" id="signup-class" placeholder="9A" required>
-                </div>
-
-                <div id="signup-error" class="error-message"></div>
-                <div id="signup-success" class="success-message"></div>
-
-                <button type="submit" class="btn btn-primary btn-large">Criar Conta</button>
-                <button type="button" id="btn-google-signup" class="btn btn-secondary btn-large">🔐 Google</button>
-
-                <p class="auth-toggle">
-                    Já tem conta? <a href="#" id="toggle-login">Faça login</a>
-                </p>
-            </form>
         </div>
     </div>
 
@@ -84,10 +136,12 @@
     <div id="app-screen" class="app-screen" style="display: none;">
         <!-- HEADER -->
         <header class="app-header">
-            <h1 class="app-title">📚 Sexta-Feira</h1>
-            <div class="header-actions">
+            <div class="header-left">
+                <h1 class="app-title">📚 Sexta-Feira</h1>
+            </div>
+            <div class="header-right">
                 <span id="user-display" class="user-display"></span>
-                <button id="btn-logout" class="btn btn-icon">🚪</button>
+                <button id="btn-logout" class="btn btn-icon btn-logout" title="Sair">🚪</button>
             </div>
         </header>
 
@@ -96,45 +150,62 @@
             <!-- TELA HOME/ESTUDOS -->
             <section id="screen-home" class="screen active">
                 <div class="welcome-banner">
-                    <h2>Bem-vindo, <span id="welcome-name"></span>! 👋</h2>
-                    <p>Sala: <span id="welcome-class"></span></p>
-                    <p>Pontos: <span id="welcome-points">0</span> ⭐</p>
+                    <div class="banner-content">
+                        <h2>Bem-vindo, <span id="welcome-name"></span>! 👋</h2>
+                        <div class="banner-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Sala:</span>
+                                <span class="stat-value" id="welcome-class"></span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Pontos:</span>
+                                <span class="stat-value" id="welcome-points">0</span> ⭐
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="quick-access">
                     <div class="quick-card" data-screen="subjects">
                         <div class="quick-icon">📚</div>
-                        <div class="quick-text">
-                            <h3>Matérias</h3>
-                            <p>Estude agora</p>
-                        </div>
+                        <h3>Matérias</h3>
+                        <p>Estude seus tópicos</p>
                     </div>
                     <div class="quick-card" data-screen="ranking">
                         <div class="quick-icon">🏆</div>
-                        <div class="quick-text">
-                            <h3>Ranking</h3>
-                            <p>Sua posição</p>
-                        </div>
+                        <h3>Ranking</h3>
+                        <p>Veja sua posição</p>
+                    </div>
+                    <div class="quick-card" data-screen="chat">
+                        <div class="quick-icon">💬</div>
+                        <h3>Chat</h3>
+                        <p>Converse com amigos</p>
                     </div>
                 </div>
 
-                <div class="section-title">Suas Matérias</div>
+                <div class="section-title">Suas Matérias Recentes</div>
                 <div id="home-subjects" class="subjects-list"></div>
             </section>
 
             <!-- TELA MATÉRIAS -->
             <section id="screen-subjects" class="screen">
                 <div class="screen-header">
-                    <h2>Matérias</h2>
-                    <button id="btn-new-subject" class="btn btn-primary btn-small">+ Nova</button>
+                    <h2>📚 Matérias</h2>
+                    <button id="btn-new-subject" class="btn btn-primary btn-small">+ Nova Matéria</button>
                 </div>
 
                 <div id="create-subject-form" class="form-box" style="display: none;">
-                    <h3>Criar Matéria</h3>
-                    <input type="text" id="subject-title" class="form-input" placeholder="Nome da matéria">
-                    <textarea id="subject-desc" class="form-input" placeholder="Descrição" style="min-height: 80px;"></textarea>
+                    <h3>📝 Criar Nova Matéria</h3>
+                    <div class="form-group">
+                        <label for="subject-title">Nome da Matéria</label>
+                        <input type="text" id="subject-title" class="form-input" placeholder="Ex: Matemática, História, Português">
+                    </div>
+                    <div class="form-group">
+                        <label for="subject-desc">Descrição</label>
+                        <textarea id="subject-desc" class="form-input" placeholder="Descreva o conteúdo da matéria..." style="min-height: 100px;"></textarea>
+                    </div>
                     <div class="form-buttons">
-                        <button id="btn-create-subject" class="btn btn-primary">Criar</button>
+                        <button id="btn-create-subject" class="btn btn-primary">Criar Matéria</button>
                         <button id="btn-cancel-subject" class="btn btn-secondary">Cancelar</button>
                     </div>
                 </div>
@@ -147,18 +218,21 @@
                     <p id="detail-desc"></p>
 
                     <div class="detail-section">
-                        <h4>Quizzes</h4>
+                        <h4>📋 Quizzes Disponíveis</h4>
                         <button id="btn-new-quiz" class="btn btn-primary btn-small">+ Novo Quiz</button>
                         <div id="quizzes-list" class="quizzes-grid"></div>
                     </div>
 
                     <div id="create-quiz-form" class="form-box" style="display: none;">
-                        <h4>Criar Quiz</h4>
-                        <input type="text" id="quiz-title" class="form-input" placeholder="Nome do quiz">
+                        <h4>🎯 Criar Novo Quiz</h4>
+                        <div class="form-group">
+                            <label for="quiz-title">Nome do Quiz</label>
+                            <input type="text" id="quiz-title" class="form-input" placeholder="Ex: Quiz de Frações">
+                        </div>
                         <div id="questions-container"></div>
-                        <button id="btn-add-question" class="btn btn-secondary btn-small">+ Pergunta</button>
+                        <button id="btn-add-question" class="btn btn-secondary btn-small">+ Adicionar Pergunta</button>
                         <div class="form-buttons">
-                            <button id="btn-save-quiz" class="btn btn-primary">Salvar</button>
+                            <button id="btn-save-quiz" class="btn btn-primary">Salvar Quiz</button>
                             <button id="btn-cancel-quiz" class="btn btn-secondary">Cancelar</button>
                         </div>
                     </div>
@@ -181,7 +255,7 @@
                         <div id="answers-container" class="answers-grid"></div>
                     </div>
 
-                    <button id="btn-next-question" class="btn btn-primary" style="display: none;">Próxima</button>
+                    <button id="btn-next-question" class="btn btn-primary btn-large" style="display: none;">Próxima Pergunta</button>
                 </div>
             </section>
 
@@ -192,10 +266,10 @@
                     <h2>🎉 Quiz Finalizado!</h2>
                     <div class="result-score">
                         <div class="score-number" id="result-score">0</div>
-                        <p>pontos</p>
+                        <p class="score-label">pontos</p>
                     </div>
-                    <p id="result-message"></p>
-                    <button id="btn-back-home" class="btn btn-primary">Voltar</button>
+                    <p id="result-message" class="result-message"></p>
+                    <button id="btn-back-home" class="btn btn-primary btn-large">Voltar às Matérias</button>
                 </div>
             </section>
 
@@ -209,7 +283,7 @@
             <section id="screen-chat" class="screen">
                 <div class="chat-header">
                     <h2>💬 Chat</h2>
-                    <button id="btn-new-chat" class="btn btn-primary btn-small">+ Novo</button>
+                    <button id="btn-new-chat" class="btn btn-primary btn-small">+ Novo Chat</button>
                 </div>
 
                 <div id="chat-list" class="chat-list"></div>
@@ -227,23 +301,6 @@
                 </div>
             </section>
 
-            <!-- TELA AMIGOS -->
-            <section id="screen-friends" class="screen">
-                <div class="friends-header">
-                    <h2>👥 Amigos</h2>
-                    <button id="btn-add-friend" class="btn btn-primary btn-small">+ Adicionar</button>
-                </div>
-
-                <div id="add-friend-form" class="form-box" style="display: none;">
-                    <h3>Adicionar Amigo</h3>
-                    <input type="text" id="friend-search" class="form-input" placeholder="Nome ou ID do usuário">
-                    <div id="search-results" class="search-results"></div>
-                    <button id="btn-cancel-add-friend" class="btn btn-secondary">Cancelar</button>
-                </div>
-
-                <div id="friends-list" class="friends-list"></div>
-            </section>
-
             <!-- TELA PERFIL -->
             <section id="screen-profile" class="screen">
                 <div class="profile-header">
@@ -254,18 +311,27 @@
                 </div>
 
                 <div class="profile-section">
-                    <h3>Informações</h3>
+                    <h3>📊 Informações</h3>
                     <div class="profile-info">
-                        <p><strong>Email:</strong> <span id="profile-email"></span></p>
-                        <p><strong>Sala:</strong> <span id="profile-class-info"></span></p>
-                        <p><strong>Pontos:</strong> <span id="profile-points-info"></span></p>
+                        <div class="info-item">
+                            <span class="info-label">Email:</span>
+                            <span class="info-value" id="profile-email"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Sala:</span>
+                            <span class="info-value" id="profile-class-info"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Pontos:</span>
+                            <span class="info-value" id="profile-points-info"></span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="profile-section">
-                    <h3>Configurações</h3>
-                    <button id="btn-edit-profile" class="btn btn-secondary btn-large">Editar Perfil</button>
-                    <button id="btn-change-password" class="btn btn-secondary btn-large">Alterar Senha</button>
+                    <h3>⚙️ Configurações</h3>
+                    <button id="btn-edit-profile" class="btn btn-secondary btn-large">✏️ Editar Perfil</button>
+                    <button id="btn-change-password" class="btn btn-secondary btn-large">🔐 Alterar Senha</button>
                 </div>
             </section>
 
@@ -276,24 +342,28 @@
                 </div>
 
                 <div id="adm-login" class="form-box">
-                    <h3>Acesso Restrito</h3>
-                    <input type="password" id="adm-password" class="form-input" placeholder="Senha de acesso">
+                    <h3>🔐 Acesso Restrito</h3>
+                    <p class="form-subtitle">Digite a senha para acessar o painel administrativo</p>
+                    <div class="form-group">
+                        <label for="adm-password">Senha de Acesso</label>
+                        <input type="password" id="adm-password" class="form-input" placeholder="Digite a senha">
+                    </div>
                     <button id="btn-adm-login" class="btn btn-primary btn-large">Entrar no Painel</button>
                 </div>
 
                 <div id="adm-panel" class="adm-panel" style="display: none;">
                     <div class="adm-section">
-                        <h3>Gerenciar Matérias</h3>
+                        <h3>📚 Gerenciar Matérias</h3>
                         <div id="adm-subjects" class="adm-list"></div>
                     </div>
 
                     <div class="adm-section">
-                        <h3>Gerenciar Quizzes</h3>
+                        <h3>🎯 Gerenciar Quizzes</h3>
                         <div id="adm-quizzes" class="adm-list"></div>
                     </div>
 
                     <div class="adm-section">
-                        <h3>Gerenciar Usuários</h3>
+                        <h3>👥 Gerenciar Usuários</h3>
                         <div id="adm-users" class="adm-list"></div>
                     </div>
 
@@ -304,25 +374,25 @@
 
         <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
-            <button class="nav-item active" data-screen="home">
+            <button class="nav-item active" data-screen="home" title="Home">
                 <span class="nav-icon">🏠</span>
                 <span class="nav-label">Home</span>
             </button>
-            <button class="nav-item" data-screen="subjects">
+            <button class="nav-item" data-screen="subjects" title="Estudos">
                 <span class="nav-icon">📚</span>
                 <span class="nav-label">Estudos</span>
             </button>
-            <button class="nav-item" data-screen="chat">
+            <button class="nav-item" data-screen="ranking" title="Ranking">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Ranking</span>
+            </button>
+            <button class="nav-item" data-screen="chat" title="Chat">
                 <span class="nav-icon">💬</span>
                 <span class="nav-label">Chat</span>
             </button>
-            <button class="nav-item" data-screen="profile">
+            <button class="nav-item" data-screen="profile" title="Perfil">
                 <span class="nav-icon">👤</span>
                 <span class="nav-label">Perfil</span>
-            </button>
-            <button class="nav-item" data-screen="adm">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-label">ADM</span>
             </button>
         </nav>
     </div>
@@ -331,6 +401,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
