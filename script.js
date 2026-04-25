@@ -165,16 +165,22 @@ setTimeout(() => {
 // ============================================================
 // AUTH
 // ============================================================
+
 auth.onAuthStateChanged(async (user) => {
   console.log('🔐 Auth:', user ? user.uid : 'Ninguém');
   
+  // REMOVER SPLASH IMEDIATAMENTE
+  forceRemoveSplash();
+  
   if (user) {
     STATE.user = user;
+    
+    // Carregar dados do usuário
     const snap = await db.ref('usuarios/' + user.uid).once('value');
     STATE.userData = snap.val();
     
     if (!STATE.userData) {
-      // Criar perfil básico
+  
       STATE.userData = {
         uid: user.uid,
         username: user.email?.split('@')[0] || 'user',
@@ -191,16 +197,16 @@ auth.onAuthStateChanged(async (user) => {
       await db.ref('usuarios/' + user.uid).set(STATE.userData);
     }
     
-    hideEl('splash-screen');
+    // Mostrar app
     hideEl('auth-screen');
     showEl('app');
     updateUI();
     showScreen('home');
     initRealtime();
+    
   } else {
     STATE.user = null;
     STATE.userData = null;
-    hideEl('splash-screen');
     hideEl('app');
     showEl('auth-screen');
     showAuthTab('login');
@@ -1890,3 +1896,24 @@ console.log('  - Ranking');
 console.log('  - Notificações com badge');
 console.log('  - Painel Admin com senha');
 console.log('  - Sistema de pontos e níveis');
+// ============================================================
+// FORÇAR REMOÇÃO DA SPLASH SE TRAVAR
+// ============================================================
+// Se depois de 4 segundos a splash ainda estiver visível, 
+// mostra a tela de login diretamente
+setTimeout(() => {
+  const splash = document.getElementById('splash-screen');
+  if (splash && splash.style.display !== 'none') {
+    console.warn('⚠️ Forçando remoção da splash por timeout');
+    splash.style.display = 'none';
+    
+    // Mostrar auth screen se o app não estiver visível
+    const app = document.getElementById('app');
+    const authScreen = document.getElementById('auth-screen');
+    
+    if (app && app.style.display === 'none' && authScreen) {
+      authScreen.style.display = '';
+      showAuthTab('login');
+    }
+  }
+}, 4000);
