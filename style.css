@@ -1213,6 +1213,43 @@ textarea.form-input {
     color: var(--text-light);
 }
 
+.friends-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.friend-item {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 2px solid var(--border);
+}
+
+.friend-info h4 {
+    color: var(--text);
+    margin-bottom: 4px;
+    font-size: 15px;
+}
+
+.friend-info p {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.friend-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.friend-actions button {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
 /* ==================== ADM ====================*/
 .adm-header {
     margin-bottom: 24px;
@@ -1525,56 +1562,4 @@ textarea.form-input {
 
     .result-box {
         padding: 20px;
-        border-radius: 14px;
-    }
-
-    .result-box h2 {
-        font-size: 24px;
-        margin-bottom: 20px;
-    }
-
-    .score-number {
-        font-size: 48px;
-    }
-
-    .profile-header {
-        padding: 24px;
-        border-radius: 16px;
-    }
-
-    .profile-avatar {
-        font-size: 48px;
-    }
-
-    .profile-header h2 {
-        font-size: 20px;
-    }
-
-    .profile-section {
-        padding: 18px;
-        border-radius: 14px;
-    }
-
-    .chat-window {
-        height: 350px;
-    }
-
-    .bottom-nav {
-        height: 70px;
-    }
-
-    .nav-icon {
-        font-size: 20px;
-    }
-
-    .nav-label {
-        font-size: 11px;
-    }
-
-    .btn-back {
-        padding: 8px 12px;
-        font-size: 13px;
-        margin-bottom: 16px;
-    }
-
-    .form-box {
+        border-
