@@ -1181,28 +1181,55 @@ function addQuestaoNormal() {
 }
 
 function removerQuestaoNormal(idx) {
+  if (questoesNormais.length <= 1) {
+    showToast('Mínimo 1 questão!', 'info');
+    return;
+  }
   questoesNormais.splice(idx, 1);
   questaoCount--;
   
-  // Reconstruir o container
   const container = document.getElementById('qn-questoes-container');
   if (!container) return;
   
+  // Reconstruir visual
+  const todasQuestoes = [...questoesNormais];
   container.innerHTML = '';
   questoesNormais = [];
   questaoCount = 0;
   
-  // Recriar todas as questões restantes (opcional: só remove e não recria)
-  // Vamos apenas remover o elemento visual
-  const el = document.getElementById('qn-questao-' + idx);
-  if (el) el.remove();
-  
-  // Reindexar
-  const divs = container.querySelectorAll('[id^="qn-questao-"]');
-  divs.forEach((div, i) => {
+  todasQuestoes.forEach(q => {
+    const i = questoesNormais.length;
+    questoesNormais.push(q);
+    questaoCount++;
+    
+    const div = document.createElement('div');
     div.id = 'qn-questao-' + i;
-    const title = div.querySelector('strong');
-    if (title) title.textContent = 'Questão ' + (i + 1);
+    div.style.cssText = 'background:var(--input-bg); border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid var(--border);';
+    
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <strong style="color:var(--text);">Questão ${i + 1}</strong>
+        ${i > 0 ? `<button onclick="removerQuestaoNormal(${i})" style="background:#fee2e2; color:#dc2626; border:none; padding:4px 10px; border-radius:8px; cursor:pointer; font-weight:600; font-size:12px;">🗑 Remover</button>` : ''}
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px; font-weight:600; color:var(--text3);">PERGUNTA</label>
+        <input type="text" value="${esc(q.pergunta)}" oninput="questoesNormais[${i}].pergunta = this.value" 
+               style="width:100%; padding:8px; border:2px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; outline:none; margin-top:4px;" />
+      </div>
+      <div style="margin-bottom:8px;">
+        <label style="font-size:11px; font-weight:600; color:var(--text3);">ALTERNATIVAS (marque a correta)</label>
+        ${['A', 'B', 'C', 'D'].map((letra, j) => `
+          <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+            <input type="radio" name="qn-correta-${i}" value="${j}" ${q.correta === j ? 'checked' : ''} 
+                   onchange="questoesNormais[${i}].correta = ${j}" style="width:18px; height:18px; cursor:pointer;" />
+            <span style="font-weight:700; font-size:13px; color:var(--text); width:20px;">${letra})</span>
+            <input type="text" value="${esc(q.alternativas[j] || '')}" oninput="questoesNormais[${i}].alternativas[${j}] = this.value"
+                   style="flex:1; padding:8px; border:2px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; outline:none;" />
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(div);
   });
 }
 
@@ -1213,7 +1240,6 @@ function salvarQuizNormal() {
   if (!nome) { showToast('Nome do quiz é obrigatório', 'error'); return; }
   if (!STATE.currentMateriaId) { showToast('Acesse uma matéria primeiro!', 'error'); return; }
 
-  // Validar questões
   const validas = questoesNormais.filter(q => 
     q.pergunta.trim() && 
     q.alternativas.filter(a => a.trim()).length >= 2
@@ -1238,7 +1264,6 @@ function salvarQuizNormal() {
   db.ref('quizzes/' + STATE.currentMateriaId).push(quiz).then(() => {
     closeModal('modal-quiz-normal');
     
-    // Limpar formulário
     document.getElementById('qn-nome').value = '';
     document.getElementById('qn-tempo').value = '30';
     document.getElementById('qn-questoes-container').innerHTML = '';
@@ -1248,7 +1273,7 @@ function salvarQuizNormal() {
     addPts(30);
     showToast('Quiz "' + nome + '" criado com ' + validas.length + ' questões! 🎮', 'success');
     
-    // Recarregar quizzes da matéria
+    // Recarregar quizzes
     if (STATE.currentMateriaId) {
       db.ref('quizzes/' + STATE.currentMateriaId).once('value').then(snap => {
         const q = snap.val();
@@ -1267,38 +1292,54 @@ function salvarQuizNormal() {
         }
       });
     }
-
-    addQuestaoNormal(); // Deixar uma questão pronta para o próximo quiz
   }).catch(err => {
     showToast('Erro ao salvar quiz', 'error');
     console.error(err);
   });
 }
 
-// Inicializar com 1 questão ao abrir o modal
-function showModal(id) {
-  const m = document.getElementById(id);
-  if (m) {
-    m.style.display = 'flex';
-    
-    // Se for o modal de quiz normal, resetar
-    if (id === 'modal-quiz-normal') {
-      questoesNormais = [];
-      questaoCount = 0;
-      document.getElementById('qn-questoes-container').innerHTML = '';
-      document.getElementById('qn-nome').value = '';
-      document.getElementById('qn-tempo').value = '30';
-      addQuestaoNormal(); // Já começa com 1 questão
-    }
-  }
-}
 // ============================================================
-// CHAT PRIVADO (PV)
+// SOBRESCREVER showModal PARA INICIAR QUIZ NORMAL
+// ============================================================
+const originalShowModal = showModal;
+showModal = function(id) {
+  originalShowModal(id);
+  
+  if (id === 'modal-quiz-normal') {
+    questoesNormais = [];
+    questaoCount = 0;
+    const container = document.getElementById('qn-questoes-container');
+    if (container) container.innerHTML = '';
+    const nomeEl = document.getElementById('qn-nome');
+    const tempoEl = document.getElementById('qn-tempo');
+    if (nomeEl) nomeEl.value = '';
+    if (tempoEl) tempoEl.value = '30';
+    addQuestaoNormal();
+  }
+};
+
+// ============================================================
+// SOBRESCREVER closeModal PARA LIMPAR PV
+// ============================================================
+const originalCloseModal = closeModal;
+closeModal = function(id) {
+  if (id === 'modal-private-chat') {
+    if (privateChatListener) {
+      try { privateChatListener(); } catch(e) {}
+      privateChatListener = null;
+    }
+    privateChatUser = null;
+  }
+  originalCloseModal(id);
+};
+
+// ============================================================
+// CHAT PRIVADO (PV) - MODAL
 // ============================================================
 let privateChatUser = null;
 let privateChatListener = null;
 
-async function openPrivateChat(uid) {
+async function openPrivateChatModal(uid) {
   if (uid === STATE.user?.uid) {
     showToast('Não pode enviar mensagem para si mesmo', 'info');
     return;
@@ -1306,24 +1347,19 @@ async function openPrivateChat(uid) {
 
   privateChatUser = uid;
   
-  // Buscar dados do usuário
   const snap = await db.ref('usuarios/' + uid).once('value');
   const u = snap.val();
   if (!u) return;
 
-  // Atualizar cabeçalho
   document.getElementById('pv-avatar').textContent = u.avatar || '?';
   document.getElementById('pv-name').textContent = u.username || 'Usuário';
   
-  // Criar ID único da conversa (ordem alfabética dos UIDs)
   const chatId = [STATE.user.uid, uid].sort().join('_');
   
-  // Remover listener antigo
   if (privateChatListener) {
     try { privateChatListener(); } catch(e) {}
   }
 
-  // Ouvir mensagens
   privateChatListener = db.ref('private_chats/' + chatId).on('value', (snap) => {
     const msgs = snap.val();
     const container = document.getElementById('pv-messages');
@@ -1359,8 +1395,6 @@ async function openPrivateChat(uid) {
   document.getElementById('pv-messages').innerHTML = '<div style="text-align:center; color:var(--text3); padding:20px;">⏳ Carregando...</div>';
   
   showModal('modal-private-chat');
-  
-  // Focar no input
   setTimeout(() => document.getElementById('pv-input')?.focus(), 300);
 }
 
@@ -1378,33 +1412,20 @@ async function sendPrivateMsg() {
     createdAt: Date.now()
   });
 
-  // Notificar o outro usuário
   await db.ref('notificacoes/' + privateChatUser).push({
     mensagem: '💬 ' + STATE.userData.username + ' te enviou uma mensagem!',
     tipo: 'message',
     lida: false,
     chatId: chatId,
+    fromUid: STATE.user.uid,
     createdAt: Date.now()
   });
 
   document.getElementById('pv-input').value = '';
 }
 
-// Fechar listener ao fechar modal
-const originalCloseModal = closeModal;
-closeModal = function(id) {
-  if (id === 'modal-private-chat') {
-    if (privateChatListener) {
-      try { privateChatListener(); } catch(e) {}
-      privateChatListener = null;
-    }
-    privateChatUser = null;
-  }
-  originalCloseModal(id);
-};
-
 // ============================================================
-// CONVIDAR USUÁRIOS PARA SALA DE CHAT
+// CONVIDAR USUÁRIOS
 // ============================================================
 let selectedInviteUsers = [];
 
@@ -1481,7 +1502,7 @@ function updateInviteSelected() {
   const el = document.getElementById('invite-selected');
   if (el) {
     el.innerHTML = selectedInviteUsers.length > 0
-      ? `<span style="font-size:13px; color:var(--text);">✅ ${selectedInviteUsers.length} usuário(s) selecionado(s)</span>`
+      ? `<span style="font-size:13px; color:var(--text);">✅ ${selectedInviteUsers.length} usuário(s)</span>`
       : '<span style="font-size:12px; color:var(--text3);">Selecionados: 0</span>';
   }
 }
@@ -1496,21 +1517,18 @@ async function sendInvites() {
     showToast('Selecione pelo menos 1 usuário', 'info');
     return;
   }
-
   if (!STATE.currentRoom) {
     showToast('Entre em uma sala primeiro!', 'error');
     return;
   }
 
-  // Pegar nome da sala
   const roomSnap = await db.ref('chat_rooms/' + STATE.currentRoom).once('value');
   const room = roomSnap.val();
   const roomName = room?.nome || 'Sala';
 
-  // Enviar notificação para cada usuário
   for (const uid of selectedInviteUsers) {
     await db.ref('notificacoes/' + uid).push({
-      mensagem: '👥 ' + STATE.userData.username + ' te convidou para a sala: ' + roomName + '!',
+      mensagem: '👥 ' + STATE.userData.username + ' te convidou para: ' + roomName + '!',
       tipo: 'invite',
       lida: false,
       roomId: STATE.currentRoom,
@@ -1519,14 +1537,14 @@ async function sendInvites() {
     });
   }
 
-  showToast('Convites enviados para ' + selectedInviteUsers.length + ' pessoa(s)! 📨', 'success');
+  showToast('Convites enviados! 📨', 'success');
   closeModal('modal-invite');
   selectedInviteUsers = [];
 }
 
-// ========== VER PERFIL (COM BOTÃO DE CHAT) ==========
-let viewingUserId = null;
-
+// ============================================================
+// VER PERFIL (COM BOTÃO DE CHAT)
+// ============================================================
 async function verPerfil(uid) {
   if (uid === STATE.user?.uid) {
     showScreen('perfil');
@@ -1550,30 +1568,19 @@ async function verPerfil(uid) {
         <span style="background:var(--hover); color:var(--text); padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px;">⭐ ${fmt(u.points || 0)} pts</span>
         <span style="background:var(--hover); color:var(--text); padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px; margin-left:5px;">👥 ${u.seguidores || 0} seguidores</span>
       </div>
-      
-      <!-- Botão Seguir -->
       <button id="btn-follow-modal" onclick="toggleFollowUser('${uid}', this)" 
               style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:5px;">
         Carregando...
       </button>
-      
-      <!-- Botão Enviar Mensagem -->
-      <button onclick="closeModal('modal-user-profile'); openPrivateChat('${uid}')" 
+      <button onclick="closeModal('modal-user-profile'); openPrivateChatModal('${uid}')" 
               style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:8px;">
         💬 Enviar Mensagem
-      </button>
-      
-      <!-- Botão Ver Perfil Completo -->
-      <button onclick="closeModal('modal-user-profile'); viewFullProfile('${uid}')" 
-              style="width:100%; padding:12px; background:var(--border); color:var(--text); border:none; border-radius:25px; cursor:pointer; font-weight:600; font-size:14px; margin-top:5px;">
-        👤 Ver Perfil Completo
       </button>
     </div>
   `;
   
   showModal('modal-user-profile');
   
-  // Verificar se já segue
   const fSnap = await db.ref('seguidores/' + STATE.user.uid + '/' + uid).once('value');
   const btn = document.getElementById('btn-follow-modal');
   if (btn) {
@@ -1587,114 +1594,10 @@ async function verPerfil(uid) {
   }
 }
 
-// ========== ABRIR CHAT PRIVADO ==========
-async function openPrivateChat(uid) {
-  if (uid === STATE.user?.uid) {
-    showToast('Não pode enviar mensagem para si mesmo', 'info');
-    return;
-  }
-
-  // Navegar para a tela de chat
-  showScreen('chat');
-  
-  // Pequeno delay para a tela carregar
-  setTimeout(() => {
-    openPVinChat(uid);
-  }, 500);
-}
-
-// ========== VER PERFIL COMPLETO ==========
-async function viewFullProfile(uid) {
-  // Por enquanto só mostra o mesmo modal com mais detalhes
-  const snap = await db.ref('usuarios/' + uid).once('value');
-  const u = snap.val();
-  if (!u) return;
-  
-  const level = getLevelName(u.points || 0);
-  
-  const content = document.getElementById('user-profile-content');
-  if (!content) return;
-  
-  content.innerHTML = `
-    <div style="text-align:center;">
-      <div style="font-size:70px;">${u.avatar || '🎓'}</div>
-      <h2 style="color:var(--text); margin:10px 0;">${esc(u.username || '?')}</h2>
-      <p style="color:var(--text3);">${esc(u.bio || 'Sem bio')}</p>
-      <p style="color:var(--text3); font-size:12px;">📧 ${esc(u.email || 'E-mail privado')}</p>
-      
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:15px 0;">
-        <div style="background:var(--hover); padding:10px; border-radius:10px;">
-          <div style="font-size:20px; font-weight:800; color:#6C5CE7;">${fmt(u.points || 0)}</div>
-          <div style="font-size:10px; color:var(--text3);">Pontos</div>
-        </div>
-        <div style="background:var(--hover); padding:10px; border-radius:10px;">
-          <div style="font-size:20px; font-weight:800; color:var(--text);">${u.quizzesPlayed || 0}</div>
-          <div style="font-size:10px; color:var(--text3);">Quizzes</div>
-        </div>
-        <div style="background:var(--hover); padding:10px; border-radius:10px;">
-          <div style="font-size:20px; font-weight:800; color:var(--text);">${u.seguidores || 0}</div>
-          <div style="font-size:10px; color:var(--text3);">Seguidores</div>
-        </div>
-      </div>
-      
-      <div style="margin:10px 0;">
-        <span style="background:var(--hover); color:var(--text); padding:5px 12px; border-radius:15px; font-weight:600; font-size:12px;">🏆 ${level}</span>
-        ${u.isAdmin ? '<span style="background:#fef3c7; color:#92400e; padding:5px 12px; border-radius:15px; font-weight:600; font-size:12px; margin-left:5px;">⚙️ Admin</span>' : ''}
-      </div>
-      
-      <button onclick="closeModal('modal-user-profile'); openPrivateChat('${uid}')" 
-              style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:10px;">
-        💬 Enviar Mensagem
-      </button>
-    </div>
-  `;
-  
-  showModal('modal-user-profile');
-}
 // ============================================================
-// NOTIFICAÇÃO DE CONVITE - ABRIR SALA AO CLICAR
+// NOTIFICAÇÕES - DATA ATTRIBUTES
 // ============================================================
-// Modificar loadNotifs para tornar convites clicáveis
-const originalLoadNotifs = loadNotifs;
-loadNotifs = async function() {
-  await originalLoadNotifs();
-  
-  // Adicionar onclick nos convites
-  setTimeout(() => {
-    document.querySelectorAll('#notificacoes-list > div').forEach(el => {
-      const text = el.textContent || '';
-      if (text.includes('convidou para a sala')) {
-        el.style.cursor = 'pointer';
-        el.style.background = 'var(--hover)';
-        el.onclick = function() {
-          // Extrair roomId da notificação (armazenado no data)
-          const roomId = this.getAttribute('data-room');
-          if (roomId) {
-            showScreen('chat');
-            setTimeout(() => joinRoom(roomId), 500);
-          }
-        };
-      }
-      // Mensagem privada
-      if (text.includes('enviou uma mensagem')) {
-        el.style.cursor = 'pointer';
-        el.style.background = 'var(--hover)';
-        el.onclick = function() {
-          const chatId = this.getAttribute('data-chat');
-          if (chatId) {
-            // Extrair o outro UID do chatId
-            const parts = chatId.split('_');
-            const otherUid = parts.find(p => p !== STATE.user?.uid);
-            if (otherUid) openPrivateChat(otherUid);
-          }
-        };
-      }
-    });
-  }, 300);
-};
-
-// Também atualizar como as notificações são renderizadas para incluir data attributes
-const originalNotifRender = loadNotifs;
+const _originalLoadNotifs = loadNotifs;
 loadNotifs = async function() {
   if (!STATE.user) return;
   const s = await db.ref('notificacoes/' + STATE.user.uid).orderByChild('createdAt').limitToLast(30).once('value');
@@ -1711,7 +1614,8 @@ loadNotifs = async function() {
   c.innerHTML = arr.map(x => `
     <div data-room="${x.roomId || ''}" data-chat="${x.chatId || ''}" 
          style="background:var(--card); border-radius:12px; padding:15px; margin-bottom:8px; cursor:${(x.roomId || x.chatId) ? 'pointer' : 'default'}; 
-                ${!x.lida ? 'border-left:3px solid #6C5CE7;' : ''} ${(x.roomId || x.chatId) ? 'background:var(--hover);' : ''}">
+                ${!x.lida ? 'border-left:3px solid #6C5CE7;' : ''} ${(x.roomId || x.chatId) ? 'background:var(--hover);' : ''}"
+         onclick="${x.roomId ? "showScreen('chat'); setTimeout(()=>joinRoom('"+x.roomId+"'), 500);" : ''}${x.chatId ? "openPrivateChatModal('"+x.fromUid+"');" : ''}">
       <div style="font-weight:600; font-size:14px; color:var(--text);">${esc(x.mensagem)}</div>
       <div style="font-size:12px; color:var(--text3);">${ago(x.createdAt)}</div>
     </div>
@@ -1721,4 +1625,5 @@ loadNotifs = async function() {
   arr.forEach(x => { if (!x.lida) updates[x.id + '/lida'] = true; });
   if (Object.keys(updates).length) await db.ref('notificacoes/' + STATE.user.uid).update(updates);
 };
+
 console.log('✅ Sexta-Feira Studies PRONTO!');

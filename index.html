@@ -350,7 +350,6 @@
     <div id="screen-materia-detalhe" style="display:none;">
       <button onclick="showScreen('materias')" style="background:none; border:none; cursor:pointer; font-weight:600; color:var(--text3); margin-bottom:15px; font-size:15px;">← Voltar</button>
       
-      <!-- Hero da Matéria -->
       <div style="background:linear-gradient(135deg, #6C5CE7, #a855f7); color:white; border-radius:20px; padding:25px; margin-bottom:20px;">
         <div style="display:flex; align-items:center; gap:15px;">
           <span id="materia-hero-icon" style="font-size:50px;">📚</span>
@@ -362,21 +361,18 @@
         </div>
       </div>
 
-      <!-- Botões de ação -->
       <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
-        <button onclick="showModal('modal-topico')" style="background:#6C5CE7; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px;">+ Novo Tópico</button>
-        <button onclick="showModal('modal-quiz-normal')" style="background:#10b981; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px;">+ Quiz Normal</button>
-        <button onclick="showModal('modal-quiz-cmd')" style="background:#f59e0b; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px;">+ Quiz /cmd</button>
+        <button onclick="showModal('modal-topico')" style="background:#6C5CE7; color:white; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px;">+ Tópico</button>
+        <button onclick="showModal('modal-quiz-normal')" style="background:#10b981; color:white; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px;">+ Quiz Normal</button>
+        <button onclick="showModal('modal-quiz-cmd')" style="background:#f59e0b; color:white; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px;">+ Quiz /cmd</button>
       </div>
 
-      <!-- Tópicos -->
       <div style="font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📝 Tópicos</div>
       <div id="topicos-list"></div>
-
-      <!-- Quizzes -->
       <div style="font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin:20px 0 10px;">🎮 Quizzes</div>
       <div id="quizzes-materia"></div>
     </div>
+
     <!-- TÓPICO DETALHE -->
     <div id="screen-topico-detalhe" style="display:none;">
       <button onclick="showScreen('materia-detalhe')" style="background:none; border:none; cursor:pointer; font-weight:600; color:var(--text3); margin-bottom:15px;">← Voltar</button>
@@ -503,103 +499,31 @@
       <div id="descobrir-feed"></div>
     </div>
 
-     <!-- CHAT -->
+    <!-- CHAT -->
     <div id="screen-chat" style="display:none;">
-      <h2 style="font-size:22px; margin-bottom:15px; color:var(--text);">💬 Chat</h2>
-      
-      <div style="display:flex; gap:10px; height:calc(100vh - 200px); min-height:450px;">
-        
-        <!-- LADO ESQUERDO: LISTA DE SALAS E PVs -->
-        <div class="card-bg" style="width:200px; border-radius:15px; border:2px solid var(--border); overflow-y:auto; display:flex; flex-direction:column; flex-shrink:0;">
-          
-          <!-- Cabeçalho Salas -->
-          <div style="padding:12px; border-bottom:2px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:13px; color:var(--text);">
-            <span>💬 Salas</span>
-            <button onclick="showModal('modal-sala')" style="background:#6C5CE7; color:white; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:14px; font-weight:700;">+</button>
+      <h2 style="font-size:22px; margin-bottom:20px; color:var(--text);">💬 Chat</h2>
+      <div style="display:flex; gap:0; height:calc(100vh - 200px); min-height:400px;">
+        <div class="card-bg" style="width:180px; border-radius:15px 0 0 15px; border:2px solid var(--border); overflow-y:auto;">
+          <div style="padding:12px; border-bottom:2px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:14px; color:var(--text);">
+            <span>Salas</span>
+            <button onclick="showModal('modal-sala')" style="background:#6C5CE7; color:white; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:16px;">+</button>
           </div>
-          
-          <!-- Lista de Salas -->
-          <div id="rooms-list" style="flex:1; overflow-y:auto;"></div>
-          
-          <!-- Separador -->
-          <div style="padding:8px 12px; border-top:2px solid var(--border); border-bottom:2px solid var(--border); font-weight:700; font-size:12px; color:var(--text3);">
-            📩 Conversas
-          </div>
-          
-          <!-- Lista de PVs -->
-          <div id="pv-list" style="flex:1; overflow-y:auto; max-height:200px;"></div>
+          <div id="rooms-list"></div>
         </div>
-        
-        <!-- LADO DIREITO: JANELA DE CHAT -->
-        <div class="card-bg" style="flex:1; border-radius:15px; border:2px solid var(--border); display:flex; flex-direction:column; overflow:hidden;">
-          
-          <!-- Estado vazio -->
-          <div id="chat-no-room" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text3); gap:15px;">
-            <div style="font-size:50px;">💬</div>
-            <div style="font-weight:700; font-size:16px;">Selecione uma sala ou conversa</div>
-            <div style="font-size:13px;">Ou crie uma nova sala para começar!</div>
-            <button onclick="showModal('modal-sala')" style="background:#6C5CE7; color:white; border:none; padding:10px 20px; border-radius:20px; font-weight:700; cursor:pointer; font-size:14px;">+ Criar Sala</button>
-          </div>
-          
-          <!-- Chat Room View -->
+        <div class="card-bg" style="flex:1; border-radius:0 15px 15px 0; border:2px solid var(--border); border-left:none; display:flex; flex-direction:column;">
+          <div id="chat-no-room" style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--text3);">Selecione uma sala</div>
           <div id="chat-room-view" style="display:none; flex-direction:column; height:100%;">
-            
-            <!-- Cabeçalho da Sala -->
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:2px solid var(--border); background:var(--hover);">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:20px;">💬</span>
-                <strong id="chat-room-name" style="color:var(--text); font-size:15px;">Sala</strong>
-              </div>
-              <div style="display:flex; gap:8px;">
-                <button onclick="showInviteModal()" title="Convidar pessoas" style="background:#6C5CE7; color:white; border:none; padding:6px 12px; border-radius:15px; cursor:pointer; font-weight:600; font-size:11px;">
-                  + Convidar
-                </button>
-                <button onclick="leaveRoom()" title="Sair da sala" style="background:var(--border); color:var(--text3); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:700; font-size:14px;">✕</button>
-              </div>
-            </div>
-            
-            <!-- Mensagens -->
-            <div id="chat-messages" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:8px;"></div>
-            
-            <!-- Input de mensagem -->
-            <div style="display:flex; gap:8px; padding:12px 15px; border-top:2px solid var(--border); align-items:center;">
-              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter')sendChatMsg()" 
-                     style="flex:1; padding:10px 15px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:25px; outline:none; font-size:14px;" />
-              <button onclick="sendChatMsg()" style="background:#6C5CE7; color:white; border:none; padding:10px 18px; border-radius:25px; font-weight:700; cursor:pointer; font-size:14px; white-space:nowrap;">
-                📤 Enviar
-              </button>
+            <div style="padding:12px; border-bottom:2px solid var(--border); font-weight:700; color:var(--text);" id="chat-room-name">Sala</div>
+            <div id="chat-messages" style="flex:1; overflow-y:auto; padding:15px;"></div>
+            <div style="display:flex; gap:8px; padding:12px; border-top:2px solid var(--border);">
+              <input type="text" id="chat-msg-input" placeholder="Mensagem..." style="flex:1; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:20px; outline:none;" />
+              <button onclick="sendChatMsg()" style="background:#6C5CE7; color:white; border:none; padding:10px 18px; border-radius:20px; font-weight:700; cursor:pointer;">Enviar</button>
             </div>
           </div>
-          
-          <!-- Private Chat View -->
-          <div id="pv-chat-view" style="display:none; flex-direction:column; height:100%;">
-            
-            <!-- Cabeçalho do PV -->
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; border-bottom:2px solid var(--border); background:var(--hover);">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <div id="pv-chat-avatar" style="width:32px; height:32px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">?</div>
-                <strong id="pv-chat-name" style="color:var(--text); font-size:15px;">Usuário</strong>
-              </div>
-              <button onclick="closePrivateChatInRoom()" style="background:var(--border); color:var(--text3); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:700; font-size:14px;">✕</button>
-            </div>
-            
-            <!-- Mensagens PV -->
-            <div id="pv-chat-messages" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:8px;"></div>
-            
-            <!-- Input PV -->
-            <div style="display:flex; gap:8px; padding:12px 15px; border-top:2px solid var(--border); align-items:center;">
-              <input type="text" id="pv-chat-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter')sendPvChatMsg()" 
-                     style="flex:1; padding:10px 15px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:25px; outline:none; font-size:14px;" />
-              <button onclick="sendPvChatMsg()" style="background:#6C5CE7; color:white; border:none; padding:10px 18px; border-radius:25px; font-weight:700; cursor:pointer; font-size:14px; white-space:nowrap;">
-                📤 Enviar
-              </button>
-            </div>
-          </div>
-          
         </div>
       </div>
     </div>
-<a class="nav-link" onclick="showScreen('chat')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:var(--text2); text-decoration:none;">💬 Chat</a>
+
     <!-- PERFIL -->
     <div id="screen-perfil" style="display:none;">
       <div style="text-align:center; padding:30px 20px; background:linear-gradient(135deg, var(--hover), #e0e7ff); border-radius:20px; margin-bottom:20px;">
@@ -663,79 +587,17 @@
 
   </div><!-- FIM MAIN CONTENT -->
 
-  <!-- BOTTOM NAV -->
+   <!-- BOTTOM NAV -->
   <div class="bottom-nav" style="position:fixed; bottom:0; left:0; right:0; height:60px; display:flex; align-items:center; z-index:100;">
-    <div onclick="showScreen('home')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🏠<br>Home</div>
-    <div onclick="showScreen('descobrir')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🌍<br>Feed</div>
-    <div onclick="showScreen('chat')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">💬<br>Chat</div>
-    <div onclick="showScreen('ranking')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🏆<br>Ranking</div>
-    <div onclick="showScreen('perfil')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">👤<br>Perfil</div>
+    <div onclick="showScreen('home')" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🏠<br>Home</div>
+    <div onclick="showScreen('descobrir')" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🌍<br>Feed</div>
+    <div onclick="showScreen('chat')" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">💬<br>Chat</div>
+    <div onclick="showScreen('ranking')" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🏆<br>Ranking</div>
+    <div onclick="showScreen('perfil')" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">👤<br>Perfil</div>
   </div>
 </div><!-- FIM APP -->
 
 <!-- ==================== MODAIS ==================== -->
- <!-- Modal Convidar para Sala -->
-<div id="modal-invite" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
-  <div onclick="closeModal('modal-invite')" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
-  <div style="position:relative; background:var(--card); color:var(--text); border-radius:20px; padding:20px; width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
-    <h3 style="margin:0 0 10px 0;">👥 Convidar para Sala</h3>
-    <p style="font-size:12px; color:var(--text3); margin-bottom:15px;">Clique nos usuários para convidar</p>
-    
-    <div style="margin-bottom:12px;">
-      <input type="text" id="invite-search" placeholder="🔍 Buscar usuário..." oninput="searchUsersToInvite()" 
-             style="width:100%; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:10px; outline:none;" />
-    </div>
-    
-    <div id="invite-users-list" style="max-height:300px; overflow-y:auto;"></div>
-    
-    <div style="margin-top:15px; padding:10px; background:var(--hover); border-radius:10px; min-height:40px;" id="invite-selected">
-      <span style="font-size:12px; color:var(--text3);">Selecionados: 0</span>
-    </div>
-    
-    <button onclick="sendInvites()" style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; margin-top:10px;">
-      📨 Enviar Convites
-    </button>
-    
-    <button onclick="closeModal('modal-invite')" style="width:100%; padding:10px; background:var(--border); color:var(--text); border:none; border-radius:10px; margin-top:8px; cursor:pointer; font-weight:600;">Fechar</button>
-  </div>
-</div>
-<!-- Modal Quiz NORMAL -->
-<div id="modal-quiz-normal" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
-  <div onclick="closeModal('modal-quiz-normal')" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
-  <div style="position:relative; background:var(--card); color:var(--text); border-radius:20px; padding:25px; width:90%; max-width:550px; max-height:90vh; overflow-y:auto;">
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <h3 style="margin:0;">🎮 Criar Quiz</h3>
-      <button onclick="closeModal('modal-quiz-normal')" style="background:var(--border); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; color:var(--text); font-size:16px;">✕</button>
-    </div>
-
-    <!-- Nome do Quiz -->
-    <div style="margin-bottom:12px;">
-      <label style="font-size:11px; font-weight:700; color:var(--text3);">NOME DO QUIZ *</label>
-      <input type="text" id="qn-nome" placeholder="Ex: Quiz de Matemática" style="width:100%; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:10px; outline:none;" />
-    </div>
-
-    <!-- Tempo por questão -->
-    <div style="margin-bottom:15px;">
-      <label style="font-size:11px; font-weight:700; color:var(--text3);">TEMPO POR QUESTÃO (segundos)</label>
-      <input type="number" id="qn-tempo" value="30" min="10" max="120" style="width:100%; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:10px; outline:none;" />
-    </div>
-
-    <!-- Container das questões -->
-    <div id="qn-questoes-container" style="margin-bottom:15px;">
-      <!-- Questões adicionadas dinamicamente -->
-    </div>
-
-    <!-- Botão adicionar questão -->
-    <button onclick="addQuestaoNormal()" style="width:100%; padding:10px; background:var(--border); color:var(--text); border:2px dashed var(--text3); border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; margin-bottom:15px;">
-      + Adicionar Questão
-    </button>
-
-    <button onclick="salvarQuizNormal()" style="width:100%; padding:14px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px;">
-      💾 Salvar Quiz
-    </button>
-  </div>
-</div>
 <div id="modal-materia" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
   <div onclick="closeModal('modal-materia')" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
   <div style="position:relative; background:var(--card); color:var(--text); border-radius:20px; padding:25px; width:90%; max-width:450px; max-height:90vh; overflow-y:auto;">
@@ -760,7 +622,25 @@
     <button onclick="criarTopico()" style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Criar Tópico</button>
   </div>
 </div>
-
+<!-- Modal Quiz NORMAL -->
+<div id="modal-quiz-normal" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-quiz-normal')" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
+  <div style="position:relative; background:var(--card); color:var(--text); border-radius:20px; padding:25px; width:90%; max-width:550px; max-height:90vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0;">🎮 Criar Quiz (Normal)</h3>
+      <button onclick="closeModal('modal-quiz-normal')" style="background:var(--border); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; color:var(--text);">✕</button>
+    </div>
+    <div style="margin-bottom:12px;"><label style="font-size:11px; font-weight:700; color:var(--text3);">NOME DO QUIZ *</label>
+      <input type="text" id="qn-nome" placeholder="Ex: Quiz de Matemática" style="width:100%; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:10px; outline:none;" /></div>
+    <div style="margin-bottom:12px;"><label style="font-size:11px; font-weight:700; color:var(--text3);">TEMPO (segundos)</label>
+      <input type="number" id="qn-tempo" value="30" min="10" max="120" style="width:100%; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:10px; outline:none;" /></div>
+    
+    <div id="qn-questoes-container" style="margin-bottom:12px;"></div>
+    
+    <button onclick="addQuestaoNormal()" style="width:100%; padding:10px; background:var(--border); color:var(--text); border:2px dashed var(--text3); border-radius:10px; cursor:pointer; font-weight:600; margin-bottom:15px;">+ Adicionar Questão</button>
+    <button onclick="salvarQuizNormal()" style="width:100%; padding:14px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">💾 Salvar Quiz</button>
+  </div>
+</div>
 <div id="modal-quiz-cmd" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
   <div onclick="closeModal('modal-quiz-cmd')" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
   <div style="position:relative; background:var(--card); color:var(--text); border-radius:20px; padding:25px; width:90%; max-width:500px;">
