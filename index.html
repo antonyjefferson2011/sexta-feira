@@ -455,7 +455,22 @@
     </div>
 
   </div>
+<!-- Botão de seguir (aparece no perfil de outros) -->
+<div id="follow-section" style="display:none; text-align:center; margin:15px 0;">
+  <button id="btn-follow" onclick="toggleFollow()" style="background:#6C5CE7; color:white; border:none; padding:10px 30px; border-radius:25px; font-weight:700; cursor:pointer; font-size:15px;">
+    👥 Seguir
+  </button>
+</div>
 
+<!-- Lista de seguidores/seguindo -->
+<div style="display:flex; gap:10px; justify-content:center; margin:15px 0;">
+  <button onclick="showFollowers()" style="background:#f0f0f0; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-weight:600; font-size:13px;">
+    👥 <span id="count-seguidores">0</span> Seguidores
+  </button>
+  <button onclick="showFollowing()" style="background:#f0f0f0; border:none; padding:8px 16px; border-radius:20px; cursor:pointer; font-weight:600; font-size:13px;">
+    ✨ <span id="count-seguindo">0</span> Seguindo
+  </button>
+</div>
   <!-- BOTTOM NAV -->
   <div style="position:fixed; bottom:0; left:0; right:0; height:60px; background:white; border-top:1px solid #eee; display:flex; align-items:center; z-index:100;">
     <div onclick="showScreen('home')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:#888;">🏠<br>Home</div>
@@ -567,6 +582,34 @@
 <div id="toast-container" style="position:fixed; bottom:70px; right:15px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
 
 <!-- ==================== SCRIPT ==================== -->
+<!-- Modal Seguidores -->
+<div id="modal-seguidores" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-seguidores')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:20px; width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
+    <h3 style="margin:0 0 15px 0;">👥 Seguidores</h3>
+    <div id="seguidores-list"></div>
+    <button onclick="closeModal('modal-seguidores')" style="width:100%; padding:10px; background:#eee; border:none; border-radius:10px; margin-top:15px; cursor:pointer; font-weight:600;">Fechar</button>
+  </div>
+</div>
+
+<!-- Modal Seguindo -->
+<div id="modal-seguindo" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-seguindo')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:20px; width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
+    <h3 style="margin:0 0 15px 0;">✨ Seguindo</h3>
+    <div id="seguindo-list"></div>
+    <button onclick="closeModal('modal-seguindo')" style="width:100%; padding:10px; background:#eee; border:none; border-radius:10px; margin-top:15px; cursor:pointer; font-weight:600;">Fechar</button>
+  </div>
+</div>
+
+<!-- Modal Perfil de Outro Usuário -->
+<div id="modal-user-profile" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-user-profile')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:20px; width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
+    <div id="user-profile-content"></div>
+    <button onclick="closeModal('modal-user-profile')" style="width:100%; padding:10px; background:#eee; border:none; border-radius:10px; margin-top:15px; cursor:pointer; font-weight:600;">Fechar</button>
+  </div>
+</div>
 <script src="script.js"></script>
 </body>
 </html>

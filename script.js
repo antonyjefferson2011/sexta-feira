@@ -868,5 +868,250 @@ document.addEventListener('keydown',(e)=>{
     document.querySelectorAll('[id^="modal-"]').forEach(m=>{ if(m.style.display==='flex') m.style.display='none'; });
   }
 });
+// ============================================================
+// SISTEMA DE AMIZADE / SEGUIDORES
+// ============================================================
 
+// Variável para guardar o perfil que está sendo visto (outro usuário)
+let viewingUserId = null;
+
+// Quando clicar no nome de alguém no ranking ou feed, ver perfil
+async function verPerfil(uid) {
+  if (uid === STATE.user?.uid) {
+    showScreen('perfil');
+    return;
+  }
+  
+  viewingUserId = uid;
+  const snap = await db.ref('usuarios/' + uid).once('value');
+  const u = snap.val();
+  if (!u) return toast('Usuário não encontrado', 'error');
+  
+  const content = $('user-profile-content');
+  if (!content) return;
+  
+  content.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:60px;">${u.avatar || '🎓'}</div>
+      <h3 style="margin:10px 0;">${esc(u.username || '?')}</h3>
+      <p style="color:#888; font-size:14px;">${esc(u.bio || 'Sem bio')}</p>
+      <div style="margin:10px 0;">
+        <span style="background:#f0f0f0; padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px;">⭐ ${fmt(u.points || 0)} pts</span>
+        <span style="background:#f0f0f0; padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px; margin-left:5px;">👥 ${u.seguidores || 0} seguidores</span>
+      </div>
+      <button id="btn-follow-modal" onclick="toggleFollowUser('${uid}')" style="background:#6C5CE7; color:white; border:none; padding:10px 25px; border-radius:25px; font-weight:700; cursor:pointer; font-size:15px; margin-top:10px;">
+        Carregando...
+      </button>
+    </div>
+  `;
+  
+  showModal('modal-user-profile');
+  
+  // Verificar se já segue
+  const fSnap = await db.ref('seguidores/' + STATE.user.uid + '/' + uid).once('value');
+  const btn = $('btn-follow-modal');
+  if (btn) {
+    if (fSnap.val()) {
+      btn.textContent = '✅ Seguindo';
+      btn.style.background = '#10b981';
+    } else {
+      btn.textContent = '👥 Seguir';
+      btn.style.background = '#6C5CE7';
+    }
+  }
+}
+
+// Seguir/Desseguir do modal
+async function toggleFollowUser(uid) {
+  if (!STATE.user) return toast('Faça login', 'error');
+  if (uid === STATE.user.uid) return;
+  
+  const ref = db.ref('seguidores/' + STATE.user.uid + '/' + uid);
+  const snap = await ref.once('value');
+  
+  if (snap.val()) {
+    // Deixar de seguir
+    await ref.remove();
+    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).remove();
+    
+    // Atualizar contagem
+    const uSnap = await db.ref('usuarios/' + uid).once('value');
+    const u = uSnap.val();
+    if (u) await db.ref('usuarios/' + uid).update({ seguidores: Math.max((u.seguidores || 1) - 1, 0) });
+    
+    const btn = $('btn-follow-modal');
+    if (btn) { btn.textContent = '👥 Seguir'; btn.style.background = '#6C5CE7'; }
+    toast('Deixou de seguir', 'info');
+  } else {
+    // Seguir
+    await ref.set(true);
+    await db.ref('seguindo/' + uid + '/' + STATE.user.uid).set(true);
+    
+    // Atualizar contagem
+    const uSnap = await db.ref('usuarios/' + uid).once('value');
+    const u = uSnap.val();
+    if (u) await db.ref('usuarios/' + uid).update({ seguidores: (u.seguidores || 0) + 1 });
+    
+    // Notificar
+    await db.ref('notificacoes/' + uid).push({
+      mensagem: '👥 ' + STATE.userData.username + ' começou a te seguir!',
+      tipo: 'follow',
+      lida: false,
+      createdAt: Date.now()
+    });
+    
+    const btn = $('btn-follow-modal');
+    if (btn) { btn.textContent = '✅ Seguindo'; btn.style.background = '#10b981'; }
+    toast('Seguindo! 👥', 'success');
+  }
+}
+
+// Mostrar lista de seguidores
+async function showFollowers() {
+  const uid = viewingUserId || STATE.user?.uid;
+  if (!uid) return;
+  
+  const snap = await db.ref('seguindo/' + uid).once('value');
+  const data = snap.val();
+  const container = $('seguidores-list');
+  if (!container) return;
+  
+  if (!data) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Nenhum seguidor ainda</div>';
+  } else {
+    const seguidores = Object.keys(data);
+    let html = '';
+    for (const sid of seguidores) {
+      const uSnap = await db.ref('usuarios/' + sid).once('value');
+      const u = uSnap.val();
+      if (u) {
+        html += `
+          <div onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #eee;cursor:pointer;">
+            <div style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${u.avatar || '?'}</div>
+            <div style="flex:1;"><strong>${esc(u.username || '?')}</strong><br><span style="font-size:11px;color:#888;">${fmt(u.points || 0)} pts</span></div>
+            <span style="color:#888;">→</span>
+          </div>
+        `;
+      }
+    }
+    container.innerHTML = html || '<div style="text-align:center;color:#888;padding:20px;">Nenhum seguidor</div>';
+  }
+  
+  showModal('modal-seguidores');
+}
+
+// Mostrar lista de quem está seguindo
+async function showFollowing() {
+  const uid = viewingUserId || STATE.user?.uid;
+  if (!uid) return;
+  
+  const snap = await db.ref('seguidores/' + uid).once('value');
+  const data = snap.val();
+  const container = $('seguindo-list');
+  if (!container) return;
+  
+  if (!data) {
+    container.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Não segue ninguém</div>';
+  } else {
+    const seguindo = Object.keys(data);
+    let html = '';
+    for (const fid of seguindo) {
+      const uSnap = await db.ref('usuarios/' + fid).once('value');
+      const u = uSnap.val();
+      if (u) {
+        html += `
+          <div onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #eee;cursor:pointer;">
+            <div style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${u.avatar || '?'}</div>
+            <div style="flex:1;"><strong>${esc(u.username || '?')}</strong><br><span style="font-size:11px;color:#888;">${fmt(u.points || 0)} pts</span></div>
+            <span style="color:#888;">→</span>
+          </div>
+        `;
+      }
+    }
+    container.innerHTML = html || '<div style="text-align:center;color:#888;padding:20px;">Não segue ninguém</div>';
+  }
+  
+  showModal('modal-seguindo');
+}
+
+// Atualizar contagem de seguidores no perfil
+async function updateFollowCounts() {
+  if (!STATE.userData) return;
+  
+  const segSnap = await db.ref('seguindo/' + STATE.user.uid).once('value');
+  const segData = segSnap.val();
+  const segCount = segData ? Object.keys(segData).length : 0;
+  
+  const seguSnap = await db.ref('seguidores/' + STATE.user.uid).once('value');
+  const seguData = seguSnap.val();
+  const seguCount = seguData ? Object.keys(seguData).length : 0;
+  
+  txt('count-seguidores', segCount);
+  txt('count-seguindo', seguCount);
+  txt('pstat-seguidores', segCount);
+  
+  // Atualizar no banco
+  await db.ref('usuarios/' + STATE.user.uid).update({ seguidores: segCount });
+}
+
+// Modificar loadPerfil para carregar contagens
+const originalLoadPerfil = loadPerfil;
+loadPerfil = async function() {
+  await originalLoadPerfil();
+  viewingUserId = null;
+  hide('follow-section');
+  await updateFollowCounts();
+};
+
+// Adicionar clique nos nomes do ranking
+const originalLoadRanking = loadRanking;
+loadRanking = async function() {
+  await originalLoadRanking();
+  // Adicionar onclick nos itens do ranking
+  setTimeout(() => {
+    document.querySelectorAll('#ranking-list > div').forEach(el => {
+      if (!el.onclick) {
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', function() {
+          const uid = this.getAttribute('data-uid');
+          if (uid) verPerfil(uid);
+        });
+      }
+    });
+  }, 500);
+};
+
+// Adicionar data-uid nos itens do ranking
+const originalRenderRanking = loadRanking;
+loadRanking = async function() {
+  db.ref('usuarios').on('value', async (snap) => {
+    const u = snap.val(); if (!u) return;
+    const arr = Object.values(u).sort((a,b)=>(b.points||0)-(a.points||0));
+    
+    // Pódio (mantém igual)
+    const setP = (n, u) => {
+      if (!u) return;
+      txt('podio'+n+'-av', u.avatar||'?');
+      txt('podio'+n+'-name', (u.username||'').split(' ')[0]);
+      txt('podio'+n+'-pts', fmt(u.points));
+    };
+    setP(1,arr[0]); setP(2,arr[1]); setP(3,arr[2]);
+    
+    const pos = arr.findIndex(u=>u.uid===STATE.user?.uid);
+    txt('my-rank-num', pos>=0?'#'+(pos+1):'#--');
+    txt('my-rank-pts', fmt(arr[pos]?.points||0));
+    
+    const c = $('ranking-list'); if (!c) return;
+    c.innerHTML = arr.slice(0,50).map((u,i) => `
+      <div data-uid="${u.uid}" onclick="verPerfil('${u.uid}')" style="background:white; border-radius:10px; padding:12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.04); ${u.uid===STATE.user?.uid?'background:#ede9fe;':''}">
+        <span style="font-weight:800; color:#888; width:24px;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>
+        <div style="width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${esc(u.avatar||'?')}</div>
+        <div style="flex:1;"><strong>${esc(u.username||'?')}</strong> ${u.uid===STATE.user?.uid?'(Você)':''}</div>
+        <span style="font-weight:700;color:#6C5CE7;">${fmt(u.points)} pts</span>
+      </div>
+    `).join('');
+  });
+};
+
+console.log('✅ Sistema de amizade adicionado!');
 console.log('✅ Sexta-Feira Studies PRONTO!');
