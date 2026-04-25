@@ -1882,24 +1882,3 @@ console.log('  - Ranking');
 console.log('  - Notificações com badge');
 console.log('  - Painel Admin com senha');
 console.log('  - Sistema de pontos e níveis');
-// ============================================================
-// FORÇAR REMOÇÃO DA SPLASH SE TRAVAR
-// ============================================================
-// Se depois de 4 segundos a splash ainda estiver visível, 
-// mostra a tela de login diretamente
-setTimeout(() => {
-  const splash = document.getElementById('splash-screen');
-  if (splash && splash.style.display !== 'none') {
-    console.warn('⚠️ Forçando remoção da splash por timeout');
-    splash.style.display = 'none';
-    
-    // Mostrar auth screen se o app não estiver visível
-    const app = document.getElementById('app');
-    const authScreen = document.getElementById('auth-screen');
-    
-    if (app && app.style.display === 'none' && authScreen) {
-      authScreen.style.display = '';
-      showAuthTab('login');
-    }
-  }
-}, 4000);
