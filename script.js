@@ -788,53 +788,126 @@ async function sendInvites() {
 // ========== RANKING ==========
 
 // ========== PERFIL ==========
+// ========== PERFIL FULLSCREEN ==========
+function closeProfileFullscreen() {
+  document.getElementById('profile-fullscreen').style.display = 'none';
+}
+
 async function verPerfil(uid) {
   if (!uid) return;
   if (uid === S.user?.uid) { navigate('perfil'); return; }
   viewingUserId = uid;
+  
   const snap = await db.ref('usuarios/' + uid).once('value');
   const u = snap.val();
   if (!u) return;
 
   const fSnap = await db.ref('seguidores/' + S.user.uid + '/' + uid).once('value');
   const isFollowing = fSnap.val() ? true : false;
-
-  $('user-profile-content').innerHTML = `
-    <div style="text-align:center;">
-      <div style="font-size:60px;">${u.avatar || '🎓'}</div>
-      <h3>${esc(u.username || '?')}</h3>
-      <p style="color:var(--text3);">${esc(u.bio || 'Sem bio')}</p>
-      <div style="margin:10px 0;">
-        <span style="background:var(--hover);padding:5px 12px;border-radius:15px;font-weight:600;">⭐ ${fmt(u.points || 0)} pts</span>
-        <span style="background:var(--hover);padding:5px 12px;border-radius:15px;font-weight:600;margin-left:5px;">👥 ${u.seguidores || 0} seguidores</span>
+  
+  // Contar seguidores e seguindo
+  const segSnap = await db.ref('seguindo/' + uid).once('value');
+  const segCount = segSnap.val() ? Object.keys(segSnap.val()).length : 0;
+  const seguSnap = await db.ref('seguidores/' + uid).once('value');
+  const seguCount = seguSnap.val() ? Object.keys(seguSnap.val()).length : 0;
+  
+  // Badges
+  const badges = [];
+  if (u.isProf) badges.push('<span class="badge" style="background:#e0e7ff;color:#6C5CE7;">✅ Professor</span>');
+  if (u.isAdmin) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e;">⚙️ Admin</span>');
+  if ((u.points || 0) >= 1000) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e;">⭐ 1K</span>');
+  if ((u.quizzesPlayed || 0) >= 10) badges.push('<span class="badge" style="background:#dbeafe;color:#1d4ed8;">🎮 Gamer</span>');
+  if (!badges.length) badges.push('<span class="badge">🌱 Novato</span>');
+  
+  // Buscar posts recentes do usuário
+  const postsSnap = await db.ref('posts').orderByChild('autorId').equalTo(uid).limitToLast(5).once('value');
+  const posts = postsSnap.val();
+  let postsHTML = '<div style="color:var(--text3);padding:15px;text-align:center;">📭 Nenhum post ainda</div>';
+  if (posts) {
+    const arr = Object.entries(posts).map(([id, p]) => ({ id, ...p })).reverse();
+    postsHTML = arr.map(p => `
+      <div class="card" style="margin-bottom:8px;">
+        <div style="font-size:13px;color:var(--text3);margin-bottom:5px;">${ago(p.createdAt)}</div>
+        <div>${esc(p.texto)}</div>
       </div>
-      <button class="btn btn-primary btn-full" id="btn-follow-modal" onclick="toggleFollowUserModal('${uid}')" style="margin-top:8px;background:${isFollowing ? '#10b981' : '#6C5CE7'};">
+    `).join('');
+  }
+  
+  // Montar tela
+  const content = document.getElementById('profile-fullscreen-content');
+  content.innerHTML = `
+    <!-- Capa -->
+    <div style="background:linear-gradient(135deg,#6C5CE7,#a855f7);border-radius:20px;padding:30px 20px;text-align:center;color:white;margin-bottom:20px;">
+      <div style="width:100px;height:100px;border-radius:50%;background:white;color:#6C5CE7;display:flex;align-items:center;justify-content:center;font-size:45px;margin:0 auto 15px;border:4px solid white;box-shadow:0 4px 20px rgba(0,0,0,0.2);">${u.avatar || '🎓'}</div>
+      <h2 style="margin:5px 0;font-size:22px;">${esc(u.username || '?')}</h2>
+      <p style="opacity:0.9;font-size:14px;margin:5px 0;">${esc(u.bio || 'Sem bio')}</p>
+      <div style="margin-top:10px;">${badges.join(' ')}</div>
+    </div>
+    
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:#6C5CE7;">${fmt(u.points || 0)}</div>
+        <div style="font-size:10px;color:var(--text3);">Pontos</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;font-weight:800;">${u.quizzesPlayed || 0}</div>
+        <div style="font-size:10px;color:var(--text3);">Quizzes</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;font-weight:800;">${segCount}</div>
+        <div style="font-size:10px;color:var(--text3);">Seguidores</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;font-weight:800;">${seguCount}</div>
+        <div style="font-size:10px;color:var(--text3);">Seguindo</div>
+      </div>
+    </div>
+    
+    <!-- Botões -->
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="btn btn-primary btn-full" id="btn-follow-full" onclick="toggleFollowUserModal('${uid}')" style="background:${isFollowing ? '#10b981' : '#6C5CE7'};box-shadow:0 4px 0 ${isFollowing ? '#059669' : '#5541c8'};">
         ${isFollowing ? '✅ Seguindo' : '👥 Seguir'}
       </button>
-      <button class="btn btn-green btn-full" onclick="closeModal('user');navigate('chat');setTimeout(function(){openPV('${uid}');},500);" style="margin-top:5px;">
-        💬 Enviar Mensagem
+      <button class="btn btn-green btn-full" onclick="closeProfileFullscreen();navigate('chat');setTimeout(function(){openPV('${uid}');},500);">
+        💬 Mensagem
       </button>
     </div>
+    
+    <!-- Posts recentes -->
+    <div class="section-title">📰 Posts de ${esc(u.username)}</div>
+    ${postsHTML}
   `;
-
-  openModal('user');
+  
+  // Mostrar tela
+  document.getElementById('profile-fullscreen').style.display = 'block';
+  document.getElementById('profile-fullscreen').scrollTop = 0;
 }
+
 // Nova função para seguir do modal
 async function toggleFollowUserModal(uid) {
   const ref = db.ref('seguidores/' + S.user.uid + '/' + uid);
   const snap = await ref.once('value');
-  const btn = document.getElementById('btn-follow-modal');
+  const btn = document.getElementById('btn-follow-full'); // Mudou o ID
 
   if (snap.val()) {
     await ref.remove();
     await db.ref('seguindo/' + uid + '/' + S.user.uid).remove();
-    if (btn) { btn.textContent = '👥 Seguir'; btn.style.background = '#6C5CE7'; }
+    if (btn) { 
+      btn.textContent = '👥 Seguir'; 
+      btn.style.background = '#6C5CE7'; 
+      btn.style.boxShadow = '0 4px 0 #5541c8';
+    }
     toast('Deixou de seguir', 'info');
   } else {
     await ref.set(true);
     await db.ref('seguindo/' + uid + '/' + S.user.uid).set(true);
     await db.ref('notificacoes/' + uid).push({ mensagem: '👥 ' + S.ud.username + ' te seguiu!', tipo: 'follow', lida: false, createdAt: Date.now() });
-    if (btn) { btn.textContent = '✅ Seguindo'; btn.style.background = '#10b981'; }
+    if (btn) { 
+      btn.textContent = '✅ Seguindo'; 
+      btn.style.background = '#10b981'; 
+      btn.style.boxShadow = '0 4px 0 #059669';
+    }
     toast('Seguindo! 👥', 'success');
   }
 }

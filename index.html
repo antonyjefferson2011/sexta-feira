@@ -234,7 +234,7 @@
       <!-- Lista -->
       <div id="ranking-list" style="margin-top:15px;"></div>
     </div>
-    
+
     <!-- FEED -->
     <div id="screen-descobrir" class="screen">
       <h2>🌍 Feed Global</h2>
@@ -308,7 +308,13 @@
 
 <div class="modal" id="modal-invite"><div class="modal-backdrop" onclick="closeModal('invite')"></div><div class="modal-box"><h3>👥 Convidar</h3><input type="text" id="invite-search" class="input-field" placeholder="Buscar..." oninput="searchUsersToInvite()" /><div id="invite-users-list" style="max-height:250px;overflow-y:auto"></div><div id="invite-selected" style="padding:10px;background:var(--hover);border-radius:10px;margin:10px 0">0 selecionados</div><button class="btn btn-primary btn-full" onclick="sendInvites()">📨 Enviar</button></div></div>
 
-<div class="modal" id="modal-user"><div class="modal-backdrop" onclick="closeModal('user')"></div><div class="modal-box"><div id="user-profile-content"></div></div></div>
+<!-- PERFIL FULLSCREEN -->
+<div id="profile-fullscreen" style="display:none;position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto;">
+  <!-- Botão Fechar -->
+  <button onclick="closeProfileFullscreen()" style="position:fixed;top:15px;right:15px;z-index:301;width:40px;height:40px;border-radius:50%;background:var(--card);border:2px solid var(--border);font-size:20px;cursor:pointer;color:var(--text);box-shadow:var(--shadow);">✕</button>
+  
+  <div id="profile-fullscreen-content" style="max-width:600px;margin:0 auto;padding:60px 20px 40px;"></div>
+</div>
 
 <div class="toast-container" id="toast-container"></div>
 
