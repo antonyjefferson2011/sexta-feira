@@ -1155,4 +1155,8 @@ function loadRanking() {
     `).join('');
   });
 }
+function closeProfileFullscreen() {
+  document.getElementById('profile-fullscreen').style.display = 'none';
+}
+
 console.log('✅ Sexta-Feira Studies PRONTO!');
