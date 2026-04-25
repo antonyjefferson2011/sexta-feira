@@ -6,526 +6,567 @@
   <meta name="theme-color" content="#6C5CE7" />
   <title>Sexta-Feira Studies</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
 
-  
-
-<!-- AUTH SCREEN -->
-<div id="auth-screen" class="auth-fullscreen" style="display:flex;">
-  <div class="auth-bg-decor">
+<!-- ==================== TELA DE LOGIN ==================== -->
+<div id="auth-screen">
+  <div class="auth-bg">
     <div class="auth-blob b1"></div>
     <div class="auth-blob b2"></div>
-    <div class="auth-blob b3"></div>
   </div>
+  
   <div class="auth-card">
-    <div class="auth-brand">
-      <span class="brand-icon">📚</span>
-      <h1>Sexta-Feira Studies</h1>
-      <p>Aprenda com quizzes e amigos!</p>
+    <div style="text-align:center; margin-bottom:25px;">
+      <div style="font-size:50px;">📚</div>
+      <h1 style="color:#6C5CE7; font-size:24px; margin:10px 0;">Sexta-Feira Studies</h1>
+      <p style="color:#888;">Aprenda com quizzes e amigos!</p>
     </div>
-    
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchAuthTab('login')">🔑 Entrar</button>
-      <button class="auth-tab" onclick="switchAuthTab('register')">✨ Cadastrar</button>
+
+    <div style="display:flex; gap:5px; background:#f0f0f0; border-radius:12px; padding:4px; margin-bottom:20px;">
+      <button class="auth-tab-btn active" onclick="switchTab('login')" style="flex:1; padding:10px; border:none; border-radius:10px; font-weight:700; cursor:pointer; background:white; color:#6C5CE7;">🔑 Entrar</button>
+      <button class="auth-tab-btn" onclick="switchTab('register')" style="flex:1; padding:10px; border:none; border-radius:10px; font-weight:700; cursor:pointer; background:transparent; color:#888;">✨ Cadastrar</button>
     </div>
 
     <!-- LOGIN -->
     <div id="login-form">
-      <div class="field-group">
-        <label>👤 Nome de usuário</label>
-        <input type="text" id="login-username" placeholder="Seu nome de usuário" autocomplete="username" class="input-field" />
+      <div style="margin-bottom:15px;">
+        <label style="font-size:12px; font-weight:700; color:#888; display:block; margin-bottom:5px;">👤 NOME DE USUÁRIO</label>
+        <input type="text" id="login-username" placeholder="Seu nome de usuário" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:15px; outline:none;" />
       </div>
-      <div class="field-group">
-        <label>🔒 Senha</label>
-        <div class="input-wrap">
-          <input type="password" id="login-password" placeholder="••••••••" class="input-field" />
-          <button class="toggle-pw" onclick="togglePass('login-password', this)">👁</button>
+      <div style="margin-bottom:15px;">
+        <label style="font-size:12px; font-weight:700; color:#888; display:block; margin-bottom:5px;">🔒 SENHA</label>
+        <div style="display:flex; align-items:center; border:2px solid #e0e0e0; border-radius:10px; overflow:hidden;">
+          <input type="password" id="login-password" placeholder="••••••••" style="flex:1; padding:12px; border:none; font-size:15px; outline:none;" />
+          <button onclick="togglePass('login-password', this)" style="padding:10px; background:none; border:none; cursor:pointer; font-size:18px;">👁</button>
         </div>
       </div>
-      <div id="login-error" class="auth-error hidden"></div>
-      <button class="btn-primary btn-full" onclick="handleLogin()">
-        <span id="login-btn-text">🚀 Entrar</span>
-        <div class="btn-loader hidden" id="login-loader"></div>
+      <div id="login-error" style="display:none; background:#ffe0e0; color:#d00; padding:10px; border-radius:8px; margin-bottom:15px; font-size:14px;"></div>
+      <button onclick="handleLogin()" id="btn-login" style="width:100%; padding:14px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer;">
+        🚀 ENTRAR
       </button>
-      <p class="auth-hint">Novo? <a href="#" onclick="switchAuthTab('register')">Criar conta →</a></p>
+      <p style="text-align:center; margin-top:15px; font-size:14px; color:#888;">
+        Novo aqui? <a href="#" onclick="switchTab('register')" style="color:#6C5CE7; font-weight:700;">Criar conta →</a>
+      </p>
     </div>
 
     <!-- REGISTER -->
-    <div id="register-form" class="hidden">
-      <div class="field-group">
-        <label>👤 Nome de usuário (único)</label>
-        <input type="text" id="reg-username" placeholder="Escolha um nome único" class="input-field" />
+    <div id="register-form" style="display:none;">
+      <div style="margin-bottom:15px;">
+        <label style="font-size:12px; font-weight:700; color:#888; display:block; margin-bottom:5px;">👤 NOME DE USUÁRIO (ÚNICO)</label>
+        <input type="text" id="reg-username" placeholder="Escolha um nome único" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:15px; outline:none;" />
       </div>
-      <div class="field-group">
-        <label>📧 E-mail</label>
-        <input type="email" id="reg-email" placeholder="seu@email.com" class="input-field" />
+      <div style="margin-bottom:15px;">
+        <label style="font-size:12px; font-weight:700; color:#888; display:block; margin-bottom:5px;">📧 E-MAIL</label>
+        <input type="email" id="reg-email" placeholder="seu@email.com" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:15px; outline:none;" />
       </div>
-      <div class="field-group">
-        <label>🔒 Senha</label>
-        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" class="input-field" />
+      <div style="margin-bottom:15px;">
+        <label style="font-size:12px; font-weight:700; color:#888; display:block; margin-bottom:5px;">🔒 SENHA (MÍN. 6)</label>
+        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:15px; outline:none;" />
       </div>
-      <div class="field-group">
-        <label>🔒 Confirmar senha</label>
-        <input type="password" id="reg-confirm" placeholder="Repita a senha" class="input-field" />
+      <div style="margin-bottom:15px;">
+        <label style="font-size:12px; font-weight:700; color:#888; display:block; margin-bottom:5px;">🔒 CONFIRMAR SENHA</label>
+        <input type="password" id="reg-confirm" placeholder="Repita a senha" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:15px; outline:none;" />
       </div>
-      <div id="reg-error" class="auth-error hidden"></div>
-      <button class="btn-primary btn-full" onclick="handleRegister()">
-        <span id="reg-btn-text">✨ Criar conta</span>
-        <div class="btn-loader hidden" id="reg-loader"></div>
+      <div id="reg-error" style="display:none; background:#ffe0e0; color:#d00; padding:10px; border-radius:8px; margin-bottom:15px; font-size:14px;"></div>
+      <button onclick="handleRegister()" id="btn-register" style="width:100%; padding:14px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer;">
+        ✨ CRIAR CONTA
       </button>
-      <p class="auth-hint">Já tem conta? <a href="#" onclick="switchAuthTab('login')">Entrar →</a></p>
+      <p style="text-align:center; margin-top:15px; font-size:14px; color:#888;">
+        Já tem conta? <a href="#" onclick="switchTab('login')" style="color:#6C5CE7; font-weight:700;">Entrar →</a>
+      </p>
     </div>
   </div>
 </div>
 
-<!-- APP PRINCIPAL -->
+<!-- ==================== APP PRINCIPAL ==================== -->
 <div id="app" style="display:none;">
 
   <!-- TOPBAR -->
-  <header class="topbar">
-    <div class="topbar-left">
-      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-      <span class="topbar-brand">📚 Sexta-Feira</span>
+  <div style="position:fixed; top:0; left:0; right:0; height:55px; background:white; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:space-between; padding:0 15px; z-index:100;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button onclick="toggleSidebar()" style="font-size:22px; background:none; border:none; cursor:pointer;">☰</button>
+      <span style="font-weight:800; color:#6C5CE7; font-size:18px;">📚 Sexta-Feira</span>
     </div>
-    <div class="topbar-right">
-      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button onclick="showScreen('notificacoes')" style="position:relative; font-size:20px; background:none; border:none; cursor:pointer;">
         🔔
-        <span class="notif-badge hidden" id="notif-badge">0</span>
+        <span id="notif-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:red; color:white; font-size:10px; width:18px; height:18px; border-radius:50%; display:none; align-items:center; justify-content:center; font-weight:700;">0</span>
       </button>
-      <div class="topbar-avatar" id="topbar-avatar" onclick="showScreen('perfil')">?</div>
+      <div id="topbar-avatar" onclick="showScreen('perfil')" style="width:35px; height:35px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; cursor:pointer; font-size:18px;">?</div>
     </div>
-  </header>
+  </div>
 
   <!-- SIDEBAR -->
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-user">
-      <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+  <div id="sidebar" style="position:fixed; top:55px; left:0; bottom:0; width:250px; background:white; border-right:1px solid #eee; z-index:99; transform:translateX(-100%); transition:0.3s; display:flex; flex-direction:column;">
+    <div style="padding:20px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px;">
+      <div id="sidebar-avatar" style="width:45px; height:45px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700;">?</div>
       <div>
-        <div class="sidebar-name" id="sidebar-name">...</div>
-        <div class="sidebar-pts" id="sidebar-pts">0 pts</div>
+        <div id="sidebar-name" style="font-weight:700; font-size:15px;">...</div>
+        <div id="sidebar-pts" style="font-size:12px; color:#6C5CE7; font-weight:600;">0 pts</div>
       </div>
     </div>
-    <div class="sidebar-menu">
-      <a class="nav-item active" onclick="showScreen('home')">🏠 Home</a>
-      <a class="nav-item" onclick="showScreen('materias')">📚 Matérias</a>
-      <a class="nav-item" onclick="showScreen('descobrir')">🌍 Feed</a>
-      <a class="nav-item" onclick="showScreen('ranking')">🏆 Ranking</a>
-      <a class="nav-item" onclick="showScreen('chat')">💬 Chat</a>
-      <a class="nav-item" onclick="showScreen('perfil')">👤 Perfil</a>
-      <a class="nav-item" onclick="showScreen('notificacoes')">🔔 Notificações</a>
-      <a class="nav-item" id="nav-adm" style="display:none;" onclick="showScreen('adm')">⚙️ Admin</a>
+    <div style="flex:1; overflow-y:auto; padding:10px 0;">
+      <a class="nav-link" onclick="showScreen('home')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">🏠 Home</a>
+      <a class="nav-link" onclick="showScreen('materias')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">📚 Matérias</a>
+      <a class="nav-link" onclick="showScreen('descobrir')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">🌍 Feed</a>
+      <a class="nav-link" onclick="showScreen('ranking')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">🏆 Ranking</a>
+      <a class="nav-link" onclick="showScreen('chat')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">💬 Chat</a>
+      <a class="nav-link" onclick="showScreen('perfil')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">👤 Perfil</a>
+      <a class="nav-link" onclick="showScreen('notificacoes')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">🔔 Notificações</a>
+      <a class="nav-link" id="nav-adm" onclick="showScreen('adm')" style="display:none; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:#555; text-decoration:none;">⚙️ Admin</a>
     </div>
-    <div class="sidebar-bottom">
-      <button class="btn-logout" onclick="handleLogout()">🚪 Sair</button>
+    <div style="padding:15px; border-top:1px solid #eee;">
+      <button onclick="handleLogout()" style="width:100%; padding:10px; background:#ffe0e0; color:#d00; border:none; border-radius:8px; font-weight:700; cursor:pointer;">🚪 Sair</button>
     </div>
-  </nav>
-  <div class="sidebar-overlay hidden" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+  </div>
+  <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:98;"></div>
 
   <!-- MAIN CONTENT -->
-  <main class="main-content" id="main-content">
+  <div style="padding:70px 15px 80px 15px; max-width:700px; margin:0 auto; min-height:100vh;" id="main-content">
 
     <!-- HOME -->
-    <section id="screen-home" class="screen-section">
-      <div class="screen-header">
+    <div id="screen-home">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <div>
-          <h2 id="home-greeting">Olá! 👋</h2>
-          <p class="screen-subtitle">Continue estudando</p>
+          <h2 id="home-greeting" style="font-size:22px; margin:0;">Olá! 👋</h2>
+          <p style="color:#888; font-size:14px; margin:5px 0 0 0;">Continue estudando</p>
         </div>
-        <div class="level-badge" id="level-badge">🌱 Nível 1</div>
+        <span id="level-badge" style="background:#6C5CE7; color:white; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700;">🌱 Nível 1</span>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-card stat-blue" onclick="showScreen('materias')">
-          <div class="stat-icon">📚</div>
-          <div class="stat-info"><div class="stat-val" id="stat-materias">0</div><div class="stat-label">Matérias</div></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+        <div onclick="showScreen('materias')" style="background:white; border-radius:15px; padding:15px; display:flex; align-items:center; gap:12px; cursor:pointer; border-left:4px solid #6C5CE7; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <span style="font-size:28px;">📚</span>
+          <div><div style="font-size:22px; font-weight:800;" id="stat-materias">0</div><div style="font-size:11px; color:#888; font-weight:600;">Matérias</div></div>
         </div>
-        <div class="stat-card stat-purple">
-          <div class="stat-icon">🎮</div>
-          <div class="stat-info"><div class="stat-val" id="stat-quizzes">0</div><div class="stat-label">Quizzes</div></div>
+        <div style="background:white; border-radius:15px; padding:15px; display:flex; align-items:center; gap:12px; border-left:4px solid #a855f7; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <span style="font-size:28px;">🎮</span>
+          <div><div style="font-size:22px; font-weight:800;" id="stat-quizzes">0</div><div style="font-size:11px; color:#888; font-weight:600;">Quizzes</div></div>
         </div>
-        <div class="stat-card stat-green">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-info"><div class="stat-val" id="stat-pontos">0</div><div class="stat-label">Pontos</div></div>
+        <div style="background:white; border-radius:15px; padding:15px; display:flex; align-items:center; gap:12px; border-left:4px solid #10b981; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <span style="font-size:28px;">⭐</span>
+          <div><div style="font-size:22px; font-weight:800;" id="stat-pontos">0</div><div style="font-size:11px; color:#888; font-weight:600;">Pontos</div></div>
         </div>
-        <div class="stat-card stat-orange" onclick="showScreen('ranking')">
-          <div class="stat-icon">🏆</div>
-          <div class="stat-info"><div class="stat-val" id="stat-rank">#--</div><div class="stat-label">Ranking</div></div>
+        <div onclick="showScreen('ranking')" style="background:white; border-radius:15px; padding:15px; display:flex; align-items:center; gap:12px; cursor:pointer; border-left:4px solid #f97316; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <span style="font-size:28px;">🏆</span>
+          <div><div style="font-size:22px; font-weight:800;" id="stat-rank">#--</div><div style="font-size:11px; color:#888; font-weight:600;">Ranking</div></div>
         </div>
       </div>
 
-      <div class="card progress-card">
-        <div class="progress-header"><span>📈 Progresso</span><span id="progress-text">0/100 pts</span></div>
-        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div style="background:white; border-radius:15px; padding:18px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:13px; font-weight:600;">
+          <span>📈 Progresso</span>
+          <span id="progress-text">0 / 100 pts</span>
+        </div>
+        <div style="height:8px; background:#eee; border-radius:10px; overflow:hidden;">
+          <div id="progress-fill" style="height:100%; background:#6C5CE7; border-radius:10px; width:0%; transition:0.5s;"></div>
+        </div>
       </div>
 
-      <div class="section-title">⚡ Ações rápidas</div>
-      <div class="quick-actions">
-        <button class="quick-btn" onclick="showScreen('materias')"><span>📚</span>Matérias</button>
-        <button class="quick-btn" onclick="showModal('modal-criar-post')"><span>✍️</span>Postar</button>
-        <button class="quick-btn" onclick="showModal('modal-criar-quiz-cmd')"><span>🎮</span>Quiz /cmd</button>
-        <button class="quick-btn" onclick="showScreen('chat')"><span>💬</span>Chat</button>
+      <div style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">⚡ Ações rápidas</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+        <button onclick="showScreen('materias')" style="background:white; border:2px solid #eee; border-radius:15px; padding:15px; cursor:pointer; font-weight:600; font-size:14px; text-align:center;">📚<br>Matérias</button>
+        <button onclick="showModal('modal-post')" style="background:white; border:2px solid #eee; border-radius:15px; padding:15px; cursor:pointer; font-weight:600; font-size:14px; text-align:center;">✍️<br>Postar</button>
+        <button onclick="showModal('modal-quiz-cmd')" style="background:white; border:2px solid #eee; border-radius:15px; padding:15px; cursor:pointer; font-weight:600; font-size:14px; text-align:center;">🎮<br>Quiz /cmd</button>
+        <button onclick="showScreen('chat')" style="background:white; border:2px solid #eee; border-radius:15px; padding:15px; cursor:pointer; font-weight:600; font-size:14px; text-align:center;">💬<br>Chat</button>
       </div>
 
-      <div class="section-title">📰 Feed recente</div>
-      <div id="home-feed" class="feed-list"><div class="empty-state">Carregando...</div></div>
-    </section>
+      <div style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📰 Feed recente</div>
+      <div id="home-feed"></div>
+    </div>
 
     <!-- MATÉRIAS -->
-    <section id="screen-materias" class="screen-section" style="display:none;">
-      <div class="screen-header">
-        <h2>📚 Matérias</h2>
-        <button class="btn-primary btn-sm" onclick="showModal('modal-criar-materia')">+ Nova</button>
+    <div id="screen-materias" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="font-size:22px; margin:0;">📚 Matérias</h2>
+        <button onclick="showModal('modal-materia')" style="background:#6C5CE7; color:white; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">+ Nova</button>
       </div>
-      <div class="search-bar"><span>🔍</span><input type="text" id="search-materias" placeholder="Buscar..." oninput="filterMaterias()" /></div>
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setMateriaFilter('all', this)">Todas</button>
-        <button class="filter-tab" onclick="setMateriaFilter('mine', this)">Minhas</button>
+      <div style="display:flex; align-items:center; gap:8px; background:white; border:2px solid #eee; border-radius:12px; padding:0 12px; margin-bottom:15px;">
+        <span>🔍</span>
+        <input type="text" id="search-materias" placeholder="Buscar matérias..." oninput="filterMaterias()" style="flex:1; padding:12px 0; border:none; outline:none; font-size:14px;" />
       </div>
-      <div id="materias-grid" class="materias-grid"><div class="empty-state">Carregando...</div></div>
-    </section>
+      <div style="display:flex; gap:8px; margin-bottom:15px;">
+        <button class="filter-btn active" onclick="setMateriaFilter('all', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Todas</button>
+        <button class="filter-btn" onclick="setMateriaFilter('mine', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Minhas</button>
+      </div>
+      <div id="materias-grid"></div>
+    </div>
 
     <!-- DETALHE MATÉRIA -->
-    <section id="screen-materia-detalhe" class="screen-section" style="display:none;">
-      <div class="screen-header">
-        <button class="btn-back" onclick="showScreen('materias')">← Voltar</button>
-        <button class="btn-primary btn-sm" onclick="showModal('modal-criar-topico')">+ Tópico</button>
-      </div>
-      <div class="materia-hero">
-        <div class="materia-hero-icon" id="materia-hero-icon">📚</div>
-        <div>
-          <h2 id="materia-hero-nome">Matéria</h2>
-          <p id="materia-hero-desc">Descrição</p>
-          <div class="materia-hero-meta">
-            <span id="materia-hero-autor">Por: --</span>
-            <span id="materia-hero-topicos">0 tópicos</span>
+    <div id="screen-materia-detalhe" style="display:none;">
+      <button onclick="showScreen('materias')" style="background:none; border:none; cursor:pointer; font-weight:600; color:#888; margin-bottom:15px; font-size:15px;">← Voltar</button>
+      <div style="background:linear-gradient(135deg, #6C5CE7, #a855f7); color:white; border-radius:20px; padding:25px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; gap:15px;">
+          <span id="materia-hero-icon" style="font-size:50px;">📚</span>
+          <div>
+            <h2 id="materia-hero-nome" style="margin:0; font-size:22px;">Matéria</h2>
+            <p id="materia-hero-desc" style="margin:5px 0; opacity:0.9; font-size:14px;">Descrição</p>
+            <span id="materia-hero-autor" style="font-size:12px; opacity:0.8;">Por: --</span>
           </div>
         </div>
       </div>
-      <div class="section-title">📝 Tópicos</div>
-      <div id="topicos-list" class="topicos-list"><div class="empty-state">Nenhum tópico</div></div>
-      <div class="section-title">🎮 Quizzes</div>
-      <div id="quizzes-materia" class="quizzes-list"><div class="empty-state">Nenhum quiz</div></div>
-      <button class="btn-secondary btn-full mt-2" onclick="showModal('modal-criar-quiz-cmd')">+ Quiz por Comando</button>
-    </section>
+      <button onclick="showModal('modal-topico')" style="background:#6C5CE7; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:700; cursor:pointer; margin-bottom:20px;">+ Novo Tópico</button>
+      <div style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📝 Tópicos</div>
+      <div id="topicos-list"></div>
+      <div style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin:20px 0 10px;">🎮 Quizzes</div>
+      <div id="quizzes-materia"></div>
+    </div>
 
-    <!-- DETALHE TÓPICO -->
-    <section id="screen-topico-detalhe" class="screen-section" style="display:none;">
-      <div class="screen-header"><button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar</button></div>
-      <div class="topico-content card">
-        <h2 id="topico-title">Tópico</h2>
-        <div class="topico-meta" id="topico-meta"></div>
-        <div class="topico-body" id="topico-body"></div>
+    <!-- TÓPICO DETALHE -->
+    <div id="screen-topico-detalhe" style="display:none;">
+      <button onclick="showScreen('materia-detalhe')" style="background:none; border:none; cursor:pointer; font-weight:600; color:#888; margin-bottom:15px;">← Voltar</button>
+      <div style="background:white; border-radius:20px; padding:25px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:20px;">
+        <h2 id="topico-title" style="margin:0 0 10px 0;">Tópico</h2>
+        <div id="topico-meta" style="font-size:12px; color:#888; margin-bottom:15px;"></div>
+        <div id="topico-body" style="line-height:1.8;"></div>
       </div>
-      <div class="section-title">💬 Comentários</div>
-      <div id="topico-comentarios" class="comentarios-list"></div>
-      <div class="comentario-form">
-        <input type="text" id="new-comment" placeholder="Comente..." />
-        <button class="btn-primary btn-sm" onclick="addComment()">Enviar</button>
+      <div style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">💬 Comentários</div>
+      <div id="topico-comentarios"></div>
+      <div style="display:flex; gap:8px; margin-top:15px;">
+        <input type="text" id="new-comment" placeholder="Comente..." style="flex:1; padding:12px; border:2px solid #eee; border-radius:10px; outline:none;" />
+        <button onclick="addComment()" style="background:#6C5CE7; color:white; border:none; padding:12px 18px; border-radius:10px; font-weight:700; cursor:pointer;">Enviar</button>
       </div>
-    </section>
+    </div>
 
     <!-- QUIZ GAME -->
-    <section id="screen-quiz-game" class="screen-section" style="display:none;">
-      <div class="quiz-header">
-        <button class="btn-back" onclick="exitQuiz()">← Sair</button>
-        <div class="quiz-progress-wrap">
-          <div class="quiz-q-counter" id="quiz-q-counter">1/10</div>
-          <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quiz-progress-fill"></div></div>
+    <div id="screen-quiz-game" style="display:none;">
+      <div style="display:flex; align-items:center; gap:15px; margin-bottom:25px;">
+        <button onclick="exitQuiz()" style="background:none; border:none; cursor:pointer; font-weight:600; color:#888;">← Sair</button>
+        <div style="flex:1;">
+          <div id="quiz-q-counter" style="font-size:13px; font-weight:700; color:#888; margin-bottom:5px;">1/10</div>
+          <div style="height:5px; background:#eee; border-radius:10px;">
+            <div id="quiz-progress-fill" style="height:100%; background:#6C5CE7; border-radius:10px; width:0%;"></div>
+          </div>
         </div>
-        <div class="quiz-timer" id="quiz-timer">⏱ 30s</div>
+        <span id="quiz-timer" style="background:#fff3cd; padding:5px 12px; border-radius:20px; font-weight:700; font-size:14px; color:#856404;">⏱ 30s</span>
       </div>
-      <div class="quiz-body">
-        <div class="quiz-card">
-          <div class="quiz-q-num" id="quiz-q-num">Questão 1</div>
-          <div class="quiz-question" id="quiz-question">...</div>
-          <div class="quiz-options" id="quiz-options"></div>
-        </div>
+      <div style="background:white; border-radius:20px; padding:30px; box-shadow:0 4px 15px rgba(0,0,0,0.08);">
+        <div id="quiz-q-num" style="font-size:12px; font-weight:700; color:#6C5CE7; margin-bottom:10px;">Questão 1</div>
+        <div id="quiz-question" style="font-size:18px; font-weight:700; margin-bottom:25px;">...</div>
+        <div id="quiz-options"></div>
       </div>
-      <div class="quiz-footer">⭐ <span id="quiz-score-live">0</span> pts</div>
-    </section>
+      <div style="text-align:center; margin-top:15px; font-weight:700; color:#6C5CE7;">⭐ <span id="quiz-score-live">0</span> pts</div>
+    </div>
 
     <!-- RESULTADO -->
-    <section id="screen-resultado" class="screen-section" style="display:none;">
-      <div class="resultado-container">
-        <div class="resultado-emoji" id="resultado-emoji">🎉</div>
+    <div id="screen-resultado" style="display:none;">
+      <div style="text-align:center; padding:30px 0;">
+        <div id="resultado-emoji" style="font-size:80px;">🎉</div>
         <h2 id="resultado-titulo">Parabéns!</h2>
-        <p id="resultado-subtitulo">Quiz finalizado</p>
-        <div class="resultado-stats">
-          <div class="res-stat"><div class="res-val" id="res-acertos">0</div><div class="res-label">Acertos</div></div>
-          <div class="res-stat"><div class="res-val" id="res-total">0</div><div class="res-label">Total</div></div>
-          <div class="res-stat"><div class="res-val" id="res-pontos">+0</div><div class="res-label">Pontos</div></div>
-          <div class="res-stat"><div class="res-val" id="res-tempo">0s</div><div class="res-label">Tempo</div></div>
+        <p id="resultado-subtitulo" style="color:#888;">Quiz finalizado</p>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin:20px 0;">
+          <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <div id="res-acertos" style="font-size:24px; font-weight:800; color:#6C5CE7;">0</div>
+            <div style="font-size:10px; color:#888;">Acertos</div>
+          </div>
+          <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <div id="res-total" style="font-size:24px; font-weight:800;">0</div>
+            <div style="font-size:10px; color:#888;">Total</div>
+          </div>
+          <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <div id="res-pontos" style="font-size:24px; font-weight:800; color:#10b981;">+0</div>
+            <div style="font-size:10px; color:#888;">Pontos</div>
+          </div>
+          <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <div id="res-tempo" style="font-size:24px; font-weight:800;">0s</div>
+            <div style="font-size:10px; color:#888;">Tempo</div>
+          </div>
         </div>
-        <div class="resultado-barra"><div class="resultado-barra-fill" id="resultado-barra-fill"></div></div>
-        <p id="resultado-pct">0%</p>
-        <div class="resultado-review" id="resultado-review"></div>
-        <div class="resultado-actions">
-          <button class="btn-primary" onclick="showScreen('home')">🏠 Início</button>
-          <button class="btn-secondary" onclick="showScreen('ranking')">🏆 Ranking</button>
+
+        <div style="height:10px; background:#eee; border-radius:10px; margin-bottom:10px;">
+          <div id="resultado-barra-fill" style="height:100%; background:#10b981; border-radius:10px; width:0%;"></div>
+        </div>
+        <p id="resultado-pct" style="font-weight:700;">0%</p>
+        
+        <div id="resultado-review" style="text-align:left; margin:20px 0;"></div>
+        
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button onclick="showScreen('home')" style="background:#6C5CE7; color:white; border:none; padding:12px 25px; border-radius:10px; font-weight:700; cursor:pointer;">🏠 Início</button>
+          <button onclick="showScreen('ranking')" style="background:#eee; color:#555; border:none; padding:12px 25px; border-radius:10px; font-weight:700; cursor:pointer;">🏆 Ranking</button>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- RANKING -->
-    <section id="screen-ranking" class="screen-section" style="display:none;">
-      <div class="screen-header"><h2>🏆 Ranking</h2></div>
-      <div class="podio" id="podio">
-        <div class="podio-item p2"><div class="podio-avatar" id="podio2-av">?</div><div class="podio-name" id="podio2-name">--</div><div class="podio-pts" id="podio2-pts">0</div><div class="podio-place">2°</div></div>
-        <div class="podio-item p1"><div class="podio-crown">👑</div><div class="podio-avatar" id="podio1-av">?</div><div class="podio-name" id="podio1-name">--</div><div class="podio-pts" id="podio1-pts">0</div><div class="podio-place">1°</div></div>
-        <div class="podio-item p3"><div class="podio-avatar" id="podio3-av">?</div><div class="podio-name" id="podio3-name">--</div><div class="podio-pts" id="podio3-pts">0</div><div class="podio-place">3°</div></div>
-      </div>
-      <div class="my-rank-card"><span>Sua posição:</span> <strong id="my-rank-num">#--</strong> <span id="my-rank-pts">0 pts</span></div>
-      <div id="ranking-list" class="ranking-list"><div class="empty-state">Carregando...</div></div>
-    </section>
-
-    <!-- DESCOBRIR / FEED -->
-    <section id="screen-descobrir" class="screen-section" style="display:none;">
-      <div class="screen-header"><h2>🌍 Feed Global</h2></div>
-
-      <div class="card post-creator">
-        <div class="post-creator-row">
-          <div class="pc-avatar" id="pc-avatar">?</div>
-          <input type="text" id="new-post-text" placeholder="O que você quer compartilhar?" class="post-input" />
+    <div id="screen-ranking" style="display:none;">
+      <h2 style="font-size:22px; margin-bottom:20px;">🏆 Ranking</h2>
+      <div style="display:flex; justify-content:center; gap:15px; margin-bottom:25px;" id="podio">
+        <div style="text-align:center;">
+          <div id="podio2-av" style="width:55px; height:55px; border-radius:50%; background:#ddd; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px;">?</div>
+          <div id="podio2-name" style="font-weight:700; font-size:13px; margin-top:5px;">--</div>
+          <div id="podio2-pts" style="font-size:11px; color:#6C5CE7;">0</div>
+          <div style="font-size:20px; font-weight:800; color:#888;">2°</div>
         </div>
-        <div class="post-creator-actions">
-          <div class="post-type-btns">
-            <button class="ptype-btn active" onclick="setPostType('post', this)">💬 Post</button>
-            <button class="ptype-btn" onclick="setPostType('dica', this)">💡 Dica</button>
-            <button class="ptype-btn" onclick="setPostType('duvida', this)">❓ Dúvida</button>
+        <div style="text-align:center; margin-top:-15px;">
+          <div style="font-size:30px;">👑</div>
+          <div id="podio1-av" style="width:65px; height:65px; border-radius:50%; background:#ffd700; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:28px;">?</div>
+          <div id="podio1-name" style="font-weight:700; font-size:14px; margin-top:5px;">--</div>
+          <div id="podio1-pts" style="font-size:12px; color:#6C5CE7;">0</div>
+          <div style="font-size:22px; font-weight:800; color:#f59e0b;">1°</div>
+        </div>
+        <div style="text-align:center;">
+          <div id="podio3-av" style="width:55px; height:55px; border-radius:50%; background:#ddd; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px;">?</div>
+          <div id="podio3-name" style="font-weight:700; font-size:13px; margin-top:5px;">--</div>
+          <div id="podio3-pts" style="font-size:11px; color:#6C5CE7;">0</div>
+          <div style="font-size:20px; font-weight:800; color:#cd853f;">3°</div>
+        </div>
+      </div>
+      <div style="background:#f0edff; border-radius:12px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:15px; font-weight:600;">
+        <span>Sua posição: <strong id="my-rank-num">#--</strong></span>
+        <span id="my-rank-pts">0 pts</span>
+      </div>
+      <div id="ranking-list"></div>
+    </div>
+
+    <!-- FEED -->
+    <div id="screen-descobrir" style="display:none;">
+      <h2 style="font-size:22px; margin-bottom:20px;">🌍 Feed Global</h2>
+      
+      <div style="background:white; border-radius:20px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:20px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <div id="pc-avatar" style="width:38px; height:38px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-weight:700;">?</div>
+          <input type="text" id="new-post-text" placeholder="O que você quer compartilhar?" style="flex:1; padding:10px; border:2px solid #eee; border-radius:20px; outline:none; font-size:14px;" />
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; gap:5px;">
+            <button class="ptype-btn active" onclick="setPostType('post', this)" style="padding:5px 12px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:12px;">💬 Post</button>
+            <button class="ptype-btn" onclick="setPostType('dica', this)" style="padding:5px 12px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:12px;">💡 Dica</button>
+            <button class="ptype-btn" onclick="setPostType('duvida', this)" style="padding:5px 12px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:12px;">❓ Dúvida</button>
           </div>
-          <button class="btn-primary btn-sm" onclick="createPost()">Publicar</button>
+          <button onclick="createPost()" style="background:#6C5CE7; color:white; border:none; padding:8px 18px; border-radius:10px; font-weight:700; cursor:pointer;">Publicar</button>
         </div>
       </div>
 
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setFeedFilter('all', this)">Todos</button>
-        <button class="filter-tab" onclick="setFeedFilter('post', this)">Posts</button>
-        <button class="filter-tab" onclick="setFeedFilter('dica', this)">Dicas</button>
-        <button class="filter-tab" onclick="setFeedFilter('duvida', this)">Dúvidas</button>
+      <div style="display:flex; gap:8px; margin-bottom:15px;">
+        <button class="feed-filter-btn active" onclick="setFeedFilter('all', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Todos</button>
+        <button class="feed-filter-btn" onclick="setFeedFilter('post', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Posts</button>
+        <button class="feed-filter-btn" onclick="setFeedFilter('dica', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Dicas</button>
+        <button class="feed-filter-btn" onclick="setFeedFilter('duvida', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Dúvidas</button>
       </div>
 
-      <div id="descobrir-feed" class="feed-list"><div class="empty-state">Carregando...</div></div>
-    </section>
+      <div id="descobrir-feed"></div>
+    </div>
 
     <!-- CHAT -->
-    <section id="screen-chat" class="screen-section" style="display:none;">
-      <div class="screen-header"><h2>💬 Chat</h2></div>
-      <div class="chat-layout">
-        <div class="chat-rooms" id="chat-rooms">
-          <div class="chat-rooms-header"><span>Salas</span><button class="btn-sm btn-primary" onclick="showModal('modal-criar-sala')">+</button></div>
+    <div id="screen-chat" style="display:none;">
+      <h2 style="font-size:22px; margin-bottom:20px;">💬 Chat</h2>
+      <div style="display:flex; gap:0; height:calc(100vh - 200px); min-height:400px;">
+        <div style="width:180px; background:white; border-radius:15px 0 0 15px; border:2px solid #eee; overflow-y:auto;">
+          <div style="padding:12px; border-bottom:2px solid #eee; display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:14px;">
+            <span>Salas</span>
+            <button onclick="showModal('modal-sala')" style="background:#6C5CE7; color:white; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:16px;">+</button>
+          </div>
           <div id="rooms-list"></div>
         </div>
-        <div class="chat-window">
-          <div class="chat-no-room" id="chat-no-room"><div class="empty-state">Selecione uma sala</div></div>
-          <div class="chat-room-view hidden" id="chat-room-view">
-            <div class="chat-room-header"><strong id="chat-room-name">Sala</strong></div>
-            <div class="chat-messages" id="chat-messages"></div>
-            <div class="chat-input-row">
-              <input type="text" id="chat-msg-input" placeholder="Mensagem..." />
-              <button class="btn-primary btn-sm" onclick="sendChatMsg()">Enviar</button>
+        <div style="flex:1; background:white; border-radius:0 15px 15px 0; border:2px solid #eee; border-left:none; display:flex; flex-direction:column;">
+          <div id="chat-no-room" style="flex:1; display:flex; align-items:center; justify-content:center; color:#888;">Selecione uma sala</div>
+          <div id="chat-room-view" style="display:none; flex-direction:column; height:100%;">
+            <div style="padding:12px; border-bottom:2px solid #eee; font-weight:700;" id="chat-room-name">Sala</div>
+            <div id="chat-messages" style="flex:1; overflow-y:auto; padding:15px;"></div>
+            <div style="display:flex; gap:8px; padding:12px; border-top:2px solid #eee;">
+              <input type="text" id="chat-msg-input" placeholder="Mensagem..." style="flex:1; padding:10px; border:2px solid #eee; border-radius:20px; outline:none;" />
+              <button onclick="sendChatMsg()" style="background:#6C5CE7; color:white; border:none; padding:10px 18px; border-radius:20px; font-weight:700; cursor:pointer;">Enviar</button>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
     <!-- PERFIL -->
-    <section id="screen-perfil" class="screen-section" style="display:none;">
-      <div class="perfil-hero">
-        <div class="perfil-avatar-wrap">
-          <div class="perfil-avatar" id="perfil-avatar">?</div>
-          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')">✏️</button>
+    <div id="screen-perfil" style="display:none;">
+      <div style="text-align:center; padding:30px 20px; background:linear-gradient(135deg, #ede9fe, #e0e7ff); border-radius:20px; margin-bottom:20px;">
+        <div id="perfil-avatar" style="width:85px; height:85px; border-radius:50%; background:#6C5CE7; color:white; display:flex; align-items:center; justify-content:center; font-size:40px; margin:0 auto; border:4px solid white; box-shadow:0 4px 15px rgba(0,0,0,0.1);">?</div>
+        <h2 id="perfil-name" style="margin:10px 0 5px;">--</h2>
+        <p id="perfil-email" style="color:#888; font-size:14px;">--</p>
+        <div id="perfil-badges"></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:20px;">
+        <div style="background:white; padding:12px; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div id="pstat-pts" style="font-size:20px; font-weight:800; color:#6C5CE7;">0</div>
+          <div style="font-size:10px; color:#888;">Pontos</div>
         </div>
-        <h2 id="perfil-name">--</h2>
-        <p id="perfil-email">--</p>
-        <div class="perfil-badges" id="perfil-badges"></div>
+        <div style="background:white; padding:12px; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div id="pstat-quizzes" style="font-size:20px; font-weight:800;">0</div>
+          <div style="font-size:10px; color:#888;">Quizzes</div>
+        </div>
+        <div style="background:white; padding:12px; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div id="pstat-materias" style="font-size:20px; font-weight:800;">0</div>
+          <div style="font-size:10px; color:#888;">Matérias</div>
+        </div>
+        <div style="background:white; padding:12px; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div id="pstat-seguidores" style="font-size:20px; font-weight:800;">0</div>
+          <div style="font-size:10px; color:#888;">Seguidores</div>
+        </div>
       </div>
-      <div class="perfil-stats">
-        <div class="pstat"><div class="pstat-val" id="pstat-pts">0</div><div class="pstat-label">Pontos</div></div>
-        <div class="pstat"><div class="pstat-val" id="pstat-quizzes">0</div><div class="pstat-label">Quizzes</div></div>
-        <div class="pstat"><div class="pstat-val" id="pstat-materias">0</div><div class="pstat-label">Matérias</div></div>
-        <div class="pstat"><div class="pstat-val" id="pstat-seguidores">0</div><div class="pstat-label">Seguidores</div></div>
-      </div>
-      <div class="card mt-2">
-        <div class="section-title">✏️ Editar</div>
-        <div class="field-group"><label>Nome</label><input type="text" id="edit-name" class="input-field" /></div>
-        <div class="field-group"><label>Bio</label><textarea id="edit-bio" rows="3" class="input-field"></textarea></div>
-        <button class="btn-primary btn-full" onclick="saveProfile()">💾 Salvar</button>
-      </div>
-      <div class="section-title">📋 Histórico</div>
-      <div id="perfil-historico" class="historico-list"><div class="empty-state">Nenhum quiz</div></div>
-    </section>
+
+      <div style="font-size:12px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📋 Histórico</div>
+      <div id="perfil-historico"></div>
+    </div>
 
     <!-- NOTIFICAÇÕES -->
-    <section id="screen-notificacoes" class="screen-section" style="display:none;">
-      <div class="screen-header">
-        <h2>🔔 Notificações</h2>
-        <button class="btn-sm btn-secondary" onclick="marcarTodasLidas()">✓ Marcar lidas</button>
+    <div id="screen-notificacoes" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="font-size:22px; margin:0;">🔔 Notificações</h2>
+        <button onclick="marcarLidas()" style="background:#eee; border:none; padding:8px 16px; border-radius:10px; font-weight:600; cursor:pointer; font-size:13px;">✓ Marcar lidas</button>
       </div>
-      <div id="notificacoes-list" class="notif-list"><div class="empty-state">Nenhuma</div></div>
-    </section>
+      <div id="notificacoes-list"></div>
+    </div>
 
     <!-- ADM -->
-    <section id="screen-adm" class="screen-section" style="display:none;">
-      <div class="screen-header"><h2>⚙️ Painel Admin</h2></div>
-      <div class="stats-grid">
-        <div class="stat-card stat-blue"><div class="stat-icon">👥</div><div class="stat-info"><div class="stat-val" id="adm-users">0</div><div class="stat-label">Usuários</div></div></div>
-        <div class="stat-card stat-purple"><div class="stat-icon">📚</div><div class="stat-info"><div class="stat-val" id="adm-materias">0</div><div class="stat-label">Matérias</div></div></div>
-        <div class="stat-card stat-green"><div class="stat-icon">🎮</div><div class="stat-info"><div class="stat-val" id="adm-quizzes">0</div><div class="stat-label">Quizzes</div></div></div>
-        <div class="stat-card stat-orange"><div class="stat-icon">💬</div><div class="stat-info"><div class="stat-val" id="adm-posts">0</div><div class="stat-label">Posts</div></div></div>
-      </div>
+    <div id="screen-adm" style="display:none;">
+      <h2 style="font-size:22px; margin-bottom:10px;">⚙️ Painel Admin</h2>
       
-      <div class="card mt-2">
-        <div class="section-title">➕ Gerar pontos para si mesmo</div>
-        <div style="display:flex;gap:0.5rem;">
-          <input type="number" id="adm-add-points" placeholder="Quantidade de pontos" class="input-field" style="flex:1;" />
-          <button class="btn-primary" onclick="admAddPoints()">Adicionar</button>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+        <div style="background:white; padding:15px; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div id="adm-users" style="font-size:28px; font-weight:800; color:#6C5CE7;">0</div>
+          <div style="font-size:11px; color:#888;">Usuários</div>
+        </div>
+        <div style="background:white; padding:15px; border-radius:12px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <div id="adm-posts" style="font-size:28px; font-weight:800; color:#f97316;">0</div>
+          <div style="font-size:11px; color:#888;">Posts</div>
         </div>
       </div>
 
-      <div class="section-title">👥 Gerenciar Conteúdo</div>
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="admLoadTab('materias', this)">Matérias</button>
-        <button class="filter-tab" onclick="admLoadTab('quizzes', this)">Quizzes</button>
-        <button class="filter-tab" onclick="admLoadTab('topicos', this)">Tópicos</button>
-        <button class="filter-tab" onclick="admLoadTab('posts', this)">Posts</button>
-        <button class="filter-tab" onclick="admLoadTab('usuarios', this)">Usuários</button>
+      <div style="background:white; border-radius:15px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:20px;">
+        <div style="font-weight:700; margin-bottom:10px;">➕ Adicionar pontos para mim</div>
+        <div style="display:flex; gap:8px;">
+          <input type="number" id="adm-add-pts" placeholder="Quantidade" style="flex:1; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;" />
+          <button onclick="admAddPts()" style="background:#10b981; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:700; cursor:pointer;">Adicionar</button>
+        </div>
       </div>
-      <div id="adm-content-list" class="adm-list"><div class="empty-state">Selecione uma aba</div></div>
-    </section>
 
-  </main>
+      <div style="display:flex; gap:8px; margin-bottom:15px; flex-wrap:wrap;">
+        <button class="adm-tab-btn active" onclick="admLoad('materias', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Matérias</button>
+        <button class="adm-tab-btn" onclick="admLoad('quizzes', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Quizzes</button>
+        <button class="adm-tab-btn" onclick="admLoad('topicos', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Tópicos</button>
+        <button class="adm-tab-btn" onclick="admLoad('posts', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Posts</button>
+        <button class="adm-tab-btn" onclick="admLoad('usuarios', this)" style="padding:6px 14px; border-radius:20px; border:2px solid #eee; background:white; cursor:pointer; font-weight:600; font-size:13px;">Usuários</button>
+      </div>
+      <div id="adm-content-list"></div>
+    </div>
+
+  </div>
 
   <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <a class="bnav-item active" onclick="showScreen('home')">🏠<span>Home</span></a>
-    <a class="bnav-item" onclick="showScreen('descobrir')">🌍<span>Feed</span></a>
-    <a class="bnav-item" onclick="showScreen('materias')">📚<span>Matérias</span></a>
-    <a class="bnav-item" onclick="showScreen('ranking')">🏆<span>Ranking</span></a>
-    <a class="bnav-item" onclick="showScreen('perfil')">👤<span>Perfil</span></a>
-  </nav>
+  <div style="position:fixed; bottom:0; left:0; right:0; height:60px; background:white; border-top:1px solid #eee; display:flex; align-items:center; z-index:100;">
+    <div onclick="showScreen('home')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:#888;">🏠<br>Home</div>
+    <div onclick="showScreen('descobrir')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:#888;">🌍<br>Feed</div>
+    <div onclick="showScreen('materias')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:#888;">📚<br>Matérias</div>
+    <div onclick="showScreen('ranking')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:#888;">🏆<br>Ranking</div>
+    <div onclick="showScreen('perfil')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:#888;">👤<br>Perfil</div>
+  </div>
+
 </div>
 
 <!-- ==================== MODAIS ==================== -->
 
-<!-- Modal Criar Matéria -->
-<div class="modal hidden" id="modal-criar-materia">
-  <div class="modal-backdrop" onclick="closeModal('modal-criar-materia')"></div>
-  <div class="modal-box">
-    <div class="modal-header"><h3>📚 Nova Matéria</h3><button class="modal-close" onclick="closeModal('modal-criar-materia')">✕</button></div>
-    <div class="modal-body">
-      <div class="field-group"><label>Nome *</label><input type="text" id="nm-nome" class="input-field" placeholder="Ex: Matemática" /></div>
-      <div class="field-group"><label>Descrição</label><textarea id="nm-desc" rows="3" class="input-field" placeholder="Descreva..."></textarea></div>
-      <div class="field-group">
-        <label>Ícone</label>
-        <div class="emoji-picker" id="emoji-picker">
-          <button class="emoji-opt selected" onclick="pickEmoji('📚', this)">📚</button>
-          <button class="emoji-opt" onclick="pickEmoji('🔬', this)">🔬</button>
-          <button class="emoji-opt" onclick="pickEmoji('🧮', this)">🧮</button>
-          <button class="emoji-opt" onclick="pickEmoji('💻', this)">💻</button>
-          <button class="emoji-opt" onclick="pickEmoji('🌍', this)">🌍</button>
-          <button class="emoji-opt" onclick="pickEmoji('📖', this)">📖</button>
-          <button class="emoji-opt" onclick="pickEmoji('🎨', this)">🎨</button>
-          <button class="emoji-opt" onclick="pickEmoji('🎵', this)">🎵</button>
-        </div>
-      </div>
-      <input type="hidden" id="nm-icone" value="📚" />
+<div id="modal-materia" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-materia')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:25px; width:90%; max-width:450px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0;">📚 Nova Matéria</h3>
+      <button onclick="closeModal('modal-materia')" style="background:#eee; border:none; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer;">✕</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-criar-materia')">Cancelar</button>
-      <button class="btn-primary" onclick="criarMateria()">Criar</button>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">NOME *</label>
+      <input type="text" id="nm-nome" placeholder="Ex: Matemática" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;" />
     </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">DESCRIÇÃO</label>
+      <textarea id="nm-desc" rows="3" placeholder="Descreva..." style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;"></textarea>
+    </div>
+    <button onclick="criarMateria()" style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px;">Criar Matéria</button>
   </div>
 </div>
 
-<!-- Modal Criar Tópico -->
-<div class="modal hidden" id="modal-criar-topico">
-  <div class="modal-backdrop" onclick="closeModal('modal-criar-topico')"></div>
-  <div class="modal-box">
-    <div class="modal-header"><h3>📝 Novo Tópico</h3><button class="modal-close" onclick="closeModal('modal-criar-topico')">✕</button></div>
-    <div class="modal-body">
-      <div class="field-group"><label>Título *</label><input type="text" id="nt-titulo" class="input-field" /></div>
-      <div class="field-group"><label>Conteúdo *</label><textarea id="nt-conteudo" rows="6" class="input-field"></textarea></div>
+<div id="modal-topico" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-topico')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:25px; width:90%; max-width:450px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0;">📝 Novo Tópico</h3>
+      <button onclick="closeModal('modal-topico')" style="background:#eee; border:none; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer;">✕</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-criar-topico')">Cancelar</button>
-      <button class="btn-primary" onclick="criarTopico()">Criar</button>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">TÍTULO *</label>
+      <input type="text" id="nt-titulo" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;" />
     </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">CONTEÚDO *</label>
+      <textarea id="nt-conteudo" rows="6" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;"></textarea>
+    </div>
+    <button onclick="criarTopico()" style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px;">Criar Tópico</button>
   </div>
 </div>
 
-<!-- Modal Criar Quiz por Comando -->
-<div class="modal hidden" id="modal-criar-quiz-cmd">
-  <div class="modal-backdrop" onclick="closeModal('modal-criar-quiz-cmd')"></div>
-  <div class="modal-box modal-lg">
-    <div class="modal-header"><h3>🎮 Criar Quiz por Comando</h3><button class="modal-close" onclick="closeModal('modal-criar-quiz-cmd')">✕</button></div>
-    <div class="modal-body">
-      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
-        Use os comandos:<br>
-        <code>/n Nome do Quiz</code> - Define o nome<br>
-        <code>/a Alternativa A</code> - Adiciona alternativa<br>
-        <code>/c A</code> - Define a correta (A, B, C ou D)<br>
-        <code>/q Pergunta</code> - Adiciona questão<br>
-        <code>/f</code> - Finaliza questão<br>
-        <code>/save</code> - Salva o quiz
-      </p>
-      <textarea id="cmd-input" rows="12" class="input-field" placeholder="/n Quiz de Matemática
-/q Quanto é 2+2?
-/a 3
-/a 4
-/a 5
-/a 6
-/c B
-/f
-/save"></textarea>
+<div id="modal-quiz-cmd" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-quiz-cmd')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:25px; width:90%; max-width:500px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0;">🎮 Quiz por Comando</h3>
+      <button onclick="closeModal('modal-quiz-cmd')" style="background:#eee; border:none; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer;">✕</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-criar-quiz-cmd')">Cancelar</button>
-      <button class="btn-primary" onclick="processarComandoQuiz()">💾 Processar</button>
-    </div>
+    <p style="font-size:12px; color:#888; margin-bottom:10px;">
+      /n Nome | /q Pergunta | /a Alternativa | /c Correta | /f Finaliza | /save Salva
+    </p>
+    <textarea id="cmd-input" rows="10" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none; font-family:monospace; font-size:13px;" placeholder="/n Quiz de Matemática&#10;/q Quanto é 2+2?&#10;/a 3&#10;/a 4&#10;/a 5&#10;/c B&#10;/f&#10;/save"></textarea>
+    <button onclick="processarCmd()" style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px; margin-top:12px;">💾 Processar</button>
   </div>
 </div>
 
-<!-- Modal Criar Post -->
-<div class="modal hidden" id="modal-criar-post">
-  <div class="modal-backdrop" onclick="closeModal('modal-criar-post')"></div>
-  <div class="modal-box">
-    <div class="modal-header"><h3>✍️ Novo Post</h3><button class="modal-close" onclick="closeModal('modal-criar-post')">✕</button></div>
-    <div class="modal-body">
-      <div class="field-group"><label>Tipo</label>
-        <select id="post-tipo-modal" class="input-field">
-          <option value="post">💬 Post</option>
-          <option value="dica">💡 Dica</option>
-          <option value="duvida">❓ Dúvida</option>
-        </select>
-      </div>
-      <div class="field-group"><label>Conteúdo *</label><textarea id="post-texto-modal" rows="4" class="input-field" placeholder="Escreva..."></textarea></div>
+<div id="modal-post" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-post')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:25px; width:90%; max-width:450px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0;">✍️ Novo Post</h3>
+      <button onclick="closeModal('modal-post')" style="background:#eee; border:none; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer;">✕</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-criar-post')">Cancelar</button>
-      <button class="btn-primary" onclick="criarPostModal()">Publicar</button>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">TIPO</label>
+      <select id="post-tipo-modal" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;">
+        <option value="post">💬 Post</option>
+        <option value="dica">💡 Dica</option>
+        <option value="duvida">❓ Dúvida</option>
+      </select>
     </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">CONTEÚDO</label>
+      <textarea id="post-texto-modal" rows="4" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;"></textarea>
+    </div>
+    <button onclick="criarPostModal()" style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px;">Publicar</button>
   </div>
 </div>
 
-<!-- Modal Criar Sala -->
-<div class="modal hidden" id="modal-criar-sala">
-  <div class="modal-backdrop" onclick="closeModal('modal-criar-sala')"></div>
-  <div class="modal-box">
-    <div class="modal-header"><h3>💬 Nova Sala</h3><button class="modal-close" onclick="closeModal('modal-criar-sala')">✕</button></div>
-    <div class="modal-body">
-      <div class="field-group"><label>Nome *</label><input type="text" id="ns-nome" class="input-field" /></div>
-      <div class="field-group"><label>Descrição</label><input type="text" id="ns-desc" class="input-field" /></div>
+<div id="modal-sala" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-sala')" style="position:absolute; inset:0; background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative; background:white; border-radius:20px; padding:25px; width:90%; max-width:450px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0;">💬 Nova Sala</h3>
+      <button onclick="closeModal('modal-sala')" style="background:#eee; border:none; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer;">✕</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-criar-sala')">Cancelar</button>
-      <button class="btn-primary" onclick="criarSala()">Criar</button>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">NOME *</label>
+      <input type="text" id="ns-nome" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;" />
     </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:#888; display:block; margin-bottom:4px;">DESCRIÇÃO</label>
+      <input type="text" id="ns-desc" style="width:100%; padding:10px; border:2px solid #eee; border-radius:10px; outline:none;" />
+    </div>
+    <button onclick="criarSala()" style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px;">Criar Sala</button>
   </div>
 </div>
 
-<!-- Modal Avatar -->
-<div class="modal hidden" id="modal-edit-avatar">
-  <div class="modal-backdrop" onclick="closeModal('modal-edit-avatar')"></div
+<div id="toast-container" style="position:fixed; bottom:70px; right:15px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
+
+<!-- ==================== SCRIPT ==================== -->
+<script src="script.js"></script>
+</body>
+</html>
