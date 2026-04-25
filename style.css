@@ -8,6 +8,7 @@
 :root {
     --primary: #2563eb;
     --primary-dark: #1d4ed8;
+    --primary-light: #3b82f6;
     --success: #22c55e;
     --success-dark: #16a34a;
     --danger: #ef4444;
@@ -15,10 +16,15 @@
     --warning: #f59e0b;
     --bg: #ffffff;
     --bg-light: #f8fafc;
+    --bg-lighter: #f1f5f9;
     --text: #334155;
     --text-light: #64748b;
+    --text-lighter: #94a3b8;
     --border: #e2e8f0;
     --border-dark: #cbd5e1;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 
 html, body {
@@ -28,7 +34,7 @@ html, body {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     background: var(--bg-light);
     color: var(--text);
     line-height: 1.6;
@@ -58,13 +64,14 @@ p {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     padding: 12px 24px;
     border: none;
     border-radius: 15px;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-appearance: none;
     appearance: none;
     user-select: none;
@@ -133,6 +140,18 @@ p {
     box-shadow: 0 0px 0 var(--danger-dark);
 }
 
+.btn-google {
+    background: #ffffff;
+    color: var(--text);
+    border: 2px solid var(--border);
+    box-shadow: 0 4px 0 var(--border-dark);
+}
+
+.btn-google:hover:not(:disabled) {
+    background: var(--bg-light);
+    box-shadow: 0 6px 0 var(--border-dark);
+}
+
 .btn-large {
     width: 100%;
     height: 48px;
@@ -146,6 +165,11 @@ p {
     font-size: 13px;
     height: auto;
     margin-bottom: 0;
+    box-shadow: none;
+}
+
+.btn-small:hover:not(:disabled) {
+    transform: translateY(-1px);
 }
 
 .btn-icon {
@@ -156,6 +180,15 @@ p {
     font-size: 20px;
     box-shadow: none;
     background: transparent;
+}
+
+.btn-icon:hover {
+    background: var(--bg-light);
+    transform: scale(1.1);
+}
+
+.btn-logout {
+    color: var(--danger);
 }
 
 .btn-back {
@@ -173,6 +206,16 @@ p {
     background: var(--border);
 }
 
+.btn-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-icon-element {
+    font-size: 18px;
+}
+
 /* ==================== INPUTS ====================*/
 .form-group {
     margin-bottom: 16px;
@@ -188,33 +231,45 @@ p {
     color: var(--text);
 }
 
-.form-input {
-    width: 100%;
-    padding: 14px 16px;
+.input-wrapper {
+    display: flex;
+    align-items: center;
     border: 2px solid var(--border);
     border-radius: 12px;
-    font-size: 16px;
-    font-family: inherit;
-    transition: all 0.3s ease;
-    -webkit-appearance: none;
-    appearance: none;
     background: var(--bg);
-    color: var(--text);
+    transition: all 0.3s ease;
 }
 
-.form-input:focus {
-    outline: none;
+.input-wrapper:focus-within {
     border-color: var(--primary);
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
+.input-icon {
+    padding: 0 12px;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.form-input {
+    flex: 1;
+    padding: 14px 12px;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+}
+
 .form-input::placeholder {
-    color: var(--text-light);
+    color: var(--text-lighter);
 }
 
 textarea.form-input {
     font-family: inherit;
     resize: vertical;
+    min-height: 100px;
 }
 
 /* ==================== MENSAGENS ====================*/
@@ -274,13 +329,19 @@ textarea.form-input {
     width: 100%;
 }
 
+.auth-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 .auth-container {
     background: var(--bg);
     border-radius: 20px;
     padding: 40px 30px;
     width: 100%;
-    max-width: 420px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    max-width: 450px;
+    box-shadow: var(--shadow-lg);
 }
 
 .auth-header {
@@ -288,9 +349,10 @@ textarea.form-input {
     margin-bottom: 30px;
 }
 
-.auth-logo {
-    font-size: 48px;
-    margin-bottom: 12px;
+.auth-logo-large {
+    font-size: 56px;
+    margin-bottom: 16px;
+    display: block;
 }
 
 .auth-header h1 {
@@ -299,7 +361,7 @@ textarea.form-input {
     margin-bottom: 8px;
 }
 
-.auth-header p {
+.auth-tagline {
     color: var(--text-light);
     font-size: 14px;
     font-weight: 500;
@@ -314,9 +376,37 @@ textarea.form-input {
 }
 
 .auth-form h2 {
-    margin-bottom: 24px;
+    margin-bottom: 8px;
     color: var(--text);
     font-size: 22px;
+}
+
+.form-subtitle {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 24px;
+    font-weight: 500;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.divider span {
+    color: var(--text-light);
+    font-size: 13px;
+    font-weight: 600;
 }
 
 .auth-toggle {
@@ -326,11 +416,16 @@ textarea.form-input {
     color: var(--text-light);
 }
 
-.auth-toggle a {
+.toggle-link {
     color: var(--primary);
     text-decoration: none;
     font-weight: 700;
     cursor: pointer;
+    transition: color 0.3s;
+}
+
+.toggle-link:hover {
+    color: var(--primary-dark);
 }
 
 .form-buttons {
@@ -351,7 +446,7 @@ textarea.form-input {
     min-height: 100vh;
     background: var(--bg-light);
     width: 100%;
-    padding-bottom: 80px;
+    padding-bottom: 90px;
 }
 
 /* HEADER */
@@ -359,11 +454,18 @@ textarea.form-input {
     background: var(--bg);
     padding: 16px 20px;
     border-bottom: 2px solid var(--border);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-left {
+    flex: 1;
 }
 
 .app-title {
@@ -372,7 +474,7 @@ textarea.form-input {
     margin: 0;
 }
 
-.header-actions {
+.header-right {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -383,6 +485,9 @@ textarea.form-input {
     color: var(--text);
     font-size: 14px;
     white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* CONTEÚDO */
@@ -424,19 +529,35 @@ textarea.form-input {
     padding: 30px;
     border-radius: 20px;
     margin-bottom: 30px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
 }
 
-.welcome-banner h2 {
+.banner-content h2 {
     font-size: 28px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+    color: white;
 }
 
-.welcome-banner p {
-    font-size: 15px;
-    opacity: 0.95;
-    margin: 6px 0;
-    color: white;
+.banner-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
 }
 
 .quick-access {
@@ -453,14 +574,18 @@ textarea.form-input {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     border: 2px solid transparent;
 }
 
 .quick-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-lg);
     border-color: var(--primary);
+}
+
+.quick-card:active {
+    transform: translateY(-2px);
 }
 
 .quick-icon {
@@ -468,13 +593,13 @@ textarea.form-input {
     margin-bottom: 12px;
 }
 
-.quick-text h3 {
+.quick-card h3 {
     color: var(--text);
     margin-bottom: 4px;
     font-size: 16px;
 }
 
-.quick-text p {
+.quick-card p {
     font-size: 13px;
     color: var(--text-light);
 }
@@ -513,7 +638,7 @@ textarea.form-input {
     padding: 24px;
     border-radius: 16px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     border: 2px solid var(--border);
 }
 
@@ -535,14 +660,18 @@ textarea.form-input {
     border-radius: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     border: 2px solid var(--border);
     border-left: 5px solid var(--primary);
 }
 
 .subject-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-lg);
+}
+
+.subject-card:active {
+    transform: translateY(-2px);
 }
 
 .subject-card h3 {
@@ -561,7 +690,7 @@ textarea.form-input {
     background: var(--bg);
     padding: 24px;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
 }
 
 .subject-detail h3 {
@@ -682,7 +811,7 @@ textarea.form-input {
     background: var(--bg);
     padding: 28px;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     max-width: 600px;
     margin: 0 auto;
 }
@@ -781,7 +910,7 @@ textarea.form-input {
     padding: 32px;
     border-radius: 16px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     max-width: 500px;
     margin: 0 auto;
 }
@@ -803,7 +932,14 @@ textarea.form-input {
     line-height: 1;
 }
 
-.result-box p {
+.score-label {
+    font-size: 16px;
+    color: var(--text-light);
+    margin-top: 8px;
+    font-weight: 600;
+}
+
+.result-message {
     font-size: 16px;
     color: var(--text-light);
     margin-bottom: 28px;
@@ -814,7 +950,7 @@ textarea.form-input {
     background: var(--bg);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     border: 2px solid var(--border);
 }
 
@@ -935,7 +1071,7 @@ textarea.form-input {
 .chat-window {
     background: var(--bg);
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
     height: 500px;
@@ -1014,86 +1150,6 @@ textarea.form-input {
     padding: 12px 16px;
 }
 
-/* ==================== AMIGOS ====================*/
-.friends-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    gap: 12px;
-}
-
-.friends-header h2 {
-    flex: 1;
-    margin: 0;
-}
-
-.search-results {
-    display: grid;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.search-result {
-    background: var(--bg-light);
-    padding: 16px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 2px solid var(--border);
-}
-
-.search-result-info h4 {
-    color: var(--text);
-    margin-bottom: 4px;
-}
-
-.search-result-info p {
-    font-size: 13px;
-    color: var(--text-light);
-}
-
-.search-result-btn {
-    padding: 8px 12px;
-    font-size: 12px;
-}
-
-.friends-list {
-    display: grid;
-    gap: 12px;
-}
-
-.friend-item {
-    background: var(--bg);
-    padding: 16px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 2px solid var(--border);
-}
-
-.friend-info h4 {
-    color: var(--text);
-    margin-bottom: 4px;
-}
-
-.friend-info p {
-    font-size: 13px;
-    color: var(--text-light);
-}
-
-.friend-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.friend-actions button {
-    padding: 8px 12px;
-    font-size: 12px;
-}
-
 /* ==================== PERFIL ====================*/
 .profile-header {
     background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
@@ -1124,7 +1180,7 @@ textarea.form-input {
     padding: 24px;
     border-radius: 16px;
     margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
 }
 
 .profile-section h3 {
@@ -1137,17 +1193,24 @@ textarea.form-input {
     gap: 12px;
 }
 
-.profile-info p {
+.info-item {
     padding: 12px;
     background: var(--bg-light);
     border-radius: 8px;
     border: 1px solid var(--border);
     font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.profile-info strong {
+.info-label {
     color: var(--text);
     font-weight: 700;
+}
+
+.info-value {
+    color: var(--text-light);
 }
 
 /* ==================== ADM ====================*/
@@ -1169,7 +1232,7 @@ textarea.form-input {
     background: var(--bg);
     padding: 24px;
     border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
     border: 2px solid var(--border);
 }
 
@@ -1246,6 +1309,7 @@ textarea.form-input {
     appearance: none;
     flex: 1;
     height: 100%;
+    color: var(--text-light);
 }
 
 .nav-item:hover {
@@ -1263,11 +1327,6 @@ textarea.form-input {
 .nav-label {
     font-size: 12px;
     font-weight: 700;
-    color: var(--text-light);
-}
-
-.nav-item.active .nav-label {
-    color: var(--primary);
 }
 
 /* ==================== RESPONSIVE ====================*/
@@ -1277,8 +1336,8 @@ textarea.form-input {
         border-radius: 16px;
     }
 
-    .auth-logo {
-        font-size: 40px;
+    .auth-logo-large {
+        font-size: 48px;
     }
 
     .auth-header h1 {
@@ -1341,9 +1400,9 @@ textarea.form-input {
         border-radius: 16px;
     }
 
-    .auth-logo {
-        font-size: 36px;
-        margin-bottom: 8px;
+    .auth-logo-large {
+        font-size: 40px;
+        margin-bottom: 12px;
     }
 
     .auth-header h1 {
@@ -1351,17 +1410,21 @@ textarea.form-input {
         margin-bottom: 4px;
     }
 
-    .auth-header p {
+    .auth-tagline {
         font-size: 13px;
     }
 
     .auth-form h2 {
         font-size: 20px;
+        margin-bottom: 6px;
+    }
+
+    .form-subtitle {
         margin-bottom: 18px;
     }
 
     .form-input {
-        padding: 12px 14px;
+        padding: 12px 10px;
         font-size: 16px;
         border-radius: 10px;
     }
@@ -1382,6 +1445,7 @@ textarea.form-input {
 
     .user-display {
         font-size: 12px;
+        max-width: 80px;
     }
 
     .app-main {
@@ -1397,8 +1461,8 @@ textarea.form-input {
         font-size: 22px;
     }
 
-    .welcome-banner p {
-        font-size: 13px;
+    .banner-stats {
+        gap: 16px;
     }
 
     .quick-access {
@@ -1415,11 +1479,11 @@ textarea.form-input {
         font-size: 28px;
     }
 
-    .quick-text h3 {
+    .quick-card h3 {
         font-size: 14px;
     }
 
-    .quick-text p {
+    .quick-card p {
         font-size: 12px;
     }
 
@@ -1514,13 +1578,3 @@ textarea.form-input {
     }
 
     .form-box {
-        padding: 18px;
-        border-radius: 14px;
-    }
-
-    .form-box h3,
-    .form-box h4 {
-        font-size: 18px;
-        margin-bottom: 14px;
-    }
-}
