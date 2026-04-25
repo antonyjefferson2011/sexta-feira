@@ -1,66 +1,368 @@
 <!-- index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sexta-Feira Studies</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
-            authDomain: "sexta-feira-fb01a.firebaseapp.com",
-            projectId: "sexta-feira-fb01a",
-            storageBucket: "sexta-feira-fb01a.appspot.com",
-            messagingSenderId: "82809140147",
-            appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
-        };
-        firebase.initializeApp(firebaseConfig);
-    </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sexta-Feira Studies</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Firebase (compat) via CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
+
 <body>
-    <div id="app" class="hidden">
-        <div id="home" class="screen">
-            <h1>Bem-vindo, <span id="userName"></span>!</h1>
-            <p>Sala: <span id="userClass"></span></p>
-            <button onclick="navigateTo('subjects')">Ir para Matérias</button>
+  <div class="appShell">
+    <!-- AUTH SCREEN -->
+    <section id="authScreen" class="authScreen">
+      <header class="authHero">
+        <div class="brand">
+          <div class="logoMark" aria-hidden="true">SF</div>
+          <div class="brandText">
+            <h1>Sexta-Feira Studies</h1>
+            <p>Estude, faça quizzes e suba no ranking.</p>
+          </div>
         </div>
-        <div id="subjects" class="screen hidden">
-            <h2>Matérias</h2>
-            <input type="text" id="subjectTitle" placeholder="Nome da Matéria">
-            <input type="text" id="subjectDescription" placeholder="Descrição">
-            <button onclick="createSubject()">Criar Matéria</button>
-            <div id="subjectList"></div>
+      </header>
+
+      <main class="authMain">
+        <div class="authTabs" role="tablist" aria-label="Autenticação">
+          <button class="tabBtn active" data-auth-tab="login" type="button">Entrar</button>
+          <button class="tabBtn" data-auth-tab="signup" type="button">Criar conta</button>
         </div>
-        <div id="quizzes" class="screen hidden">
-            <h2>Quiz</h2>
-            <input type="text" id="quizTitle" placeholder="Título do Quiz">
-            <div id="questions"></div>
-            <button onclick="createQuiz()">Criar Quiz</button>
+
+        <form id="loginForm" class="authCard active" autocomplete="on">
+          <div class="field">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" name="email" type="email" placeholder="voce@email.com" required />
+          </div>
+
+          <div class="field">
+            <label for="loginPassword">Senha</label>
+            <input id="loginPassword" name="password" type="password" placeholder="Sua senha" required minlength="6"/>
+          </div>
+
+          <div class="btnRow">
+            <button class="primaryBtn" type="submit">Entrar</button>
+          </div>
+
+          <div class="divider">
+            <span>ou</span>
+          </div>
+
+          <button id="googleLoginBtn" class="googleBtn" type="button">
+            <span class="googleIcon" aria-hidden="true">G</span>
+            Entrar com Google
+          </button>
+
+          <p class="hint" id="loginHint" aria-live="polite"></p>
+        </form>
+
+        <form id="signupForm" class="authCard" autocomplete="on">
+          <div class="field">
+            <label for="signupName">Nome</label>
+            <input id="signupName" name="name" type="text" placeholder="Seu nome" required minlength="2"/>
+          </div>
+
+          <div class="field">
+            <label for="signupEmail">Email</label>
+            <input id="signupEmail" name="email" type="email" placeholder="voce@email.com" required />
+          </div>
+
+          <div class="field">
+            <label for="signupPassword">Senha</label>
+            <input id="signupPassword" name="password" type="password" placeholder="Crie uma senha" required minlength="6"/>
+          </div>
+
+          <div class="field">
+            <label for="signupClass">Sala</label>
+            <input id="signupClass" name="class" type="text" placeholder="Ex: 9A, 8B" required minlength="2" maxlength="8"/>
+          </div>
+
+          <div class="btnRow">
+            <button class="primaryBtn" type="submit">Criar conta</button>
+          </div>
+
+          <div class="divider">
+            <span>ou</span>
+          </div>
+
+          <button id="googleSignupBtn" class="googleBtn" type="button">
+            <span class="googleIcon" aria-hidden="true">G</span>
+            Entrar com Google
+          </button>
+
+          <p class="hint" id="signupHint" aria-live="polite"></p>
+        </form>
+
+        <div class="authFooterNote">
+          <p><strong>Dica:</strong> após entrar, você entra direto no app (sem ficar na tela de login).</p>
         </div>
-        <div id="ranking" class="screen hidden">
-            <h2>Ranking Global</h2>
-            <div id="rankingList"></div>
+      </main>
+    </section>
+
+    <!-- APP SCREEN -->
+    <section id="appScreen" class="appScreen hidden">
+      <header class="appHeader">
+        <div class="appHeaderLeft">
+          <div class="logoSmall" aria-hidden="true">SF</div>
+          <div class="appHeaderText">
+            <h2>Sexta-Feira Studies</h2>
+            <p id="userSubtitle">Carregando...</p>
+          </div>
         </div>
-        <div id="history" class="screen hidden">
-            <h2>Histórico</h2>
-            <div id="historyList"></div>
+
+        <div class="appHeaderRight">
+          <button id="logoutBtn" class="ghostBtn" type="button">Sair</button>
         </div>
-        <button onclick="logout()">Sair</button>
-    </div>
-    <div id="login" class="screen">
-        <h2>Login</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Senha">
-        <input type="text" id="name" placeholder="Nome">
-        <input type="text" id="class" placeholder="Sala">
-        <button onclick="register()">Cadastrar</button>
-        <button onclick="login()">Entrar</button>
-        <button onclick="loginWithGoogle()">Entrar com Google</button>
-    </div>
-    <script src="script.js"></script>
+      </header>
+
+      <nav class="bottomNav" aria-label="Navegação do app">
+        <button class="navItem active" data-view="home" type="button">
+          <span class="navIcon" aria-hidden="true">🏠</span>
+          Home
+        </button>
+        <button class="navItem" data-view="subjects" type="button">
+          <span class="navIcon" aria-hidden="true">📚</span>
+          Matérias
+        </button>
+        <button class="navItem" data-view="ranking" type="button">
+          <span class="navIcon" aria-hidden="true">🏆</span>
+          Ranking
+        </button>
+        <button class="navItem" data-view="history" type="button">
+          <span class="navIcon" aria-hidden="true">📜</span>
+          Histórico
+        </button>
+      </nav>
+
+      <main class="appMain">
+        <!-- Views: HOME -->
+        <section id="view-home" class="view">
+          <div class="pageHero">
+            <h3>Olá, <span id="homeName">—</span> 👋</h3>
+            <p>Você está na <strong id="homeClass">—</strong>. Continue estudando e ganhe pontos.</p>
+          </div>
+
+          <div class="grid2">
+            <div class="card statCard">
+              <div class="statTop">
+                <span class="badge">Seu placar</span>
+              </div>
+              <div class="statValue" id="homePoints">0</div>
+              <div class="statHint">pontos acumulados</div>
+            </div>
+
+            <div class="card">
+              <div class="cardTitle">Acelere hoje</div>
+              <div class="cardBody">
+                <ol class="quickList">
+                  <li>Abra uma matéria.</li>
+                  <li>Crie ou jogue um quiz.</li>
+                  <li>Registre seu progresso no histórico.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="cardTitleRow">
+              <div class="cardTitle">Atalhos</div>
+            </div>
+
+            <div class="actionsRow">
+              <button class="secondaryBtn" data-view="subjects" type="button">Ver Matérias</button>
+              <button class="secondaryBtn" data-view="ranking" type="button">Ver Ranking</button>
+              <button class="secondaryBtn" data-view="history" type="button">Ver Histórico</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Views: SUBJECTS -->
+        <section id="view-subjects" class="view hidden">
+          <div class="pageHero">
+            <h3>📚 Matérias</h3>
+            <p>Crie matérias, adicione tópicos via quizzes e jogue para acumular pontos.</p>
+          </div>
+
+          <div class="card">
+            <div class="cardTitleRow">
+              <div class="cardTitle">Criar matéria</div>
+            </div>
+
+            <form id="createSubjectForm" class="formGrid">
+              <div class="field">
+                <label for="subjectTitle">Nome da matéria</label>
+                <input id="subjectTitle" type="text" placeholder="Ex: Matemática" required minlength="2" maxlength="60"/>
+              </div>
+              <div class="field">
+                <label for="subjectDesc">Descrição</label>
+                <input id="subjectDesc" type="text" placeholder="Breve descrição" required minlength="2" maxlength="120"/>
+              </div>
+              <div class="field full">
+                <button class="primaryBtn" type="submit">Criar matéria</button>
+              </div>
+            </form>
+
+            <p class="hint" id="subjectCreateHint" aria-live="polite"></p>
+          </div>
+
+          <div class="card">
+            <div class="cardTitleRow">
+              <div class="cardTitle">Suas matérias</div>
+              <div class="muted" id="subjectsLoading">Carregando...</div>
+            </div>
+
+            <div id="subjectsList" class="cardsGrid" aria-live="polite"></div>
+
+            <p class="hint muted" id="subjectsEmpty" style="display:none;">Nenhuma matéria ainda. Crie a primeira acima.</p>
+          </div>
+
+          <!-- Subject Detail (within same view) -->
+          <div id="subjectDetailWrap" class="subjectDetailWrap hidden">
+            <div class="subjectDetailTop">
+              <button class="ghostBtn" type="button" id="backToSubjectsBtn">← Voltar</button>
+              <div class="subjectDetailHeader">
+                <div class="subjectDetailTitle" id="subjectDetailTitle">—</div>
+                <div class="subjectDetailDesc" id="subjectDetailDesc">—</div>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="card">
+                <div class="cardTitleRow">
+                  <div class="cardTitle">Criar quiz</div>
+                </div>
+
+                <form id="createQuizForm" class="quizCreateForm">
+                  <div class="field">
+                    <label for="quizTitle">Título do quiz</label>
+                    <input id="quizTitle" type="text" placeholder="Ex: Revisão de Equações" required minlength="3" maxlength="80"/>
+                  </div>
+
+                  <div class="sectionDivider"></div>
+
+                  <div class="quizQuestionsHeader">
+                    <div class="cardTitle" style="font-size:14px;">Perguntas (tópicos)</div>
+                    <div class="muted" style="font-size:12px;">Cada pergunta tem 4 alternativas.</div>
+                  </div>
+
+                  <div id="questionsEditor" class="questionsEditor"></div>
+
+                  <div class="actionsRow">
+                    <button id="addQuestionBtn" class="secondaryBtn" type="button">+ Adicionar pergunta</button>
+                    <button class="primaryBtn" type="submit">Salvar quiz</button>
+                  </div>
+                </form>
+
+                <p class="hint" id="quizCreateHint" aria-live="polite"></p>
+              </div>
+
+              <div class="card">
+                <div class="cardTitleRow">
+                  <div class="cardTitle">Jogar quiz</div>
+                </div>
+
+                <div class="quizPickWrap">
+                  <div class="muted" style="margin-bottom:8px;">Selecione um quiz da matéria:</div>
+                  <select id="quizSelect" class="selectInput"></select>
+                </div>
+
+                <div class="actionsRow">
+                  <button id="startQuizBtn" class="primaryBtn" type="button">Iniciar quiz</button>
+                </div>
+
+                <div id="quizRunner" class="quizRunner hidden">
+                  <div class="progressWrap">
+                    <div class="progressTop">
+                      <span id="quizProgressText">Pergunta 1/1</span>
+                      <span id="quizScoreText">Pontuação: 0</span>
+                    </div>
+                    <div class="progressBar" aria-hidden="true">
+                      <div id="quizProgressBar" class="progressFill" style="width:0%"></div>
+                    </div>
+                  </div>
+
+                  <div class="quizQuestionTitle" id="quizQuestionEnunciado"></div>
+
+                  <div id="quizAnswersGrid" class="answersGrid" role="group" aria-label="Alternativas"></div>
+
+                  <div class="actionsRow">
+                    <button id="nextQuestionBtn" class="primaryBtn" type="button" disabled>Próximo</button>
+                  </div>
+                  <div class="quizResult hidden" id="quizResult">
+                    <div class="resultBig" id="quizResultPoints">0</div>
+                    <div class="resultText">
+                      <strong>Resultado:</strong> Você acertou e ganhou pontos!
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Views: Ranking -->
+        <section id="view-ranking" class="view hidden">
+          <div class="pageHero">
+            <h3>🏆 Ranking Global</h3>
+            <p>Ordenado por pontos (do maior para o menor).</p>
+          </div>
+
+          <div class="card">
+            <div class="cardTitleRow">
+              <div class="cardTitle">Top estudantes</div>
+              <div class="muted" id="rankingLoading">Carregando...</div>
+            </div>
+
+            <div id="rankingList" class="rankingList" aria-live="polite"></div>
+
+            <p class="hint muted" id="rankingEmpty" style="display:none;">Nenhum usuário encontrado.</p>
+          </div>
+        </section>
+
+        <!-- Views: History -->
+        <section id="view-history" class="view hidden">
+          <div class="pageHero">
+            <h3>📜 Histórico</h3>
+            <p>Quizzes jogados com sua pontuação e data.</p>
+          </div>
+
+          <div class="card">
+            <div class="cardTitleRow">
+              <div class="cardTitle">Seus registros</div>
+              <div class="muted" id="historyLoading">Carregando...</div>
+            </div>
+
+            <div id="historyList" class="historyList" aria-live="polite"></div>
+            <p class="hint muted" id="historyEmpty" style="display:none;">Ainda não há quizzes no histórico. Jogue um quiz para começar!</p>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <div id="globalToast" class="toast hidden" aria-live="polite"></div>
+  </div>
+
+  <script>
+    // Firebase config (provided)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+      authDomain: "sexta-feira-fb01a.firebaseapp.com",
+      projectId: "sexta-feira-fb01a",
+      storageBucket: "sexta-feira-fb01a.firebasestorage.app",
+      messagingSenderId: "82809140147",
+      appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
+    };
+  </script>
+  <script src="./script.js"></script>
 </body>
 </html>
