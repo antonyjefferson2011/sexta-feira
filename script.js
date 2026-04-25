@@ -25,6 +25,7 @@ let currentQuestionIndex = 0;
 let currentScore = 0;
 let admLoggedIn = false;
 let questionCount = 0;
+let editingProfile = false;
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
@@ -381,8 +382,8 @@ function setupAppEventListeners() {
     document.getElementById('btn-send-message')?.addEventListener('click', sendMessage);
 
     // Profile
-    document.getElementById('btn-edit-profile')?.addEventListener('click', editProfile);
-    document.getElementById('btn-change-password')?.addEventListener('click', changePassword);
+    document.getElementById('btn-edit-profile')?.addEventListener('click', openEditProfile);
+    document.getElementById('btn-change-password')?.addEventListener('click', openChangePassword);
 
     // ADM
     document.getElementById('btn-adm-login')?.addEventListener('click', admLogin);
@@ -806,25 +807,75 @@ async function loadRanking() {
 async function loadChats() {
     try {
         const chatList = document.getElementById('chat-list');
-        chatList.innerHTML = '';
+        const chatWindow = document.getElementById('chat-window');
 
-        // Aqui você pode carregar chats do usuário
-        // Por enquanto, vamos deixar vazio
-        chatList.innerHTML = '<p style="text-align: center; color: #64748b;">Nenhum chat disponível</p>';
+        if (currentChat) {
+            chatList.style.display = 'none';
+            chatWindow.style.display = 'flex';
+            await loadChatMessages();
+        } else {
+            chatList.style.display = 'grid';
+            chatWindow.style.display = 'none';
+
+            // Carregar lista de amigos para chat
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            const userData = userDoc.data();
+            const friends = userData.friends || [];
+
+            chatList.innerHTML = '';
+
+            if (friends.length === 0) {
+                chatList.innerHTML = '<p style="text-align: center; color: #64748b;">Nenhum amigo para conversar. Adicione amigos na seção de Perfil!</p>';
+            } else {
+                for (const friendId of friends) {
+                    const friendDoc = await db.collection('users').doc(friendId).get();
+                    if (friendDoc.exists) {
+                        const friend = friendDoc.data();
+                        const item = document.createElement('div');
+                        item.className = 'chat-item';
+                        item.innerHTML = `
+                            <div class="chat-item-info">
+                                <h3>${friend.name}</h3>
+                                <p>${friend.class}</p>
+                            </div>
+                            <span class="chat-item-time">💬</span>
+                        `;
+                        item.addEventListener('click', () => {
+                            currentChat = { id: friendId, name: friend.name };
+                            loadChats();
+                        });
+                        chatList.appendChild(item);
+                    }
+                }
+            }
+        }
     } catch (error) {
         console.error('❌ Erro ao carregar chats:', error);
     }
 }
 
+async function loadChatMessages() {
+    try {
+        document.getElementById('chat-title').textContent = currentChat.name;
+        const messagesContainer = document.getElementById('messages-container');
+        messagesContainer.innerHTML = '';
+
+        // Aqui você pode carregar mensagens do Realtime Database
+        // Por enquanto, deixamos vazio
+        messagesContainer.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">Nenhuma mensagem ainda. Comece a conversa!</p>';
+    } catch (error) {
+        console.error('❌ Erro ao carregar mensagens:', error);
+    }
+}
+
 function openNewChat() {
-    // Implementar lógica de novo chat
-    alert('Funcionalidade em desenvolvimento');
+    // Redirecionar para perfil para adicionar amigos
+    showScreen('profile');
 }
 
 function backToChats() {
     currentChat = null;
-    document.getElementById('chat-window').style.display = 'none';
-    document.getElementById('chat-list').style.display = 'block';
+    loadChats();
 }
 
 function sendMessage() {
@@ -833,8 +884,21 @@ function sendMessage() {
 
     if (!message) return;
 
-    // Implementar lógica de envio de mensagem
-    input.value = '';
+    try {
+        // Salvar mensagem no Realtime Database
+        const chatKey = [currentUser.uid, currentChat.id].sort().join('_');
+        rtdb.ref(`chats/${chatKey}`).push({
+            sender: currentUser.uid,
+            message: message,
+            timestamp: new Date().getTime()
+        });
+
+        console.log('✅ Mensagem enviada');
+        input.value = '';
+        loadChatMessages();
+    } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error);
+    }
 }
 
 // ==================== PROFILE ====================
@@ -850,17 +914,108 @@ async function loadProfile() {
         document.getElementById('profile-email').textContent = userData.email || 'N/A';
         document.getElementById('profile-class-info').textContent = userData.class || 'Não definida';
         document.getElementById('profile-points-info').textContent = userData.points || 0;
+
+        // Carregar amigos
+        await loadFriends(userData.friends || []);
     } catch (error) {
         console.error('❌ Erro ao carregar perfil:', error);
     }
 }
 
-function editProfile() {
-    alert('Funcionalidade em desenvolvimento');
+async function loadFriends(friendIds) {
+    // Esta função será implementada na seção de amigos
 }
 
-function changePassword() {
-    alert('Funcionalidade em desenvolvimento');
+async function openEditProfile() {
+    const userDoc = await db.collection('users').doc(currentUser.uid).get();
+    const userData = userDoc.data();
+
+    const newClass = prompt('Digite sua nova sala:', userData.class);
+    
+    if (newClass !== null && newClass.trim() !== '') {
+        try {
+            await db.collection('users').doc(currentUser.uid).update({
+                class: newClass.trim()
+            });
+            console.log('✅ Perfil atualizado com sucesso');
+            loadProfile();
+            loadHomeData();
+        } catch (error) {
+            console.error('❌ Erro ao atualizar perfil:', error);
+            alert('Erro ao atualizar perfil');
+        }
+    }
+}
+
+async function openChangePassword() {
+    const newPassword = prompt('Digite sua nova senha (mínimo 6 caracteres):');
+    
+    if (newPassword !== null && newPassword.trim() !== '') {
+        if (newPassword.length < 6) {
+            alert('Senha deve ter pelo menos 6 caracteres');
+            return;
+        }
+
+        try {
+            await currentUser.updatePassword(newPassword);
+            console.log('✅ Senha alterada com sucesso');
+            alert('Senha alterada com sucesso!');
+        } catch (error) {
+            console.error('❌ Erro ao alterar senha:', error);
+            if (error.code === 'auth/requires-recent-login') {
+                alert('Por favor, faça login novamente para alterar a senha');
+            } else {
+                alert('Erro ao alterar senha: ' + error.message);
+            }
+        }
+    }
+}
+
+// ==================== AMIGOS ====================
+async function addFriend() {
+    const friendEmail = prompt('Digite o email do amigo que deseja adicionar:');
+    
+    if (friendEmail !== null && friendEmail.trim() !== '') {
+        try {
+            // Buscar usuário pelo email
+            const friendSnapshot = await db.collection('users')
+                .where('email', '==', friendEmail.trim())
+                .get();
+
+            if (friendSnapshot.empty) {
+                alert('Usuário não encontrado');
+                return;
+            }
+
+            const friendDoc = friendSnapshot.docs[0];
+            const friendId = friendDoc.id;
+
+            if (friendId === currentUser.uid) {
+                alert('Você não pode adicionar a si mesmo');
+                return;
+            }
+
+            // Adicionar amigo
+            const userRef = db.collection('users').doc(currentUser.uid);
+            const userDoc = await userRef.get();
+            const friends = userDoc.data().friends || [];
+
+            if (friends.includes(friendId)) {
+                alert('Este usuário já é seu amigo');
+                return;
+            }
+
+            friends.push(friendId);
+            await userRef.update({ friends: friends });
+
+            console.log('✅ Amigo adicionado com sucesso');
+            alert('Amigo adicionado com sucesso!');
+            loadProfile();
+        } catch (error) {
+            console.error('❌ Erro ao adicionar amigo:', error);
+            alert('Erro ao adicionar amigo');
+        }
+    }
 }
 
 // ==================== ADM ====================
@@ -998,5 +1153,12 @@ async function deleteUser(id) {
         }
     }
 }
+
+// ==================== ADICIONAR BOTÃO DE AMIGOS NO HTML ====================
+// Adicione este botão na seção de perfil no HTML:
+// <button id="btn-add-friend" class="btn btn-secondary btn-large">👥 Adicionar Amigo</button>
+
+// E adicione este listener no setupAppEventListeners:
+// document.getElementById('btn-add-friend')?.addEventListener('click', addFriend);
 
 console.log('✅ Script carregado com sucesso');
