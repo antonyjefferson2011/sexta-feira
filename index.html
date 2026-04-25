@@ -8,141 +8,125 @@
 </head>
 <body>
     <header>
-        <div class="container">
-            <h1>Sexta-Feira Studies</h1>
-            <nav>
-                <ul>
-                    <li><a href="#home" data-nav="home">Home</a></li>
-                    <li><a href="#materias" data-nav="materias">Matérias</a></li>
-                    <li><a href="#quiz-list" data-nav="quiz-list">Quizzes</a></li>
-                    <li><a href="#ranking" data-nav="ranking">Ranking</a></li>
-                    <li><a href="#historico" data-nav="historico">Histórico</a></li>
-                </ul>
-            </nav>
+        <h1>Sexta-Feira Studies</h1>
+        <div id="user-info">
+            <span id="loggedInUser"></span>
+            <button id="logout-btn" class="hidden">Logout</button>
         </div>
     </header>
 
-    <main class="container">
-        <section id="home" class="page active">
-            <h2>Bem-vindo à Sexta-Feira Studies!</h2>
-            <p>Sua plataforma completa para organizar seus estudos, criar quizzes e acompanhar seu progresso.</p>
-            <div class="user-info">
-                <p id="userNameDisplay">Criado por: Visitante</p>
-                <button id="changeNameBtn">Alterar Nome</button>
+    <main id="app-container">
+        <section id="auth-section" class="active">
+            <h2>Bem-vindo!</h2>
+            <div class="auth-form">
+                <h3>Login</h3>
+                <input type="email" id="login-email" placeholder="Email">
+                <input type="password" id="login-password" placeholder="Senha">
+                <button id="login-btn">Entrar</button>
             </div>
-            <div class="quick-actions">
-                <a href="#materias" data-nav="materias" class="btn-primary">Explorar Matérias</a>
-                <a href="#quiz-list" data-nav="quiz-list" class="btn-secondary">Começar um Quiz</a>
+            <div class="auth-form">
+                <h3>Cadastro</h3>
+                <input type="text" id="signup-name" placeholder="Nome">
+                <input type="email" id="signup-email" placeholder="Email">
+                <input type="password" id="signup-password" placeholder="Senha">
+                <input type="text" id="signup-class" placeholder="Sala (ex: 9A)">
+                <button id="signup-btn">Criar Conta</button>
             </div>
         </section>
 
-        <section id="materias" class="page">
-            <h2>Matérias</h2>
-            <div id="materias-list" class="card-grid">
-                <!-- Materias cards will be loaded here -->
+        <section id="dashboard-section" class="hidden">
+            <div class="dashboard-header">
+                <div id="user-profile">
+                    <p><strong>Nome:</strong> <span id="profile-name"></span></p>
+                    <p><strong>Sala:</strong> <span id="profile-class"></span></p>
+                    <p><strong>Pontos:</strong> <span id="profile-points"></span></p>
+                </div>
+                <div class="quick-actions">
+                    <button id="create-subject-btn">Criar Matéria</button>
+                    <button id="view-ranking-btn">Ver Ranking</button>
+                    <button id="view-history-btn">Ver Histórico</button>
+                </div>
             </div>
-            <button id="addMateriaBtn" class="btn-float-action">+</button>
-        </section>
 
-        <section id="materia-detail" class="page">
-            <h2 id="materia-detail-title"></h2>
-            <p id="materia-detail-description"></p>
-            <div id="topicos-list">
-                <!-- Tópicos will be loaded here -->
+            <div id="subjects-container" class="content-area">
+                <h2>Minhas Matérias</h2>
+                <div id="subjects-list" class="card-container">
+                    <!-- Matérias serão carregadas aqui -->
+                </div>
             </div>
-            <button id="addTopicoBtn" class="btn-secondary">Adicionar Tópico</button>
-            <button id="backToMateriasBtn" class="btn-secondary">Voltar para Matérias</button>
-        </section>
 
-        <section id="quiz-list" class="page">
-            <h2>Quizzes Disponíveis</h2>
-            <div id="quizzes-available" class="card-grid">
-                <!-- Quizzes will be loaded here -->
+            <div id="subject-detail-section" class="content-area hidden">
+                <h2 id="current-subject-title"></h2>
+                <p id="current-subject-description"></p>
+                <button id="back-to-dashboard-btn">Voltar para Matérias</button>
+                <button id="create-topic-btn">Adicionar Tópico</button>
+                <button id="create-quiz-btn">Criar Quiz</button>
+
+                <div id="topics-container">
+                    <h3>Tópicos</h3>
+                    <ul id="topics-list">
+                        <!-- Tópicos serão carregados aqui -->
+                    </ul>
+                </div>
+
+                <div id="quizzes-container">
+                    <h3>Quizzes Disponíveis</h3>
+                    <ul id="quizzes-list">
+                        <!-- Quizzes serão carregados aqui -->
+                    </ul>
+                </div>
+
+                <div id="quiz-play-container" class="hidden">
+                    <h3 id="quiz-title"></h3>
+                    <div id="question-container">
+                        <p id="question-text"></p>
+                        <div id="options-container">
+                            <!-- Opções do quiz serão carregadas aqui -->
+                        </div>
+                        <button id="next-question-btn">Próximo</button>
+                    </div>
+                    <div id="quiz-results" class="hidden">
+                        <h4>Resultado do Quiz</h4>
+                        <p>Sua pontuação: <span id="final-score"></span></p>
+                        <p>Acertos: <span id="correct-answers"></span></p>
+                        <button id="play-again-btn">Jogar Novamente</button>
+                    </div>
+                </div>
             </div>
-            <button id="createQuizBtn" class="btn-primary">Criar Novo Quiz</button>
-        </section>
 
-        <section id="create-quiz" class="page">
-            <h2>Criar Novo Quiz</h2>
-            <input type="text" id="quiz-title-input" placeholder="Título do Quiz">
-            <div id="questions-container">
-                <!-- Questions will be added here -->
+            <div id="ranking-section" class="content-area hidden">
+                <h2>Ranking Global</h2>
+                <button id="back-to-dashboard-from-ranking-btn">Voltar</button>
+                <ol id="ranking-list">
+                    <!-- Ranking será carregado aqui -->
+                </ol>
             </div>
-            <button id="add-question-btn" class="btn-secondary">+ Adicionar Pergunta</button>
-            <button id="save-quiz-btn" class="btn-primary">Salvar Quiz</button>
-            <button id="cancel-create-quiz-btn" class="btn-secondary">Cancelar</button>
-        </section>
 
-        <section id="play-quiz" class="page">
-            <h2 id="play-quiz-title"></h2>
-            <div id="quiz-progress"></div>
-            <div id="question-display">
-                <!-- Question will be displayed here -->
+            <div id="history-section" class="content-area hidden">
+                <h2>Histórico de Quizzes</h2>
+                <button id="back-to-dashboard-from-history-btn">Voltar</button>
+                <ul id="history-list">
+                    <!-- Histórico será carregado aqui -->
+                </ul>
             </div>
-            <div id="alternatives-display">
-                <!-- Alternatives will be displayed here -->
-            </div>
-            <button id="next-question-btn" class="btn-primary" style="display: none;">Próxima</button>
-            <button id="finish-quiz-btn" class="btn-primary" style="display: none;">Finalizar Quiz</button>
-            <button id="refazer-quiz-btn" class="btn-secondary" style="display: none;">Refazer Quiz</button>
-            <button id="backToQuizListBtn" class="btn-secondary">Voltar para Quizzes</button>
-        </section>
-
-        <section id="quiz-result" class="page">
-            <h2>Resultado do Quiz</h2>
-            <p>Quiz: <span id="result-quiz-title"></span></p>
-            <p>Pontuação: <span id="score-display"></span></p>
-            <p>Acertos: <span id="correct-answers-display"></span></p>
-            <p>Erros: <span id="incorrect-answers-display"></span></p>
-            <button id="refazer-quiz-btn-result" class="btn-primary">Refazer</button>
-            <button id="backToQuizListBtn-result" class="btn-secondary">Voltar para Quizzes</button>
-        </section>
-
-        <section id="ranking" class="page">
-            <h2>Ranking de Estudos</h2>
-            <ul id="ranking-list">
-                <!-- Ranking will be loaded here -->
-            </ul>
-            <p class="footer-info">Criado por: <span id="rankingUserName"></span></p>
-        </section>
-
-        <section id="historico" class="page">
-            <h2>Histórico de Quizzes</h2>
-            <ul id="historico-list">
-                <!-- History will be loaded here -->
-            </ul>
-            <p class="footer-info">Criado por: <span id="historicoUserName"></span></p>
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2023 Sexta-Feira Studies. Todos os direitos reservados.</p>
-            <p>Criado por: <span id="footerUserName"></span></p>
-        </div>
-    </footer>
-
-    <!-- Modals -->
-    <div id="materia-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Nova Matéria</h2>
-            <input type="text" id="materia-name-input" placeholder="Nome da Matéria">
-            <textarea id="materia-description-input" placeholder="Descrição da Matéria"></textarea>
-            <button id="save-materia-btn" class="btn-primary">Salvar Matéria</button>
+    <div id="modal-overlay" class="hidden"></div>
+    <div id="modal" class="hidden">
+        <div id="modal-content">
+            <span id="close-modal-btn">&times;</span>
+            <h3 id="modal-title"></h3>
+            <div id="modal-body">
+                <!-- Conteúdo dinâmico do modal -->
+            </div>
         </div>
     </div>
 
-    <div id="topico-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Novo Tópico</h2>
-            <input type="text" id="topico-title-input" placeholder="Título do Tópico">
-            <textarea id="topico-content-input" placeholder="Conteúdo do Tópico"></textarea>
-            <button id="save-topico-btn" class="btn-primary">Salvar Tópico</button>
-        </div>
-    </div>
-
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
