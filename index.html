@@ -2,17 +2,58 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EduConnect — Aprenda. Conecte. Evolua.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="description" content="Sexta-Feira Studies — Aprenda com quizzes, tópicos e conecte-se com amigos!" />
+  <title>Sexta-Feira Studies — Aprenda. Conecte. Evolua.</title>
+  
+  <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css" />
+  
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <!-- Firebase SDK -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  
+  <!-- Firebase SDK (carregado primeiro para garantir disponibilidade) -->
   <script type="module">
+    // ============================================================
+    // FIREBASE INITIALIZATION
+    // ============================================================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged, 
+      updateProfile,
+      sendPasswordResetEmail,
+      updateEmail,
+      updatePassword
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getDatabase, 
+      ref, 
+      set, 
+      get, 
+      push, 
+      update, 
+      remove, 
+      onValue, 
+      off,
+      query, 
+      orderByChild, 
+      orderByKey,
+      limitToFirst, 
+      limitToLast,
+      equalTo,
+      serverTimestamp,
+      increment,
+      runTransaction
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
       authDomain: "sexta-feira-fb01a.firebaseapp.com",
@@ -24,11 +65,37 @@
       measurementId: "G-DEZ5ZESQH7"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    // Initialize Firebase
+    let app, auth, db;
+    
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getDatabase(app);
+      console.log('✅ Firebase inicializado com sucesso!');
+      console.log('📁 Database URL:', firebaseConfig.databaseURL);
+    } catch (error) {
+      console.error('❌ Erro ao inicializar Firebase:', error);
+    }
 
-    window._firebase = { auth, db, ref, set, get, push, update, remove, onValue, query, orderByChild, limitToFirst, serverTimestamp, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile };
+    // Export all Firebase functions globally
+    window._firebase = { 
+      app, auth, db, 
+      ref, set, get, push, update, remove, 
+      onValue, off, query, orderByChild, orderByKey,
+      limitToFirst, limitToLast, equalTo,
+      serverTimestamp, increment, runTransaction,
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged, 
+      updateProfile,
+      sendPasswordResetEmail,
+      updateEmail,
+      updatePassword
+    };
+    
+    console.log('🔧 Firebase modules exported to window._firebase');
   </script>
 </head>
 <body>
@@ -36,10 +103,17 @@
 <!-- ==================== SPLASH SCREEN ==================== -->
 <div id="splash-screen" class="splash">
   <div class="splash-logo">
-    <div class="splash-icon">⚡</div>
-    <h1>EduConnect</h1>
-    <p>Carregando plataforma...</p>
-    <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+    <div class="splash-icon">📚</div>
+    <h1>Sexta-Feira Studies</h1>
+    <p>Aprenda. Conecte. Evolua.</p>
+    <div class="splash-bar">
+      <div class="splash-bar-fill"></div>
+    </div>
+    <div class="splash-loader-dots">
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+    </div>
   </div>
 </div>
 
@@ -49,18 +123,21 @@
     <div class="auth-blob b1"></div>
     <div class="auth-blob b2"></div>
     <div class="auth-blob b3"></div>
+    <div class="auth-blob b4"></div>
   </div>
-  <div class="auth-container">
+  
+  <div class="auth-container" id="auth-container">
+    <!-- Brand -->
     <div class="auth-brand">
-      <span class="brand-icon">⚡</span>
-      <h1>EduConnect</h1>
-      <p>Aprenda. Conecte. Evolua.</p>
+      <span class="brand-icon">📚</span>
+      <h1>Sexta-Feira Studies</h1>
+      <p>Aprenda com quizzes, tópicos e amigos!</p>
     </div>
 
-    <!-- Tabs -->
+    <!-- Auth Tabs -->
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login">Entrar</button>
-      <button class="auth-tab" data-tab="register">Cadastrar</button>
+      <button class="auth-tab active" data-tab="login" id="tab-login">Entrar</button>
+      <button class="auth-tab" data-tab="register" id="tab-register">Cadastrar</button>
     </div>
 
     <!-- Login Form -->
@@ -68,24 +145,35 @@
       <div class="field-group">
         <label>E-mail</label>
         <div class="input-wrap">
-          <span class="input-icon">✉</span>
+          <span class="input-icon">✉️</span>
           <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" />
         </div>
       </div>
+      
       <div class="field-group">
         <label>Senha</label>
         <div class="input-wrap">
           <span class="input-icon">🔒</span>
           <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
-          <button class="toggle-pw" onclick="togglePw('login-password', this)">👁</button>
+          <button class="toggle-pw" type="button" onclick="togglePassword('login-password', this)" title="Mostrar/ocultar senha">👁️</button>
         </div>
       </div>
+      
       <div id="login-error" class="auth-error hidden"></div>
-      <button class="btn-primary btn-full" id="btn-login" onclick="doLogin()">
-        <span>Entrar na plataforma</span>
-        <div class="btn-loader hidden"></div>
+      
+      <button class="btn-primary btn-full" id="btn-login" onclick="handleLogin()">
+        <span id="btn-login-text">Entrar na plataforma</span>
+        <div class="btn-loader hidden" id="btn-login-loader"></div>
       </button>
-      <p class="auth-hint">Novo aqui? <a href="#" onclick="switchTab('register')">Crie sua conta grátis →</a></p>
+      
+      <p class="auth-hint">
+        Novo por aqui? 
+        <a href="#" onclick="switchAuthTab('register')">Crie sua conta grátis →</a>
+      </p>
+      
+      <p class="auth-hint" style="margin-top: 0.5rem;">
+        <a href="#" onclick="resetPassword()" style="font-size: 0.8rem; color: var(--text-muted);">Esqueceu a senha?</a>
+      </p>
     </div>
 
     <!-- Register Form -->
@@ -94,24 +182,27 @@
         <label>Nome completo</label>
         <div class="input-wrap">
           <span class="input-icon">👤</span>
-          <input type="text" id="reg-name" placeholder="Seu nome" autocomplete="name" />
+          <input type="text" id="reg-name" placeholder="Seu nome completo" autocomplete="name" />
         </div>
       </div>
+      
       <div class="field-group">
         <label>E-mail</label>
         <div class="input-wrap">
-          <span class="input-icon">✉</span>
+          <span class="input-icon">✉️</span>
           <input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email" />
         </div>
       </div>
+      
       <div class="field-group">
         <label>Senha</label>
         <div class="input-wrap">
           <span class="input-icon">🔒</span>
           <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-          <button class="toggle-pw" onclick="togglePw('reg-password', this)">👁</button>
+          <button class="toggle-pw" type="button" onclick="togglePassword('reg-password', this)" title="Mostrar/ocultar senha">👁️</button>
         </div>
       </div>
+      
       <div class="field-group">
         <label>Confirmar senha</label>
         <div class="input-wrap">
@@ -119,12 +210,18 @@
           <input type="password" id="reg-confirm" placeholder="Repita a senha" autocomplete="new-password" />
         </div>
       </div>
+      
       <div id="reg-error" class="auth-error hidden"></div>
-      <button class="btn-primary btn-full" id="btn-register" onclick="doRegister()">
-        <span>Criar minha conta</span>
-        <div class="btn-loader hidden"></div>
+      
+      <button class="btn-primary btn-full" id="btn-register" onclick="handleRegister()">
+        <span id="btn-register-text">Criar minha conta</span>
+        <div class="btn-loader hidden" id="btn-register-loader"></div>
       </button>
-      <p class="auth-hint">Já tem conta? <a href="#" onclick="switchTab('login')">Fazer login →</a></p>
+      
+      <p class="auth-hint">
+        Já tem conta? 
+        <a href="#" onclick="switchAuthTab('login')">Fazer login →</a>
+      </p>
     </div>
   </div>
 </div>
@@ -135,14 +232,15 @@
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="topbar-left">
-      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-      <span class="topbar-brand">⚡ EduConnect</span>
+      <button class="menu-btn" onclick="toggleSidebar()" aria-label="Abrir menu">☰</button>
+      <span class="topbar-brand">📚 Sexta-Feira Studies</span>
     </div>
     <div class="topbar-right">
-      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn">
-        🔔 <span class="notif-badge hidden" id="notif-count">0</span>
+      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn" aria-label="Notificações">
+        🔔 
+        <span class="notif-badge hidden" id="notif-count">0</span>
       </button>
-      <div class="topbar-avatar" onclick="showScreen('perfil')" id="topbar-avatar">?</div>
+      <div class="topbar-avatar" onclick="showScreen('perfil')" id="topbar-avatar" title="Ver perfil">?</div>
     </div>
   </header>
 
@@ -155,6 +253,7 @@
         <div class="sidebar-pts" id="sidebar-pts">0 pts</div>
       </div>
     </div>
+    
     <div class="sidebar-menu">
       <a class="nav-item active" data-screen="home" onclick="showScreen('home')">🏠 <span>Home</span></a>
       <a class="nav-item" data-screen="materias" onclick="showScreen('materias')">📚 <span>Matérias</span></a>
@@ -162,18 +261,22 @@
       <a class="nav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆 <span>Ranking</span></a>
       <a class="nav-item" data-screen="chat" onclick="showScreen('chat')">💬 <span>Chat</span></a>
       <a class="nav-item" data-screen="perfil" onclick="showScreen('perfil')">👤 <span>Perfil</span></a>
-      <a class="nav-item" data-screen="adm" id="nav-adm" onclick="showScreen('adm')" style="display:none">⚙️ <span>ADM</span></a>
+      <a class="nav-item" data-screen="notificacoes" onclick="showScreen('notificacoes')">🔔 <span>Notificações</span></a>
+      <a class="nav-item" data-screen="adm" id="nav-adm" style="display:none" onclick="showScreen('adm')">⚙️ <span>ADM</span></a>
     </div>
+    
     <div class="sidebar-bottom">
-      <button class="btn-logout" onclick="doLogout()">🚪 Sair</button>
+      <button class="btn-logout" onclick="handleLogout()">🚪 Sair da conta</button>
     </div>
   </nav>
+  
+  <!-- Sidebar Overlay (mobile) -->
   <div class="sidebar-overlay hidden" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <!-- MAIN CONTENT -->
   <main class="main-content" id="main-content">
 
-    <!-- ===== HOME ===== -->
+    <!-- ===== HOME SCREEN ===== -->
     <section id="screen-home" class="screen-section">
       <div class="screen-header">
         <div>
@@ -196,7 +299,7 @@
           <div class="stat-icon">🎮</div>
           <div class="stat-info">
             <div class="stat-val" id="stat-quizzes">0</div>
-            <div class="stat-label">Quizzes feitos</div>
+            <div class="stat-label">Quizzes</div>
           </div>
         </div>
         <div class="stat-card stat-green">
@@ -227,7 +330,7 @@
       </div>
 
       <!-- Quick Actions -->
-      <div class="section-title">Ações rápidas</div>
+      <div class="section-title">⚡ Ações rápidas</div>
       <div class="quick-actions">
         <button class="quick-btn" onclick="showScreen('materias')">
           <span class="qb-icon">📚</span>
@@ -248,13 +351,13 @@
       </div>
 
       <!-- Feed Recente -->
-      <div class="section-title">Atividade recente</div>
+      <div class="section-title">📰 Atividade recente</div>
       <div id="home-feed" class="feed-list">
         <div class="empty-state">Carregando atividades...</div>
       </div>
     </section>
 
-    <!-- ===== MATÉRIAS ===== -->
+    <!-- ===== MATÉRIAS SCREEN ===== -->
     <section id="screen-materias" class="screen-section hidden">
       <div class="screen-header">
         <div>
@@ -264,13 +367,11 @@
         <button class="btn-primary btn-sm" onclick="showModal('modal-nova-materia')">+ Nova</button>
       </div>
 
-      <!-- Search -->
       <div class="search-bar">
         <span>🔍</span>
         <input type="text" id="search-materias" placeholder="Buscar matérias..." oninput="filterMaterias()" />
       </div>
 
-      <!-- Filter Tabs -->
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all" onclick="setMateriaFilter('all', this)">Todas</button>
         <button class="filter-tab" data-filter="mine" onclick="setMateriaFilter('mine', this)">Minhas</button>
@@ -282,18 +383,18 @@
       </div>
     </section>
 
-    <!-- ===== DETALHE MATÉRIA ===== -->
+    <!-- ===== DETALHE MATÉRIA SCREEN ===== -->
     <section id="screen-materia-detalhe" class="screen-section hidden">
       <div class="screen-header">
-        <button class="btn-back" onclick="showScreen('materias')">← Voltar</button>
-        <button class="btn-primary btn-sm" onclick="showModal('modal-novo-topico')">+ Tópico</button>
+        <button class="btn-back" onclick="showScreen('materias')">← Voltar para Matérias</button>
+        <button class="btn-primary btn-sm" onclick="showModal('modal-novo-topico')">+ Novo Tópico</button>
       </div>
 
       <div class="materia-hero" id="materia-hero">
         <div class="materia-hero-icon" id="materia-hero-icon">📚</div>
         <div>
           <h2 id="materia-hero-nome">Matéria</h2>
-          <p id="materia-hero-desc">Descrição</p>
+          <p id="materia-hero-desc">Descrição da matéria</p>
           <div class="materia-hero-meta">
             <span id="materia-hero-autor">Por: --</span>
             <span id="materia-hero-topicos">0 tópicos</span>
@@ -301,44 +402,48 @@
         </div>
       </div>
 
-      <div class="section-title">Tópicos</div>
+      <div class="section-title">📝 Tópicos</div>
       <div id="topicos-list" class="topicos-list">
         <div class="empty-state">Nenhum tópico ainda. Crie o primeiro!</div>
       </div>
 
-      <div class="section-title">Quizzes desta matéria</div>
+      <div class="section-title">🎮 Quizzes desta matéria</div>
       <div id="quizzes-materia" class="quizzes-list">
         <div class="empty-state">Nenhum quiz ainda.</div>
       </div>
       <button class="btn-secondary btn-full mt-2" onclick="showModal('modal-novo-quiz')">+ Criar Quiz</button>
     </section>
 
-    <!-- ===== DETALHE TÓPICO ===== -->
+    <!-- ===== DETALHE TÓPICO SCREEN ===== -->
     <section id="screen-topico-detalhe" class="screen-section hidden">
       <div class="screen-header">
-        <button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar</button>
+        <button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar para Matéria</button>
       </div>
       <div class="topico-content card" id="topico-content">
         <h2 id="topico-title">Tópico</h2>
         <div class="topico-meta" id="topico-meta"></div>
         <div class="topico-body" id="topico-body"></div>
       </div>
-      <div class="section-title">Comentários</div>
-      <div id="topico-comentarios" class="comentarios-list"></div>
+      
+      <div class="section-title">💬 Comentários</div>
+      <div id="topico-comentarios" class="comentarios-list">
+        <div class="empty-state">Sem comentários ainda. Seja o primeiro!</div>
+      </div>
+      
       <div class="comentario-form">
-        <input type="text" id="new-comment" placeholder="Escreva um comentário..." />
-        <button class="btn-primary" onclick="addComment()">Enviar</button>
+        <input type="text" id="new-comment" placeholder="Escreva um comentário..." onkeydown="if(event.key==='Enter')addComment()" />
+        <button class="btn-primary btn-sm" onclick="addComment()">Enviar</button>
       </div>
     </section>
 
-    <!-- ===== QUIZ ===== -->
+    <!-- ===== QUIZ GAME SCREEN ===== -->
     <section id="screen-quiz" class="screen-section hidden">
       <div class="quiz-header">
-        <button class="btn-back" onclick="exitQuiz()">← Sair</button>
+        <button class="btn-back" onclick="exitQuiz()">← Sair do Quiz</button>
         <div class="quiz-progress-wrap">
           <div class="quiz-q-counter" id="quiz-q-counter">1/10</div>
           <div class="quiz-progress-track">
-            <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+            <div class="quiz-progress-fill" id="quiz-progress-fill" style="width:0%"></div>
           </div>
         </div>
         <div class="quiz-timer" id="quiz-timer">⏱ 30s</div>
@@ -357,12 +462,12 @@
       </div>
     </section>
 
-    <!-- ===== RESULTADO ===== -->
+    <!-- ===== RESULTADO SCREEN ===== -->
     <section id="screen-resultado" class="screen-section hidden">
       <div class="resultado-container">
         <div class="resultado-emoji" id="resultado-emoji">🎉</div>
         <h2 id="resultado-titulo">Parabéns!</h2>
-        <p id="resultado-subtitulo">Quiz finalizado</p>
+        <p id="resultado-subtitulo">Quiz finalizado com sucesso</p>
 
         <div class="resultado-stats">
           <div class="res-stat">
@@ -384,7 +489,7 @@
         </div>
 
         <div class="resultado-barra">
-          <div class="resultado-barra-fill" id="resultado-barra-fill"></div>
+          <div class="resultado-barra-fill" id="resultado-barra-fill" style="width:0%"></div>
         </div>
         <p class="resultado-pct" id="resultado-pct">0% de acerto</p>
 
@@ -397,12 +502,12 @@
       </div>
     </section>
 
-    <!-- ===== RANKING ===== -->
+    <!-- ===== RANKING SCREEN ===== -->
     <section id="screen-ranking" class="screen-section hidden">
       <div class="screen-header">
         <div>
           <h2>🏆 Ranking</h2>
-          <p class="screen-subtitle">Top 50 usuários</p>
+          <p class="screen-subtitle">Os melhores estudantes</p>
         </div>
       </div>
 
@@ -429,7 +534,7 @@
       </div>
 
       <div class="my-rank-card" id="my-rank-card">
-        <span>Sua posição:</span>
+        <span>🏅 Sua posição:</span>
         <span class="my-rank-num" id="my-rank-num">#--</span>
         <span id="my-rank-pts">0 pts</span>
       </div>
@@ -439,7 +544,7 @@
       </div>
     </section>
 
-    <!-- ===== DESCOBRIR ===== -->
+    <!-- ===== DESCOBRIR SCREEN ===== -->
     <section id="screen-descobrir" class="screen-section hidden">
       <div class="screen-header">
         <div>
@@ -452,7 +557,7 @@
       <div class="post-creator card">
         <div class="post-creator-row">
           <div class="pc-avatar" id="pc-avatar">?</div>
-          <input type="text" id="new-post-text" placeholder="Compartilhe algo com a comunidade..." class="post-input" />
+          <input type="text" id="new-post-text" placeholder="Compartilhe algo com a comunidade..." class="post-input" onkeydown="if(event.key==='Enter')createPost()" />
         </div>
         <div class="post-creator-actions">
           <div class="post-type-btns">
@@ -464,7 +569,7 @@
         </div>
       </div>
 
-      <!-- Filter -->
+      <!-- Feed Filter -->
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all" onclick="setFeedFilter('all', this)">Todos</button>
         <button class="filter-tab" data-filter="post" onclick="setFeedFilter('post', this)">Posts</button>
@@ -477,7 +582,7 @@
       </div>
     </section>
 
-    <!-- ===== CHAT ===== -->
+    <!-- ===== CHAT SCREEN ===== -->
     <section id="screen-chat" class="screen-section hidden">
       <div class="screen-header">
         <div>
@@ -487,19 +592,19 @@
       </div>
 
       <div class="chat-layout">
-        <!-- Rooms list -->
         <div class="chat-rooms" id="chat-rooms">
           <div class="chat-rooms-header">
             <span>Salas</span>
             <button class="btn-sm btn-primary" onclick="showModal('modal-nova-sala')">+</button>
           </div>
-          <div id="rooms-list"></div>
+          <div id="rooms-list">
+            <div class="room-item"><div class="room-name">Carregando salas...</div></div>
+          </div>
         </div>
 
-        <!-- Chat window -->
         <div class="chat-window" id="chat-window">
           <div class="chat-no-room" id="chat-no-room">
-            <div class="empty-state">Selecione uma sala para começar a conversar</div>
+            <div class="empty-state">💬 Selecione uma sala para começar a conversar</div>
           </div>
           <div class="chat-room-view hidden" id="chat-room-view">
             <div class="chat-room-header">
@@ -508,22 +613,24 @@
                 <span id="chat-room-members">0 membros</span>
               </div>
             </div>
-            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-messages" id="chat-messages">
+              <div class="empty-state">Sem mensagens ainda. Diga olá! 👋</div>
+            </div>
             <div class="chat-input-row">
-              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
-              <button class="btn-primary" onclick="sendChatMessage()">Enviar</button>
+              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter')sendChatMessage()" />
+              <button class="btn-primary btn-sm" onclick="sendChatMessage()">Enviar</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ===== PERFIL ===== -->
+    <!-- ===== PERFIL SCREEN ===== -->
     <section id="screen-perfil" class="screen-section hidden">
       <div class="perfil-hero">
         <div class="perfil-avatar-wrap">
           <div class="perfil-avatar" id="perfil-avatar">?</div>
-          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')">✏️</button>
+          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')" title="Mudar avatar">✏️</button>
         </div>
         <h2 id="perfil-name">--</h2>
         <p id="perfil-email">--</p>
@@ -549,9 +656,9 @@
         </div>
       </div>
 
-      <!-- Edit Profile -->
+      <!-- Edit Profile Card -->
       <div class="card mt-2">
-        <div class="section-title">Editar perfil</div>
+        <div class="section-title">✏️ Editar perfil</div>
         <div class="field-group">
           <label>Nome</label>
           <div class="input-wrap">
@@ -565,36 +672,35 @@
         <button class="btn-primary btn-full" onclick="saveProfile()">💾 Salvar perfil</button>
       </div>
 
-      <!-- Histórico -->
-      <div class="section-title">Histórico de quizzes</div>
+      <!-- Histórico de Quizzes -->
+      <div class="section-title">📋 Histórico de quizzes</div>
       <div id="perfil-historico" class="historico-list">
         <div class="empty-state">Nenhum quiz realizado ainda</div>
       </div>
     </section>
 
-    <!-- ===== NOTIFICAÇÕES ===== -->
+    <!-- ===== NOTIFICAÇÕES SCREEN ===== -->
     <section id="screen-notificacoes" class="screen-section hidden">
       <div class="screen-header">
         <div>
           <h2>🔔 Notificações</h2>
         </div>
-        <button class="btn-sm btn-secondary" onclick="markAllRead()">Marcar lidas</button>
+        <button class="btn-sm btn-secondary" onclick="markAllNotificationsRead()">✓ Marcar todas lidas</button>
       </div>
       <div id="notificacoes-list" class="notif-list">
         <div class="empty-state">Sem notificações</div>
       </div>
     </section>
 
-    <!-- ===== ADM ===== -->
+    <!-- ===== ADM SCREEN ===== -->
     <section id="screen-adm" class="screen-section hidden">
       <div class="screen-header">
         <div>
-          <h2>⚙️ Painel ADM</h2>
+          <h2>⚙️ Painel Administrativo</h2>
           <p class="screen-subtitle">Controle total da plataforma</p>
         </div>
       </div>
 
-      <!-- ADM Stats -->
       <div class="stats-grid">
         <div class="stat-card stat-blue">
           <div class="stat-icon">👥</div>
@@ -626,214 +732,5 @@
         </div>
       </div>
 
-      <!-- Tabs ADM -->
       <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setAdmTab('usuarios', this)">Usuários</button>
-        <button class="filter-tab" onclick="setAdmTab('conteudo', this)">Conteúdo</button>
-        <button class="filter-tab" onclick="setAdmTab('denuncias', this)">Denúncias</button>
-      </div>
-
-      <div id="adm-usuarios" class="adm-tab">
-        <div class="search-bar">
-          <span>🔍</span>
-          <input type="text" id="adm-search-user" placeholder="Buscar usuário..." oninput="admSearchUser()" />
-        </div>
-        <div id="adm-users-list" class="adm-list"></div>
-      </div>
-      <div id="adm-conteudo" class="adm-tab hidden">
-        <div id="adm-content-list" class="adm-list"></div>
-      </div>
-      <div id="adm-denuncias" class="adm-tab hidden">
-        <div id="adm-reports-list" class="adm-list">
-          <div class="empty-state">Nenhuma denúncia</div>
-        </div>
-      </div>
-    </section>
-
-  </main><!-- /main-content -->
-
-  <!-- BOTTOM NAV (mobile) -->
-  <nav class="bottom-nav">
-    <a class="bnav-item active" data-screen="home" onclick="showScreen('home')">🏠<span>Home</span></a>
-    <a class="bnav-item" data-screen="materias" onclick="showScreen('materias')">📚<span>Matérias</span></a>
-    <a class="bnav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍<span>Descobrir</span></a>
-    <a class="bnav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆<span>Ranking</span></a>
-    <a class="bnav-item" data-screen="chat" onclick="showScreen('chat')">💬<span>Chat</span></a>
-  </nav>
-
-</div><!-- /app -->
-
-<!-- ==================== MODALS ==================== -->
-
-<!-- Modal: Nova Matéria -->
-<div class="modal hidden" id="modal-nova-materia">
-  <div class="modal-backdrop" onclick="closeModal('modal-nova-materia')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📚 Nova Matéria</h3>
-      <button class="modal-close" onclick="closeModal('modal-nova-materia')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Nome da matéria *</label>
-        <input type="text" id="nm-nome" placeholder="Ex: Matemática, História..." />
-      </div>
-      <div class="field-group">
-        <label>Descrição</label>
-        <textarea id="nm-desc" placeholder="Descreva o que será estudado..." rows="3"></textarea>
-      </div>
-      <div class="field-group">
-        <label>Ícone</label>
-        <div class="emoji-picker" id="emoji-picker-materia">
-          <button class="emoji-opt selected" data-emoji="📚" onclick="selectEmoji('materia','📚',this)">📚</button>
-          <button class="emoji-opt" data-emoji="🔬" onclick="selectEmoji('materia','🔬',this)">🔬</button>
-          <button class="emoji-opt" data-emoji="🧮" onclick="selectEmoji('materia','🧮',this)">🧮</button>
-          <button class="emoji-opt" data-emoji="🎨" onclick="selectEmoji('materia','🎨',this)">🎨</button>
-          <button class="emoji-opt" data-emoji="🌍" onclick="selectEmoji('materia','🌍',this)">🌍</button>
-          <button class="emoji-opt" data-emoji="💻" onclick="selectEmoji('materia','💻',this)">💻</button>
-          <button class="emoji-opt" data-emoji="📖" onclick="selectEmoji('materia','📖',this)">📖</button>
-          <button class="emoji-opt" data-emoji="⚗️" onclick="selectEmoji('materia','⚗️',this)">⚗️</button>
-          <button class="emoji-opt" data-emoji="🎵" onclick="selectEmoji('materia','🎵',this)">🎵</button>
-          <button class="emoji-opt" data-emoji="🏃" onclick="selectEmoji('materia','🏃',this)">🏃</button>
-        </div>
-      </div>
-      <div class="field-group">
-        <label>Visibilidade</label>
-        <div class="radio-group">
-          <label class="radio-opt"><input type="radio" name="nm-vis" value="public" checked /> 🌍 Pública</label>
-          <label class="radio-opt"><input type="radio" name="nm-vis" value="private" /> 🔒 Privada</label>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-nova-materia')">Cancelar</button>
-      <button class="btn-primary" onclick="criarMateria()">Criar Matéria</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Novo Tópico -->
-<div class="modal hidden" id="modal-novo-topico">
-  <div class="modal-backdrop" onclick="closeModal('modal-novo-topico')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📝 Novo Tópico</h3>
-      <button class="modal-close" onclick="closeModal('modal-novo-topico')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Título *</label>
-        <input type="text" id="nt-titulo" placeholder="Título do tópico" />
-      </div>
-      <div class="field-group">
-        <label>Conteúdo *</label>
-        <textarea id="nt-conteudo" placeholder="Escreva o conteúdo aqui..." rows="6"></textarea>
-      </div>
-      <div class="field-group">
-        <label>Tags (separadas por vírgula)</label>
-        <input type="text" id="nt-tags" placeholder="ex: fórmulas, teoria, prática" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-novo-topico')">Cancelar</button>
-      <button class="btn-primary" onclick="criarTopico()">Criar Tópico</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Novo Quiz -->
-<div class="modal hidden" id="modal-novo-quiz">
-  <div class="modal-backdrop" onclick="closeModal('modal-novo-quiz')"></div>
-  <div class="modal-box modal-lg">
-    <div class="modal-header">
-      <h3>🎮 Criar Quiz</h3>
-      <button class="modal-close" onclick="closeModal('modal-novo-quiz')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Nome do quiz *</label>
-        <input type="text" id="nq-nome" placeholder="Ex: Quiz de Álgebra" />
-      </div>
-      <div class="field-group">
-        <label>Tempo por questão (segundos)</label>
-        <input type="number" id="nq-tempo" value="30" min="10" max="120" />
-      </div>
-      <div class="section-title">Questões <button class="btn-sm btn-secondary" onclick="addQuizQuestion()">+ Adicionar</button></div>
-      <div id="quiz-questions-builder" class="qbuilder">
-        <!-- Questions added dynamically -->
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-novo-quiz')">Cancelar</button>
-      <button class="btn-primary" onclick="salvarQuiz()">💾 Salvar Quiz</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Nova Sala de Chat -->
-<div class="modal hidden" id="modal-nova-sala">
-  <div class="modal-backdrop" onclick="closeModal('modal-nova-sala')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>💬 Nova Sala</h3>
-      <button class="modal-close" onclick="closeModal('modal-nova-sala')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-group">
-        <label>Nome da sala *</label>
-        <input type="text" id="ns-nome" placeholder="Ex: Matemática Avançada" />
-      </div>
-      <div class="field-group">
-        <label>Descrição</label>
-        <input type="text" id="ns-desc" placeholder="Sobre o que é essa sala?" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('modal-nova-sala')">Cancelar</button>
-      <button class="btn-primary" onclick="criarSala()">Criar Sala</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Edit Avatar -->
-<div class="modal hidden" id="modal-edit-avatar">
-  <div class="modal-backdrop" onclick="closeModal('modal-edit-avatar')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>✏️ Escolher Avatar</h3>
-      <button class="modal-close" onclick="closeModal('modal-edit-avatar')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="avatar-grid" id="avatar-grid">
-        <!-- Generated dynamically -->
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-primary" onclick="saveAvatar()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Ver Perfil de Outro Usuário -->
-<div class="modal hidden" id="modal-user-profile">
-  <div class="modal-backdrop" onclick="closeModal('modal-user-profile')"></div>
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>👤 Perfil</h3>
-      <button class="modal-close" onclick="closeModal('modal-user-profile')">✕</button>
-    </div>
-    <div class="modal-body" id="modal-user-profile-body">
-      <!-- Loaded dynamically -->
-    </div>
-  </div>
-</div>
-
-<!-- TOAST CONTAINER -->
-<div id="toast-container" class="toast-container"></div>
-
-<!-- CONFETTI -->
-<canvas id="confetti-canvas" class="confetti-canvas hidden"></canvas>
-
-<script src="app.js"></script>
-</body>
-</html>
+        <button class="filter-tab active" onclick="setAdmTab('usuarios', this)">👥 Us
