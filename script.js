@@ -153,12 +153,21 @@ function updateUI(){
   const u = STATE.userData; if(!u) return;
   txt('sidebar-name', u.username||'?'); txt('sidebar-pts', fmt(u.points));
   const av = u.avatar||'🎓';
-  txt('sidebar-avatar', av); txt('topbar-avatar', av);
-  txt('pc-avatar', av); txt('perfil-avatar', av);
+  
+  // Verificar se é URL de imagem
+  if (av.startsWith('http')) {
+    document.getElementById('sidebar-avatar').innerHTML = `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+    document.getElementById('topbar-avatar').innerHTML = `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+    document.getElementById('pc-avatar').innerHTML = `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+    document.getElementById('perfil-avatar').innerHTML = `<img src="${av}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />`;
+  } else {
+    txt('sidebar-avatar', av); txt('topbar-avatar', av);
+    txt('pc-avatar', av); txt('perfil-avatar', av);
+  }
+  
   txt('perfil-name', u.username||'--'); txt('perfil-email', u.email||'--');
   txt('home-greeting', 'Olá, '+(u.username||'Estudante').split(' ')[0]+'! 👋');
 }
-
 // ========== NAVEGAÇÃO ==========
 function showScreen(name){
   document.querySelectorAll('#main-content > div').forEach(d=>d.style.display='none');
@@ -234,20 +243,23 @@ async function loadHome(){
 }
 
 function feedHTML(p, compact){
+  const imagemHTML = p.imagem ? 
+    `<img src="${p.imagem}" style="width:100%; max-height:300px; object-fit:cover; border-radius:10px; margin-top:8px;" loading="lazy" />` : '';
+  
   return `
     <div style="background:white; border-radius:15px; padding:15px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
         <div style="width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">${esc(p.avatar||p.autorAvatar||'?')}</div>
         <div style="flex:1;"><span style="font-weight:700;">${esc(p.autorNome||'?')}</span> <span style="color:#888;font-size:12px;">${ago(p.createdAt)}</span></div>
       </div>
-      <div>${esc(p.texto)}</div>
+      ${p.texto ? `<div>${esc(p.texto)}</div>` : ''}
+      ${imagemHTML}
       ${!compact?`<div style="margin-top:10px; display:flex; gap:12px;">
         <button onclick="likePost('${p.id}')" style="border:none;background:none;cursor:pointer;font-weight:600;color:#888;">❤️ ${p.likes?Object.keys(p.likes).length:0}</button>
         ${p.autorId===STATE.user?.uid?`<button onclick="deletePost('${p.id}')" style="border:none;background:none;cursor:pointer;color:#ef4444;font-weight:600;">🗑</button>`:''}
       </div>`:''}
     </div>`;
 }
-
 // ========== MATÉRIAS ==========
 function loadMaterias(){
   db.ref('materias').on('value',(snap)=>{
@@ -596,10 +608,44 @@ async function createPost(){
 }
 
 async function criarPostModal(){
-  const t=$('post-texto-modal')?.value?.trim(), tp=$('post-tipo-modal')?.value||'post';
-  if(!t){ toast('Escreva algo','error'); return; }
-  await db.ref('posts').push({ texto:t, tipo:tp, autorId:STATE.user.uid, autorNome:STATE.userData.username, avatar:STATE.userData.avatar, createdAt:Date.now() });
-  closeModal('modal-post'); $('post-texto-modal').value=''; addPts(5); toast('Publicado!','success');
+  const t = document.getElementById('post-texto-modal')?.value?.trim();
+  const tp = document.getElementById('post-tipo-modal')?.value || 'post';
+  const imagemInput = document.getElementById('post-imagem');
+  
+  if(!t && !imagemInput?.files[0]){ 
+    showToast('Escreva algo ou adicione uma imagem', 'error'); 
+    return; 
+  }
+  
+  let imagemUrl = null;
+  
+  if (imagemInput && imagemInput.files[0]) {
+    showToast('⏳ Enviando imagem...', 'info');
+    const result = await uploadImage(imagemInput.files[0]);
+    if (result) {
+      imagemUrl = result.url;
+    } else {
+      showToast('Erro ao enviar imagem', 'error');
+      return;
+    }
+  }
+  
+  await db.ref('posts').push({ 
+    texto: t || '', 
+    tipo: tp, 
+    imagem: imagemUrl,
+    autorId: STATE.user.uid, 
+    autorNome: STATE.userData.username, 
+    avatar: STATE.userData.avatar, 
+    createdAt: Date.now() 
+  });
+  
+  closeModal('modal-post');
+  document.getElementById('post-texto-modal').value = '';
+  if (imagemInput) imagemInput.value = '';
+  document.getElementById('post-image-preview').innerHTML = '';
+  addPts(5);
+  showToast('Publicado!', 'success');
 }
 
 async function likePost(id){
@@ -1625,5 +1671,76 @@ loadNotifs = async function() {
   arr.forEach(x => { if (!x.lida) updates[x.id + '/lida'] = true; });
   if (Object.keys(updates).length) await db.ref('notificacoes/' + STATE.user.uid).update(updates);
 };
+// ============================================================
+// UPLOAD DE IMAGENS (ImgBB)
+// ============================================================
+const IMGBB_API_KEY = '86427cccd2a94fb42a0754ffd7f19e79'; // Substitua pela sua key
 
+async function uploadImage(file) {
+  // Converte o arquivo para Base64
+  const base64 = await fileToBase64(file);
+  
+  // Prepara o formulário
+  const formData = new FormData();
+  formData.append('key', IMGBB_API_KEY);
+  formData.append('image', base64.split(',')[1]); // Remove o prefixo "data:image/..."
+  
+  try {
+    const response = await fetch('https://api.imgbb.com/1/upload', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return {
+        url: data.data.url,           // URL direta da imagem
+        display_url: data.data.display_url, // URL da página
+        delete_url: data.data.delete_url    // URL para deletar
+      };
+    } else {
+      console.error('Erro no upload:', data);
+      return null;
+    }
+  } catch (error) {
+    console.error('Erro:', error);
+    return null;
+  }
+}
+
+// Converte arquivo para Base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadAvatar(input) {
+  if (!input.files[0]) return;
+  showToast('⏳ Enviando foto...', 'info');
+  const result = await uploadImage(input.files[0]);
+  if (result) {
+    await db.ref('usuarios/' + STATE.user.uid).update({ avatar: result.url });
+    STATE.userData.avatar = result.url;
+    updateUI();
+    showToast('Foto atualizada! 📷', 'success');
+  } else {
+    showToast('Erro ao enviar foto', 'error');
+  }
+}
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'post-imagem' && e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const preview = document.getElementById('post-image-preview');
+      if (preview) {
+        preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; max-height:200px; border-radius:10px; margin-top:5px;" />`;
+      }
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  }
+});
 console.log('✅ Sexta-Feira Studies PRONTO!');
