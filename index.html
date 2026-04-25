@@ -147,7 +147,7 @@
 
         <!-- CONTEÚDO PRINCIPAL -->
         <main class="app-main">
-            <!-- TELA HOME/ESTUDOS -->
+            <!-- TELA HOME -->
             <section id="screen-home" class="screen active">
                 <div class="welcome-banner">
                     <div class="banner-content">
@@ -191,21 +191,21 @@
             <section id="screen-subjects" class="screen">
                 <div class="screen-header">
                     <h2>📚 Matérias</h2>
-                    <button id="btn-new-subject" class="btn btn-primary btn-small">+ Nova Matéria</button>
+                    <button id="btn-new-subject" class="btn btn-primary btn-small">+ Nova</button>
                 </div>
 
                 <div id="create-subject-form" class="form-box" style="display: none;">
                     <h3>📝 Criar Nova Matéria</h3>
                     <div class="form-group">
-                        <label for="subject-title">Nome da Matéria</label>
-                        <input type="text" id="subject-title" class="form-input" placeholder="Ex: Matemática, História, Português">
+                        <label for="subject-title">Nome da Matéria *</label>
+                        <input type="text" id="subject-title" class="form-input" placeholder="Ex: Matemática, História" required>
                     </div>
                     <div class="form-group">
-                        <label for="subject-desc">Descrição</label>
-                        <textarea id="subject-desc" class="form-input" placeholder="Descreva o conteúdo da matéria..." style="min-height: 100px;"></textarea>
+                        <label for="subject-desc">Descrição (Opcional)</label>
+                        <textarea id="subject-desc" class="form-input" placeholder="Descreva o conteúdo..." style="min-height: 80px;"></textarea>
                     </div>
                     <div class="form-buttons">
-                        <button id="btn-create-subject" class="btn btn-primary">Criar Matéria</button>
+                        <button id="btn-create-subject" class="btn btn-primary">Criar</button>
                         <button id="btn-cancel-subject" class="btn btn-secondary">Cancelar</button>
                     </div>
                 </div>
@@ -217,8 +217,32 @@
                     <h3 id="detail-title"></h3>
                     <p id="detail-desc"></p>
 
+                    <!-- TÓPICOS/RESUMOS -->
                     <div class="detail-section">
-                        <h4>📋 Quizzes Disponíveis</h4>
+                        <h4>📖 Tópicos e Resumos</h4>
+                        <button id="btn-new-topic" class="btn btn-primary btn-small">+ Novo Tópico</button>
+                        <div id="topics-list" class="topics-grid"></div>
+                    </div>
+
+                    <div id="create-topic-form" class="form-box" style="display: none;">
+                        <h4>✍️ Criar Novo Tópico</h4>
+                        <div class="form-group">
+                            <label for="topic-title">Título do Tópico</label>
+                            <input type="text" id="topic-title" class="form-input" placeholder="Ex: Introdução ao Cálculo">
+                        </div>
+                        <div class="form-group">
+                            <label for="topic-content">Conteúdo</label>
+                            <textarea id="topic-content" class="form-input" placeholder="Escreva seu resumo aqui..." style="min-height: 150px;"></textarea>
+                        </div>
+                        <div class="form-buttons">
+                            <button id="btn-save-topic" class="btn btn-primary">Salvar Tópico</button>
+                            <button id="btn-cancel-topic" class="btn btn-secondary">Cancelar</button>
+                        </div>
+                    </div>
+
+                    <!-- QUIZZES -->
+                    <div class="detail-section">
+                        <h4>🎯 Quizzes</h4>
                         <button id="btn-new-quiz" class="btn btn-primary btn-small">+ Novo Quiz</button>
                         <div id="quizzes-list" class="quizzes-grid"></div>
                     </div>
@@ -230,7 +254,7 @@
                             <input type="text" id="quiz-title" class="form-input" placeholder="Ex: Quiz de Frações">
                         </div>
                         <div id="questions-container"></div>
-                        <button id="btn-add-question" class="btn btn-secondary btn-small">+ Adicionar Pergunta</button>
+                        <button id="btn-add-question" class="btn btn-secondary btn-small">+ Pergunta</button>
                         <div class="form-buttons">
                             <button id="btn-save-quiz" class="btn btn-primary">Salvar Quiz</button>
                             <button id="btn-cancel-quiz" class="btn btn-secondary">Cancelar</button>
@@ -255,7 +279,7 @@
                         <div id="answers-container" class="answers-grid"></div>
                     </div>
 
-                    <button id="btn-next-question" class="btn btn-primary btn-large" style="display: none;">Próxima Pergunta</button>
+                    <button id="btn-next-question" class="btn btn-primary btn-large" style="display: none; margin-top: 20px;">Próxima</button>
                 </div>
             </section>
 
@@ -269,7 +293,7 @@
                         <p class="score-label">pontos</p>
                     </div>
                     <p id="result-message" class="result-message"></p>
-                    <button id="btn-back-home" class="btn btn-primary btn-large">Voltar às Matérias</button>
+                    <button id="btn-back-home-result" class="btn btn-primary btn-large">Voltar</button>
                 </div>
             </section>
 
@@ -338,25 +362,31 @@
                     <button id="btn-add-friend" class="btn btn-primary btn-large">➕ Adicionar Amigo</button>
                     <div id="friends-list" class="friends-list"></div>
                 </div>
+
+                <div class="profile-section">
+                    <h3>🔐 Painel Administrativo</h3>
+                    <button id="btn-access-adm" class="btn btn-danger btn-large">⚙️ Acessar ADM</button>
+                </div>
             </section>
 
             <!-- TELA ADM -->
             <section id="screen-adm" class="screen">
                 <div class="adm-header">
                     <h2>⚙️ Painel Administrativo</h2>
+                    <button id="btn-exit-adm" class="btn btn-back">← Sair do Painel</button>
                 </div>
 
                 <div id="adm-login" class="form-box">
                     <h3>🔐 Acesso Restrito</h3>
-                    <p class="form-subtitle">Digite a senha para acessar o painel administrativo</p>
+                    <p class="form-subtitle">Digite a senha para acessar o painel</p>
                     <div class="form-group">
                         <label for="adm-password">Senha de Acesso</label>
                         <input type="password" id="adm-password" class="form-input" placeholder="Digite a senha">
                     </div>
-                    <button id="btn-adm-login" class="btn btn-primary btn-large">Entrar no Painel</button>
+                    <button id="btn-adm-login" class="btn btn-primary btn-large">Entrar</button>
                 </div>
 
-                <div id="adm-panel" class="adm-panel" style="display: none;">
+                <div id="adm-panel" class="adm-panel">
                     <div class="adm-section">
                         <h3>📚 Gerenciar Matérias</h3>
                         <div id="adm-subjects" class="adm-list"></div>
