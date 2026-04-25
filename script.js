@@ -177,7 +177,7 @@ function updateUI() {
 }
 
 // ========== NAVEGAÇÃO ==========
-function navigate(name) {
+ffunction navigate(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const t = $('screen-' + name);
   if (t) t.classList.add('active');
@@ -185,6 +185,11 @@ function navigate(name) {
   if (sidebar) sidebar.classList.remove('open');
   const overlay = $('sidebar-overlay');
   if (overlay) overlay.classList.remove('show');
+  
+  // 👇 ADICIONE ESTA LINHA AQUI
+  document.getElementById('main-content').scrollTop = 0;
+  window.scrollTo(0, 0);
+  
   if (name === 'home') loadHome();
   if (name === 'materias') loadMaterias();
   if (name === 'descobrir') loadFeed();
