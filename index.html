@@ -119,6 +119,7 @@
                 <h1 class="app-title">📚 Sexta-Feira</h1>
             </div>
             <div class="header-right">
+                <button id="btn-notifications" class="btn btn-icon notification-bell" title="Notificações" onclick="loadNotifications()">🔔</button>
                 <span id="user-display" class="user-display"></span>
                 <button id="btn-logout" class="btn btn-icon btn-logout" title="Sair">🚪</button>
             </div>
@@ -170,7 +171,7 @@
             <section id="screen-subjects" class="screen">
                 <div class="screen-header">
                     <h2>📚 Matérias</h2>
-                    <button id="btn-new-subject" class="btn btn-primary btn-small">+ Nova</button>
+                    <button id="btn-new-subject" class="btn btn-primary btn-small" onclick="openCreateSubject()">+ Nova</button>
                 </div>
 
                 <div id="create-subject-form" class="form-box" style="display: none;">
@@ -184,22 +185,22 @@
                         <textarea id="subject-desc" class="form-input" placeholder="Descreva o conteúdo..." style="min-height: 80px;"></textarea>
                     </div>
                     <div class="form-buttons">
-                        <button id="btn-create-subject" class="btn btn-primary">Criar</button>
-                        <button id="btn-cancel-subject" class="btn btn-secondary">Cancelar</button>
+                        <button type="button" id="btn-create-subject" class="btn btn-primary" onclick="createSubject()">Criar</button>
+                        <button type="button" id="btn-cancel-subject" class="btn btn-secondary" onclick="closeCreateSubject()">Cancelar</button>
                     </div>
                 </div>
 
                 <div id="subjects-container" class="subjects-grid"></div>
 
                 <div id="subject-detail" class="subject-detail" style="display: none;">
-                    <button id="btn-back-subject" class="btn btn-back">← Voltar</button>
+                    <button type="button" id="btn-back-subject" class="btn btn-back" onclick="backToSubjects()">← Voltar</button>
                     <h3 id="detail-title"></h3>
                     <p id="detail-desc"></p>
 
                     <!-- TÓPICOS/RESUMOS -->
                     <div class="detail-section">
                         <h4>📖 Tópicos e Resumos</h4>
-                        <button id="btn-new-topic" class="btn btn-primary btn-small">+ Novo Tópico</button>
+                        <button type="button" id="btn-new-topic" class="btn btn-primary btn-small" onclick="openCreateTopic()">+ Novo Tópico</button>
                         <div id="topics-list" class="topics-grid"></div>
                     </div>
 
@@ -214,15 +215,15 @@
                             <textarea id="topic-content" class="form-input" placeholder="Escreva seu resumo aqui..." style="min-height: 150px;"></textarea>
                         </div>
                         <div class="form-buttons">
-                            <button id="btn-save-topic" class="btn btn-primary">Salvar Tópico</button>
-                            <button id="btn-cancel-topic" class="btn btn-secondary">Cancelar</button>
+                            <button type="button" id="btn-save-topic" class="btn btn-primary" onclick="saveTopic()">Salvar Tópico</button>
+                            <button type="button" id="btn-cancel-topic" class="btn btn-secondary" onclick="closeCreateTopic()">Cancelar</button>
                         </div>
                     </div>
 
                     <!-- QUIZZES -->
                     <div class="detail-section">
                         <h4>🎯 Quizzes</h4>
-                        <button id="btn-new-quiz" class="btn btn-primary btn-small">+ Novo Quiz</button>
+                        <button type="button" id="btn-new-quiz" class="btn btn-primary btn-small" onclick="openCreateQuiz()">+ Novo Quiz</button>
                         <div id="quizzes-list" class="quizzes-grid"></div>
                     </div>
 
@@ -233,10 +234,10 @@
                             <input type="text" id="quiz-title" class="form-input" placeholder="Ex: Quiz de Frações">
                         </div>
                         <div id="questions-container"></div>
-                        <button id="btn-add-question" class="btn btn-secondary btn-small">+ Pergunta</button>
+                        <button type="button" id="btn-add-question" class="btn btn-secondary btn-small" onclick="addQuestion()">+ Pergunta</button>
                         <div class="form-buttons">
-                            <button id="btn-save-quiz" class="btn btn-primary">Salvar Quiz</button>
-                            <button id="btn-cancel-quiz" class="btn btn-secondary">Cancelar</button>
+                            <button type="button" id="btn-save-quiz" class="btn btn-primary" onclick="saveQuiz()">Salvar Quiz</button>
+                            <button type="button" id="btn-cancel-quiz" class="btn btn-secondary" onclick="closeCreateQuiz()">Cancelar</button>
                         </div>
                     </div>
                 </div>
@@ -244,7 +245,7 @@
 
             <!-- TELA QUIZ -->
             <section id="screen-quiz" class="screen">
-                <button id="btn-back-quiz" class="btn btn-back">← Voltar</button>
+                <button type="button" id="btn-back-quiz" class="btn btn-back" onclick="backToSubjects()">← Voltar</button>
                 <div class="quiz-container">
                     <div class="quiz-progress">
                         <div class="progress-bar">
@@ -258,7 +259,7 @@
                         <div id="answers-container" class="answers-grid"></div>
                     </div>
 
-                    <button id="btn-next-question" class="btn btn-primary btn-large" style="display: none; margin-top: 20px;">Próxima</button>
+                    <button type="button" id="btn-next-question" class="btn btn-primary btn-large" onclick="nextQuestion()" style="display: none; margin-top: 20px;">Próxima</button>
                 </div>
             </section>
 
@@ -291,7 +292,7 @@
                             </div>
                         </div>
 
-                        <button id="btn-back-home-result" class="btn btn-primary btn-large">🏠 Voltar ao Início</button>
+                        <button type="button" id="btn-back-home-result" class="btn btn-primary btn-large" onclick="showScreen('home')">🏠 Voltar ao Início</button>
                     </div>
                 </div>
             </section>
@@ -312,8 +313,8 @@
                 </div>
 
                 <div class="discover-tabs">
-                    <button class="discover-tab active" data-tab="subjects">📚 Matérias</button>
-                    <button class="discover-tab" data-tab="people">👥 Pessoas</button>
+                    <button type="button" class="discover-tab active" data-tab="subjects">📚 Matérias</button>
+                    <button type="button" class="discover-tab" data-tab="people">👥 Pessoas</button>
                 </div>
 
                 <div id="discover-subjects-tab" class="discover-tab-content active">
@@ -335,13 +336,13 @@
 
                 <div id="chat-window" class="chat-window" style="display: none;">
                     <div class="chat-top">
-                        <button id="btn-back-chat" class="btn btn-back">← Voltar</button>
+                        <button type="button" id="btn-back-chat" class="btn btn-back" onclick="backToChats()">← Voltar</button>
                         <h3 id="chat-title"></h3>
                     </div>
                     <div id="messages-container" class="messages-container"></div>
                     <div class="chat-input-box">
                         <input type="text" id="message-input" class="form-input" placeholder="Digite uma mensagem...">
-                        <button id="btn-send-message" class="btn btn-primary btn-small">Enviar</button>
+                        <button type="button" id="btn-send-message" class="btn btn-primary btn-small" onclick="sendMessage()">Enviar</button>
                     </div>
                 </div>
             </section>
@@ -375,19 +376,19 @@
 
                 <div class="profile-section">
                     <h3>⚙️ Configurações</h3>
-                    <button id="btn-edit-profile" class="btn btn-secondary btn-large">✏️ Editar Sala</button>
-                    <button id="btn-change-password" class="btn btn-secondary btn-large">🔐 Alterar Senha</button>
+                    <button type="button" id="btn-edit-profile" class="btn btn-secondary btn-large" onclick="openEditProfile()">✏️ Editar Sala</button>
+                    <button type="button" id="btn-change-password" class="btn btn-secondary btn-large" onclick="openChangePassword()">🔐 Alterar Senha</button>
                 </div>
 
                 <div class="profile-section">
                     <h3>👥 Meus Amigos</h3>
-                    <button id="btn-add-friend" class="btn btn-primary btn-large">➕ Adicionar Amigo</button>
+                    <button type="button" id="btn-add-friend" class="btn btn-primary btn-large" onclick="openAddFriend()">➕ Adicionar Amigo</button>
                     <div id="friends-list" class="friends-list"></div>
                 </div>
 
                 <div class="profile-section">
                     <h3>🔐 Painel Administrativo</h3>
-                    <button id="btn-access-adm" class="btn btn-danger btn-large">⚙️ Acessar ADM</button>
+                    <button type="button" id="btn-access-adm" class="btn btn-danger btn-large" onclick="showScreen('adm')">⚙️ Acessar ADM</button>
                 </div>
             </section>
 
@@ -395,7 +396,7 @@
             <section id="screen-adm" class="screen">
                 <div class="adm-header">
                     <h2>⚙️ Painel Administrativo</h2>
-                    <button id="btn-exit-adm" class="btn btn-back">← Sair do Painel</button>
+                    <button type="button" id="btn-exit-adm" class="btn btn-back" onclick="showScreen('profile')">← Sair do Painel</button>
                 </div>
 
                 <div id="adm-login" class="form-box">
@@ -406,17 +407,17 @@
                         <input type="password" id="adm-password" class="form-input" placeholder="Digite a senha">
                     </div>
                     <div id="adm-login-error" class="error-message"></div>
-                    <button id="btn-adm-login" class="btn btn-primary btn-large">Entrar</button>
+                    <button type="button" id="btn-adm-login" class="btn btn-primary btn-large" onclick="admLogin()">Entrar</button>
                 </div>
 
-                <div id="adm-panel" class="adm-panel">
+                <div id="adm-panel" class="adm-panel" style="display: none;">
                     <div class="adm-section">
                         <h3>💰 Depositar Pontos</h3>
                         <div class="form-group">
                             <label for="adm-points-amount">Quantidade de Pontos</label>
                             <input type="number" id="adm-points-amount" class="form-input" placeholder="Digite a quantidade" min="1">
                         </div>
-                        <button id="btn-deposit-points" class="btn btn-success btn-large">Depositar Pontos</button>
+                        <button type="button" id="btn-deposit-points" class="btn btn-success btn-large" onclick="depositPoints()">Depositar Pontos</button>
                     </div>
 
                     <div class="adm-section">
@@ -429,9 +430,9 @@
                         </div>
                         <div class="form-group">
                             <label for="adm-quiz-code">Código do Quiz</label>
-                            <textarea id="adm-quiz-code" class="form-input" placeholder="/q1 Pergunta aqui&#10;/a1 Opção 1&#10;/a2 Opção 2&#10;/a3 Opção 3&#10;/a4 Opção 4&#10;/c 1" style="min-height: 150px;"></textarea>
+                            <textarea id="adm-quiz-code" class="form-input" placeholder="/n Nome do Quiz&#10;/q1 Pergunta aqui&#10;/a1 Opção 1&#10;/a2 Opção 2&#10;/a3 Opção 3&#10;/a4 Opção 4&#10;/c 1" style="min-height: 150px;"></textarea>
                         </div>
-                        <button id="btn-create-quiz-code" class="btn btn-primary btn-large">Criar Quiz</button>
+                        <button type="button" id="btn-create-quiz-code" class="btn btn-primary btn-large" onclick="createQuizFromCode()">Criar Quiz</button>
                     </div>
 
                     <div class="adm-section">
@@ -449,36 +450,40 @@
                         <div id="adm-users" class="adm-list"></div>
                     </div>
 
-                    <button id="btn-adm-logout" class="btn btn-danger btn-large">Sair do Painel</button>
+                    <button type="button" id="btn-adm-logout" class="btn btn-danger btn-large" onclick="admLogout()">Sair do Painel</button>
                 </div>
             </section>
         </main>
 
         <!-- BOTTOM NAVIGATION -->
         <nav class="bottom-nav">
-            <button class="nav-item active" data-screen="home" title="Home">
+            <button type="button" class="nav-item active" data-screen="home" title="Home">
                 <span class="nav-icon">🏠</span>
                 <span class="nav-label">Home</span>
             </button>
-            <button class="nav-item" data-screen="subjects" title="Estudos">
+            <button type="button" class="nav-item" data-screen="subjects" title="Estudos">
                 <span class="nav-icon">📚</span>
                 <span class="nav-label">Estudos</span>
             </button>
-            <button class="nav-item" data-screen="discover" title="Descobrir">
+            <button type="button" class="nav-item" data-screen="discover" title="Descobrir">
                 <span class="nav-icon">🔍</span>
                 <span class="nav-label">Descobrir</span>
             </button>
-            <button class="nav-item" data-screen="chat" title="Chat">
+            <button type="button" class="nav-item" data-screen="chat" title="Chat">
                 <span class="nav-icon">💬</span>
                 <span class="nav-label">Chat</span>
             </button>
-            <button class="nav-item" data-screen="profile" title="Perfil">
+            <button type="button" class="nav-item" data-screen="profile" title="Perfil">
                 <span class="nav-icon">👤</span>
                 <span class="nav-label">Perfil</span>
             </button>
         </nav>
     </div>
 
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    
     <script src="script.js"></script>
 </body>
 </html>
