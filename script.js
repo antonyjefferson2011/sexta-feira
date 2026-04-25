@@ -585,67 +585,26 @@ async function searchUsers() {
 function renderUserList(users) {
   const arr = Object.entries(users).map(([id, u]) => ({ id, ...u })).sort((a, b) => (b.points || 0) - (a.points || 0));
   const c = $('descobrir-feed');
-  c.innerHTML = arr.map(u => `
-    <div class="card" onclick="${u.id === S.user?.uid ? "navigate('perfil')" : "verPerfil('" + u.id + "')"}" style="cursor:pointer;display:flex;align-items:center;gap:10px;">
-      <div style="width:40px;height:40px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${u.avatar || '?'}</div>
-      <div style="flex:1;">
-        <strong>${esc(u.username)}</strong> ${u.id === S.user?.uid ? '<span style="background:#6C5CE7;color:white;padding:2px 8px;border-radius:10px;font-size:10px;">Você</span>' : ''}
-        <br><span style="font-size:12px;color:var(--text3);">⭐ ${fmt(u.points)} pts · 👥 ${u.seguidores || 0} seguidores</span>
-      </div>
-      ${u.id !== S.user?.uid ? `<button class="btn btn-primary btn-sm btn-follow" data-uid="${u.id}" onclick="event.stopPropagation();toggleFollowUser('${u.id}',this)">⏳</button>` : ''}
-    </div>
-  `).join('');
-  
-  // 👇 ADICIONE ISSO AQUI
-  updateFollowButtons();
+  c.innerHTML = arr.map(u => `<div class="card" onclick="${u.id === S.user?.uid ? "navigate('perfil')" : "verPerfil('" + u.id + "')"}" style="cursor:pointer;display:flex;align-items:center;gap:10px;">
+    <div style="width:40px;height:40px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${u.avatar || '?'}</div>
+    <div style="flex:1;"><strong>${esc(u.username)}</strong> ${u.id === S.user?.uid ? '<span style="background:#6C5CE7;color:white;padding:2px 8px;border-radius:10px;font-size:10px;">Você</span>' : ''}<br><span style="font-size:12px;color:var(--text3);">⭐ ${fmt(u.points)} pts · 👥 ${u.seguidores || 0} seguidores</span></div>
+    ${u.id !== S.user?.uid ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();toggleFollowUser('${u.id}',this)">Seguir</button>` : ''}
+  </div>`).join('');
 }
-aasync function toggleFollowUser(uid, btn) {
+
+async function toggleFollowUser(uid, btn) {
   if (!S.user) return;
-  
   const ref = db.ref('seguidores/' + S.user.uid + '/' + uid);
   const snap = await ref.once('value');
-  
   if (snap.val()) {
-    // DEIXAR DE SEGUIR
     await ref.remove();
     await db.ref('seguindo/' + uid + '/' + S.user.uid).remove();
-    
-    // Atualizar contagem no perfil do usuário
-    const uSnap = await db.ref('usuarios/' + uid).once('value');
-    const u = uSnap.val();
-    if (u) await db.ref('usuarios/' + uid).update({ seguidores: Math.max((u.seguidores || 1) - 1, 0) });
-    
-    // Atualizar botão
-    if (btn) {
-      btn.textContent = '👥 Seguir';
-      btn.style.background = '#6C5CE7';
-      btn.classList.remove('following');
-    }
-    toast('Deixou de seguir', 'info');
-    
+    if (btn) btn.textContent = 'Seguir';
   } else {
-    // SEGUIR
     await ref.set(true);
     await db.ref('seguindo/' + uid + '/' + S.user.uid).set(true);
-    
-    // Atualizar contagem
-    const uSnap = await db.ref('usuarios/' + uid).once('value');
-    const u = uSnap.val();
-    if (u) await db.ref('usuarios/' + uid).update({ seguidores: (u.seguidores || 0) + 1 });
-    
-    // Notificar
-    await db.ref('notificacoes/' + uid).push({
-      mensagem: '👥 ' + S.ud.username + ' começou a te seguir!',
-      tipo: 'follow', lida: false, createdAt: Date.now()
-    });
-    
-    // Atualizar botão
-    if (btn) {
-      btn.textContent = '✅ Seguindo';
-      btn.style.background = '#10b981';
-      btn.classList.add('following');
-    }
-    toast('Seguindo! 👥', 'success');
+    await db.ref('notificacoes/' + uid).push({ mensagem: '👥 ' + S.ud.username + ' te seguiu!', tipo: 'follow', lida: false, createdAt: Date.now() });
+    if (btn) { btn.textContent = '✅ Seguindo'; btn.style.background = '#10b981'; }
   }
 }
 // ========== CHAT ==========
@@ -824,7 +783,11 @@ async function verPerfil(uid) {
   const snap = await db.ref('usuarios/' + uid).once('value');
   const u = snap.val();
   if (!u) return;
-  
+
+  // Verificar se segue ANTES de montar o HTML
+  const fSnap = await db.ref('seguidores/' + S.user.uid + '/' + uid).once('value');
+  const isFollowing = fSnap.val() ? true : false;
+
   $('user-profile-content').innerHTML = `
     <div style="text-align:center;">
       <div style="font-size:60px;">${u.avatar || '🎓'}</div>
@@ -834,16 +797,36 @@ async function verPerfil(uid) {
         <span style="background:var(--hover);padding:5px 12px;border-radius:15px;font-weight:600;">⭐ ${fmt(u.points || 0)} pts</span>
         <span style="background:var(--hover);padding:5px 12px;border-radius:15px;font-weight:600;margin-left:5px;">👥 ${u.seguidores || 0} seguidores</span>
       </div>
-      <button class="btn btn-primary btn-full" onclick="toggleFollowUser('${uid}');closeModal('user');" style="margin-top:8px;">
-        ${(await db.ref('seguidores/'+S.user.uid+'/'+uid).once('value')).val() ? '✅ Seguindo' : '👥 Seguir'}
+      <button class="btn btn-primary btn-full" id="btn-follow-modal" onclick="toggleFollowUserModal('${uid}')" style="margin-top:8px;background:${isFollowing ? '#10b981' : '#6C5CE7'};">
+        ${isFollowing ? '✅ Seguindo' : '👥 Seguir'}
       </button>
       <button class="btn btn-green btn-full" onclick="closeModal('user');navigate('chat');setTimeout(()=>openPV('${uid}'),500);" style="margin-top:5px;">
         💬 Enviar Mensagem
       </button>
     </div>
   `;
-  
+
   openModal('user');
+}
+
+// Nova função para seguir do modal
+async function toggleFollowUserModal(uid) {
+  const ref = db.ref('seguidores/' + S.user.uid + '/' + uid);
+  const snap = await ref.once('value');
+  const btn = document.getElementById('btn-follow-modal');
+
+  if (snap.val()) {
+    await ref.remove();
+    await db.ref('seguindo/' + uid + '/' + S.user.uid).remove();
+    if (btn) { btn.textContent = '👥 Seguir'; btn.style.background = '#6C5CE7'; }
+    toast('Deixou de seguir', 'info');
+  } else {
+    await ref.set(true);
+    await db.ref('seguindo/' + uid + '/' + S.user.uid).set(true);
+    await db.ref('notificacoes/' + uid).push({ mensagem: '👥 ' + S.ud.username + ' te seguiu!', tipo: 'follow', lida: false, createdAt: Date.now() });
+    if (btn) { btn.textContent = '✅ Seguindo'; btn.style.background = '#10b981'; }
+    toast('Seguindo! 👥', 'success');
+  }
 }
 
 async function showFollowers() {
@@ -985,29 +968,5 @@ document.addEventListener('keydown', (e) => {
     document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
   }
 });
-// ========== ATUALIZAR BOTÕES DE SEGUIR ==========
-async function updateFollowButtons() {
-  if (!S.user) return;
-  
-  const btns = document.querySelectorAll('.btn-follow');
-  
-  for (const btn of btns) {
-    const uid = btn.getAttribute('data-uid');
-    if (!uid) continue;
-    
-    const snap = await db.ref('seguidores/' + S.user.uid + '/' + uid).once('value');
-    
-    if (snap.val()) {
-      btn.textContent = '✅ Seguindo';
-      btn.style.background = '#10b981';
-      btn.classList.add('following');
-    } else {
-      btn.textContent = '👥 Seguir';
-      btn.style.background = '#6C5CE7';
-      btn.classList.remove('following');
-    }
-  }
-}
 
-console.log('✅ Sexta-Feira Studies PRONTO!');
 console.log('✅ Sexta-Feira Studies PRONTO!');
