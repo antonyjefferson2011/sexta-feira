@@ -40,6 +40,10 @@
                 <button class="nav-btn" data-screen="subjects">📚 Matérias</button>
                 <button class="nav-btn" data-screen="ranking">🏆 Ranking</button>
                 <button class="nav-btn" data-screen="history">📜 Histórico</button>
+                <button class="nav-btn" data-screen="chat">💬 Chat</button>
+                <div id="admin-panel" style="display: none;">
+                    <button class="nav-btn" data-screen="admin">⚙️ Admin</button>
+                </div>
                 <button id="logout-btn" class="btn-secondary">Sair</button>
             </div>
         </nav>
@@ -68,8 +72,17 @@
                 <button id="back-to-subjects-btn" class="btn-back">Voltar</button>
                 <h2 id="subject-title-display"></h2>
                 <p id="subject-description-display"></p>
+                <button id="create-topic-btn" class="btn-primary">Criar Tópico</button>
                 <button id="create-quiz-btn" class="btn-primary">Criar Quiz</button>
+                <div id="topics-list" class="grid-list"></div>
                 <div id="quizzes-list" class="grid-list"></div>
+            </div>
+            <div id="topic-create-screen" class="screen" style="display: none;">
+                <h1>Criar Tópico</h1>
+                <input type="text" id="topic-title" placeholder="Título do Tópico" required>
+                <textarea id="topic-content" placeholder="Conteúdo/Resumo" required></textarea>
+                <button id="save-topic-btn" class="btn-primary">Salvar</button>
+                <button id="back-to-subject-btn" class="btn-secondary">Voltar</button>
             </div>
             <div id="quiz-create-screen" class="screen" style="display: none;">
                 <h1>Criar Quiz</h1>
@@ -118,6 +131,21 @@
             <div id="history-screen" class="screen" style="display: none;">
                 <h1>Histórico</h1>
                 <div id="history-list" class="list"></div>
+            </div>
+            <div id="chat-screen" class="screen" style="display: none;">
+                <h1>Chat Geral</h1>
+                <div id="chat-messages" class="chat-messages"></div>
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="500">
+                    <button id="send-message-btn" class="btn-primary">Enviar</button>
+                </div>
+            </div>
+            <div id="admin-screen" class="screen" style="display: none;">
+                <h1>Painel Admin</h1>
+                <h2>Gerenciar Matérias</h2>
+                <div id="admin-subjects-list" class="list"></div>
+                <h2>Gerenciar Quizzes</h2>
+                <div id="admin-quizzes-list" class="list"></div>
             </div>
         </div>
     </div>
