@@ -1,629 +1,684 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const pages = document.querySelectorAll('.page');
-    const navLinks = document.querySelectorAll('nav a');
-    const userNameDisplay = document.getElementById('userNameDisplay');
-    const footerUserName = document.getElementById('footerUserName');
-    const rankingUserName = document.getElementById('rankingUserName');
-    const historicoUserName = document.getElementById('historicoUserName');
-    const changeNameBtn = document.getElementById('changeNameBtn');
+// script.js
 
-    const materiaModal = document.getElementById('materia-modal');
-    const materiaNameInput = document.getElementById('materia-name-input');
-    const materiaDescriptionInput = document.getElementById('materia-description-input');
-    const saveMateriaBtn = document.getElementById('save-materia-btn');
-    const addMateriaBtn = document.getElementById('addMateriaBtn');
-    const closeMateriaModal = materiaModal.querySelector('.close-button');
-    const materiasListDiv = document.getElementById('materias-list');
+// --- Firebase Configuration ---
+const firebaseConfig = {
+    apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+    authDomain: "sexta-feira-fb01a.firebaseapp.com",
+    projectId: "sexta-feira-fb01a",
+    storageBucket: "sexta-feira-fb01a.firebasestorage.app",
+    messagingSenderId: "82809140147",
+    appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
+};
 
-    const topicoModal = document.getElementById('topico-modal');
-    const topicoTitleInput = document.getElementById('topico-title-input');
-    const topicoContentInput = document.getElementById('topico-content-input');
-    const saveTopicoBtn = document.getElementById('save-topico-btn');
-    const addTopicoBtn = document.getElementById('addTopicoBtn');
-    const closeTopicoModal = topicoModal.querySelector('.close-button');
-    const topicosListDiv = document.getElementById('topicos-list');
-    let currentMateriaId = null;
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
-    const quizListDiv = document.getElementById('quizzes-available');
-    const createQuizBtn = document.getElementById('createQuizBtn');
-    const quizTitleInput = document.getElementById('quiz-title-input');
-    const questionsContainer = document.getElementById('questions-container');
-    const addQuestionBtn = document.getElementById('add-question-btn');
-    const saveQuizBtn = document.getElementById('save-quiz-btn');
-    const cancelCreateQuizBtn = document.getElementById('cancel-create-quiz-btn');
-    const playQuizTitle = document.getElementById('play-quiz-title');
-    const questionDisplay = document.getElementById('question-display');
-    const alternativesDisplay = document.getElementById('alternatives-display');
-    const nextQuestionBtn = document.getElementById('next-question-btn');
-    const finishQuizBtn = document.getElementById('finish-quiz-btn');
-    const refazerQuizBtn = document.getElementById('refazer-quiz-btn');
-    const backToQuizListBtn = document.querySelectorAll('#play-quiz .btn-secondary');
-    const quizResultSection = document.getElementById('quiz-result');
-    const resultQuizTitle = document.getElementById('result-quiz-title');
-    const scoreDisplay = document.getElementById('score-display');
-    const correctAnswersDisplay = document.getElementById('correct-answers-display');
-    const incorrectAnswersDisplay = document.getElementById('incorrect-answers-display');
-    const refazerQuizBtnResult = document.getElementById('refazer-quiz-btn-result');
-    const backToQuizListBtnResult = document.getElementById('backToQuizListBtn-result');
+// Get Firebase services
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    const rankingListUl = document.getElementById('ranking-list');
-    const historicoListUl = document.getElementById('historico-list');
+// --- DOM Elements ---
+const authSection = document.getElementById('auth-section');
+const dashboardSection = document.getElementById('dashboard-section');
+const subjectsContainer = document.getElementById('subjects-container');
+const subjectsList = document.getElementById('subjects-list');
+const subjectDetailSection = document.getElementById('subject-detail-section');
+const currentSubjectTitle = document.getElementById('current-subject-title');
+const currentSubjectDescription = document.getElementById('current-subject-description');
+const topicsList = document.getElementById('topics-list');
+const quizzesList = document.getElementById('quizzes-list');
+const quizPlayContainer = document.getElementById('quiz-play-container');
+const questionContainer = document.getElementById('question-container');
+const optionsContainer = document.getElementById('options-container');
+const nextQuestionBtn = document.getElementById('next-question-btn');
+const quizResults = document.getElementById('quiz-results');
+const rankingSection = document.getElementById('ranking-section');
+const historySection = document.getElementById('history-section');
+const loggedInUserSpan = document.getElementById('loggedInUser');
+const logoutBtn = document.getElementById('logout-btn');
 
-    const POINTS_PER_CORRECT_ANSWER = 10;
-    const LOCAL_STORAGE_KEY_USER = 'sfStudiesUserName';
-    const LOCAL_STORAGE_KEY_MATERIAS = 'sfStudiesMaterias';
-    const LOCAL_STORAGE_KEY_QUIZZES = 'sfStudiesQuizzes';
-    const LOCAL_STORAGE_KEY_USER_STATS = 'sfStudiesUserStats';
-    const LOCAL_STORAGE_KEY_HISTORY = 'sfStudiesHistory';
+// Auth Inputs
+const loginEmailInput = document.getElementById('login-email');
+const loginPasswordInput = document.getElementById('login-password');
+const loginBtn = document.getElementById('login-btn');
+const signupNameInput = document.getElementById('signup-name');
+const signupEmailInput = document.getElementById('signup-email');
+const signupPasswordInput = document.getElementById('signup-password');
+const signupClassInput = document.getElementById('signup-class');
+const signupBtn = document.getElementById('signup-btn');
 
-    let currentUser = localStorage.getItem(LOCAL_STORAGE_KEY_USER) || 'Visitante';
-    let materias = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_MATERIAS)) || [];
-    let quizzes = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_QUIZZES)) || [];
-    let userStats = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_USER_STATS)) || {};
-    let quizHistory = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_HISTORY)) || [];
+// Profile Info
+const profileNameSpan = document.getElementById('profile-name');
+const profileClassSpan = document.getElementById('profile-class');
+const profilePointsSpan = document.getElementById('profile-points');
 
-    let currentQuizData = null;
-    let currentQuestionIndex = 0;
-    let score = 0;
-    let correctAnswersCount = 0;
-    let incorrectAnswersCount = 0;
+// Modals
+const modalOverlay = document.getElementById('modal-overlay');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+const closeModalBtn = document.getElementById('close-modal-btn');
 
-    // --- Navigation ---
-    function showPage(pageId) {
-        pages.forEach(page => {
-            page.classList.remove('active');
-        });
-        document.getElementById(pageId).classList.add('active');
+// Buttons
+const createSubjectBtn = document.getElementById('create-subject-btn');
+const viewRankingBtn = document.getElementById('view-ranking-btn');
+const viewHistoryBtn = document.getElementById('view-history-btn');
+const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+const backToDashboardFromRankingBtn = document.getElementById('back-to-dashboard-from-ranking-btn');
+const backToDashboardFromHistoryBtn = document.getElementById('back-to-dashboard-from-history-btn');
+const createTopicBtn = document.getElementById('create-topic-btn');
+const createQuizBtn = document.getElementById('create-quiz-btn');
+const playAgainBtn = document.getElementById('play-again-btn');
 
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('data-nav') === pageId) {
-                link.classList.add('active');
-            }
-        });
-        loadContentForPage(pageId);
+// --- State Variables ---
+let currentUser = null;
+let currentSubjectId = null;
+let currentQuizId = null;
+let currentQuizData = null;
+let currentQuestionIndex = 0;
+let userScore = 0;
+let correctAnswersCount = 0;
+
+// --- Helper Functions ---
+function showSection(sectionId) {
+    document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.classList.remove('hidden');
+        section.classList.add('animated-fade-in');
+    }
+}
+
+function showModal(title, contentHtml) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = contentHtml;
+    modalOverlay.classList.remove('hidden');
+    modal.classList.remove('hidden');
+}
+
+function hideModal() {
+    modalOverlay.classList.add('hidden');
+    modal.classList.add('hidden');
+    modalBody.innerHTML = ''; // Clear content
+}
+
+function displayError(message) {
+    console.error('Error:', message);
+    alert(`Ocorreu um erro: ${message}`);
+}
+
+function clearForm(formElement) {
+    formElement.querySelectorAll('input').forEach(input => input.value = '');
+}
+
+// --- Authentication ---
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUser = user;
+        loggedInUserSpan.textContent = user.displayName || user.email;
+        logoutBtn.classList.remove('hidden');
+        fetchUserProfile();
+        loadDashboard();
+        showSection('dashboard-section');
+    } else {
+        currentUser = null;
+        loggedInUserSpan.textContent = '';
+        logoutBtn.classList.add('hidden');
+        showSection('auth-section');
+        clearForm(document.querySelector('#auth-section .auth-form:nth-of-type(1)')); // Clear login form
+        clearForm(document.querySelector('#auth-section .auth-form:nth-of-type(2)')); // Clear signup form
+    }
+});
+
+loginBtn.addEventListener('click', async () => {
+    const email = loginEmailInput.value;
+    const password = loginPasswordInput.value;
+
+    if (!email || !password) {
+        alert('Por favor, preencha todos os campos de login.');
+        return;
     }
 
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const pageId = e.target.getAttribute('data-nav');
-            showPage(pageId);
-        });
-    });
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch (error) {
+        displayError(`Falha ao fazer login: ${error.message}`);
+    }
+});
 
-    function loadContentForPage(pageId) {
-        switch (pageId) {
-            case 'home':
-                updateUserNameDisplay();
-                break;
-            case 'materias':
-                renderMaterias();
-                break;
-            case 'quiz-list':
-                renderAvailableQuizzes();
-                break;
-            case 'ranking':
-                renderRanking();
-                break;
-            case 'historico':
-                renderHistory();
-                break;
-        }
+signupBtn.addEventListener('click', async () => {
+    const name = signupNameInput.value;
+    const email = signupEmailInput.value;
+    const password = signupPasswordInput.value;
+    const className = signupClassInput.value;
+
+    if (!name || !email || !password || !className) {
+        alert('Por favor, preencha todos os campos de cadastro.');
+        return;
     }
 
-    // --- User Management ---
-    function updateUserNameDisplay() {
-        userNameDisplay.textContent = `Criado por: ${currentUser}`;
-        footerUserName.textContent = currentUser;
-        rankingUserName.textContent = currentUser;
-        historicoUserName.textContent = currentUser;
-    }
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        await userCredential.user.updateProfile({ displayName: name });
 
-    changeNameBtn.addEventListener('click', () => {
-        const newName = prompt("Qual o seu nome?", currentUser);
-        if (newName && newName.trim() !== '') {
-            currentUser = newName.trim();
-            localStorage.setItem(LOCAL_STORAGE_KEY_USER, currentUser);
-            updateUserNameDisplay();
-            // Update user stats if they exist
-            if (userStats[currentUser]) {
-                userStats[currentUser].name = currentUser;
-            }
-            saveUserStats();
-        }
-    });
-
-    // --- Materias Management ---
-    function saveMaterias() {
-        localStorage.setItem(LOCAL_STORAGE_KEY_MATERIAS, JSON.stringify(materias));
-    }
-
-    function renderMaterias() {
-        materiasListDiv.innerHTML = '';
-        if (materias.length === 0) {
-            materiasListDiv.innerHTML = '<p>Nenhuma matéria adicionada ainda. Clique no "+" para criar uma.</p>';
-            return;
-        }
-        materias.forEach(materia => {
-            const card = document.createElement('div');
-            card.classList.add('card');
-            card.innerHTML = `
-                <h3>${materia.name}</h3>
-                <p>${materia.description}</p>
-                <span class="author">Autor: ${materia.author || currentUser}</span>
-            `;
-            card.addEventListener('click', () => {
-                currentMateriaId = materia.id;
-                document.getElementById('materia-detail-title').textContent = materia.name;
-                document.getElementById('materia-detail-description').textContent = materia.description;
-                renderTopicos(materia.id);
-                showPage('materia-detail');
-            });
-            materiasListDiv.appendChild(card);
-        });
-    }
-
-    addMateriaBtn.addEventListener('click', () => {
-        materiaNameInput.value = '';
-        materiaDescriptionInput.value = '';
-        materiaModal.style.display = 'block';
-    });
-
-    closeMateriaModal.addEventListener('click', () => {
-        materiaModal.style.display = 'none';
-    });
-
-    saveMateriaBtn.addEventListener('click', () => {
-        const name = materiaNameInput.value.trim();
-        const description = materiaDescriptionInput.value.trim();
-
-        if (!name) {
-            alert('O nome da matéria é obrigatório.');
-            return;
-        }
-
-        const newMateria = {
-            id: Date.now().toString(),
+        // Save user data to Firestore
+        await db.collection('users').doc(userCredential.user.uid).set({
             name: name,
-            description: description,
-            topics: [],
-            author: currentUser
-        };
-        materias.push(newMateria);
-        saveMaterias();
-        renderMaterias();
-        materiaModal.style.display = 'none';
-    });
+            email: email,
+            class: className,
+            points: 0,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-    // --- Tópicos Management ---
-    function saveTopicsForMateria(materiaId) {
-        const materiaIndex = materias.findIndex(m => m.id === materiaId);
-        if (materiaIndex !== -1) {
-            materias[materiaIndex].topics = materias[materiaIndex].topics;
-            saveMaterias();
-        }
+        alert('Conta criada com sucesso! Faça login para continuar.');
+        showSection('auth-section'); // Return to login
+        clearForm(document.querySelector('#auth-section .auth-form:nth-of-type(2)')); // Clear signup form
+
+    } catch (error) {
+        displayError(`Falha ao criar conta: ${error.message}`);
     }
+});
 
-    function renderTopicos(materiaId) {
-        topicosListDiv.innerHTML = '';
-        const materia = materias.find(m => m.id === materiaId);
-        if (!materia || materia.topics.length === 0) {
-            topicosListDiv.innerHTML = '<p>Nenhum tópico adicionado para esta matéria.</p>';
+logoutBtn.addEventListener('click', async () => {
+    try {
+        await auth.signOut();
+        alert('Logout realizado com sucesso!');
+    } catch (error) {
+        displayError(`Falha ao fazer logout: ${error.message}`);
+    }
+});
+
+// --- User Profile ---
+async function fetchUserProfile() {
+    if (!currentUser) return;
+
+    try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            profileNameSpan.textContent = userData.name;
+            profileClassSpan.textContent = userData.class;
+            profilePointsSpan.textContent = userData.points || 0;
+        }
+    } catch (error) {
+        displayError(`Erro ao carregar perfil do usuário: ${error.message}`);
+    }
+}
+
+// --- Dashboard and Subjects ---
+function loadDashboard() {
+    subjectsList.innerHTML = ''; // Clear existing subjects
+    db.collection('subjects').where('ownerId', '==', currentUser.uid).get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                subjectsList.innerHTML = '<p>Você ainda não criou nenhuma matéria. Clique em "Criar Matéria" para começar!</p>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const subject = { id: doc.id, ...doc.data() };
+                const subjectCard = document.createElement('div');
+                subjectCard.classList.add('subject-card');
+                subjectCard.innerHTML = `
+                    <h4>${subject.name}</h4>
+                    <p>${subject.description}</p>
+                    <button class="view-subject-btn" data-subject-id="${subject.id}">Ver Matéria</button>
+                `;
+                subjectsList.appendChild(subjectCard);
+            });
+        })
+        .catch(error => {
+            displayError(`Erro ao carregar matérias: ${error.message}`);
+        });
+}
+
+createSubjectBtn.addEventListener('click', () => {
+    showModal('Criar Nova Matéria', `
+        <input type="text" id="modal-subject-name" placeholder="Nome da Matéria">
+        <textarea id="modal-subject-description" placeholder="Descrição da Matéria"></textarea>
+        <button id="save-subject-btn">Salvar Matéria</button>
+    `);
+
+    document.getElementById('save-subject-btn').addEventListener('click', async () => {
+        const name = document.getElementById('modal-subject-name').value;
+        const description = document.getElementById('modal-subject-description').value;
+
+        if (!name || !description) {
+            alert('Por favor, preencha nome e descrição da matéria.');
             return;
         }
-        materia.topics.forEach(topico => {
-            const topicElement = document.createElement('div');
-            topicElement.classList.add('card');
-            topicElement.innerHTML = `
-                <h3>${topico.title}</h3>
-                <p>${topico.content}</p>
-                <span class="author">Autor: ${topico.author || currentUser}</span>
-            `;
-            topicosListDiv.appendChild(topicElement);
-        });
-    }
 
-    addTopicoBtn.addEventListener('click', () => {
-        if (currentMateriaId) {
-            topicoTitleInput.value = '';
-            topicoContentInput.value = '';
-            topicoModal.style.display = 'block';
-        } else {
-            alert('Selecione uma matéria primeiro.');
+        try {
+            await db.collection('subjects').add({
+                name: name,
+                description: description,
+                ownerId: currentUser.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            hideModal();
+            loadDashboard();
+        } catch (error) {
+            displayError(`Erro ao criar matéria: ${error.message}`);
         }
     });
+});
 
-    closeTopicoModal.addEventListener('click', () => {
-        topicoModal.style.display = 'none';
-    });
+// Event delegation for viewing subjects
+subjectsList.addEventListener('click', (event) => {
+    if (event.target.classList.contains('view-subject-btn')) {
+        currentSubjectId = event.target.dataset.subjectId;
+        loadSubjectDetails(currentSubjectId);
+    }
+});
 
-    saveTopicoBtn.addEventListener('click', () => {
-        const title = topicoTitleInput.value.trim();
-        const content = topicoContentInput.value.trim();
+function loadSubjectDetails(subjectId) {
+    db.collection('subjects').doc(subjectId).get()
+        .then(doc => {
+            if (!doc.exists) {
+                alert('Matéria não encontrada.');
+                return;
+            }
+            const subjectData = doc.data();
+            currentSubjectTitle.textContent = subjectData.name;
+            currentSubjectDescription.textContent = subjectData.description;
+
+            loadTopics(subjectId);
+            loadQuizzes(subjectId);
+
+            showSection('subject-detail-section');
+        })
+        .catch(error => {
+            displayError(`Erro ao carregar detalhes da matéria: ${error.message}`);
+        });
+}
+
+function loadTopics(subjectId) {
+    topicsList.innerHTML = '';
+    db.collection('subjects').doc(subjectId).collection('topics').orderBy('createdAt').get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                topicsList.innerHTML = '<li>Nenhum tópico encontrado para esta matéria.</li>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const topic = { id: doc.id, ...doc.data() };
+                const topicItem = document.createElement('li');
+                topicItem.innerHTML = `
+                    <div>
+                        <strong>${topic.title}</strong>
+                        <p>${topic.content}</p>
+                    </div>
+                `;
+                topicsList.appendChild(topicItem);
+            });
+        })
+        .catch(error => {
+            displayError(`Erro ao carregar tópicos: ${error.message}`);
+        });
+}
+
+createTopicBtn.addEventListener('click', () => {
+    showModal('Criar Novo Tópico', `
+        <input type="text" id="modal-topic-title" placeholder="Título do Tópico">
+        <textarea id="modal-topic-content" placeholder="Conteúdo do Tópico"></textarea>
+        <button id="save-topic-btn">Salvar Tópico</button>
+    `);
+
+    document.getElementById('save-topic-btn').addEventListener('click', async () => {
+        const title = document.getElementById('modal-topic-title').value;
+        const content = document.getElementById('modal-topic-content').value;
 
         if (!title || !content) {
-            alert('Título e conteúdo do tópico são obrigatórios.');
+            alert('Por favor, preencha título e conteúdo do tópico.');
             return;
         }
 
-        if (currentMateriaId) {
-            const materiaIndex = materias.findIndex(m => m.id === currentMateriaId);
-            if (materiaIndex !== -1) {
-                materias[materiaIndex].topics.push({
-                    id: Date.now().toString(),
-                    title: title,
-                    content: content,
-                    author: currentUser
-                });
-                saveMaterias();
-                renderTopicos(currentMateriaId);
-                topicoModal.style.display = 'none';
-            }
-        }
-    });
-
-    document.getElementById('backToMateriasBtn').addEventListener('click', () => {
-        showPage('materias');
-    });
-
-    // --- Quiz Management ---
-    function saveQuizzes() {
-        localStorage.setItem(LOCAL_STORAGE_KEY_QUIZZES, JSON.stringify(quizzes));
-    }
-
-    function renderAvailableQuizzes() {
-        quizListDiv.innerHTML = '';
-        if (quizzes.length === 0) {
-            quizListDiv.innerHTML = '<p>Nenhum quiz criado ainda. Clique em "Criar Novo Quiz".</p>';
-            return;
-        }
-        quizzes.forEach((quiz, index) => {
-            const card = document.createElement('div');
-            card.classList.add('card');
-            card.innerHTML = `
-                <h3>${quiz.title}</h3>
-                <p>${quiz.questions.length} perguntas</p>
-                <button class="btn-secondary play-quiz-btn" data-quiz-id="${quiz.id}">Jogar</button>
-            `;
-            quizListDiv.appendChild(card);
-        });
-
-        document.querySelectorAll('.play-quiz-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const quizId = e.target.getAttribute('data-quiz-id');
-                startQuiz(quizId);
-            });
-        });
-    }
-
-    createQuizBtn.addEventListener('click', () => {
-        showPage('create-quiz');
-        quizTitleInput.value = '';
-        questionsContainer.innerHTML = '';
-        currentQuestionIndex = 0; // Reset for new quiz creation
-    });
-
-    addQuestionBtn.addEventListener('click', () => {
-        addQuestion();
-    });
-
-    saveQuizBtn.addEventListener('click', () => {
-        const title = quizTitleInput.value.trim();
-        if (!title) {
-            alert('O título do quiz é obrigatório.');
-            return;
-        }
-
-        const questionBlocks = document.querySelectorAll('.question-block');
-        const newQuizQuestions = [];
-        let isValid = true;
-
-        questionBlocks.forEach((block, index) => {
-            const questionText = block.querySelector('input[type="text"]').value.trim();
-            const alternativesInputs = block.querySelectorAll('.alternative-input');
-            const correctRadio = block.querySelector('input[type="radio"]:checked');
-
-            if (!questionText) {
-                alert(`Pergunta ${index + 1} está vazia.`);
-                isValid = false;
-                return;
-            }
-
-            const alternatives = [];
-            let correctAnswerSelected = false;
-            alternativesInputs.forEach(input => {
-                if (input.value.trim()) {
-                    alternatives.push(input.value.trim());
-                }
-            });
-
-            if (alternatives.length < 4) {
-                alert(`Pergunta ${index + 1} precisa ter 4 alternativas.`);
-                isValid = false;
-                return;
-            }
-
-            if (!correctRadio) {
-                alert(`Selecione a alternativa correta para a pergunta ${index + 1}.`);
-                isValid = false;
-                return;
-            }
-
-            const correctAnswerIndex = Array.from(alternativesInputs).indexOf(correctRadio);
-            newQuizQuestions.push({
-                question: questionText,
-                alternatives: alternatives,
-                correctAnswerIndex: correctAnswerIndex
-            });
-        });
-
-        if (isValid) {
-            quizzes.push({
-                id: Date.now().toString(),
+        try {
+            await db.collection('subjects').doc(currentSubjectId).collection('topics').add({
                 title: title,
-                questions: newQuizQuestions,
-                author: currentUser
+                content: content,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            saveQuizzes();
-            showPage('quiz-list');
-            renderAvailableQuizzes();
+            hideModal();
+            loadTopics(currentSubjectId);
+        } catch (error) {
+            displayError(`Erro ao criar tópico: ${error.message}`);
         }
     });
+});
 
-    cancelCreateQuizBtn.addEventListener('click', () => {
-        showPage('quiz-list');
-    });
+function loadQuizzes(subjectId) {
+    quizzesList.innerHTML = '';
+    db.collection('subjects').doc(subjectId).collection('quizzes').get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                quizzesList.innerHTML = '<li>Nenhum quiz encontrado para esta matéria.</li>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const quiz = { id: doc.id, ...doc.data() };
+                const quizItem = document.createElement('li');
+                quizItem.classList.add('quiz-item');
+                quizItem.innerHTML = `
+                    <span class="quiz-item-title">${quiz.title}</span>
+                    <button class="play-quiz-btn" data-quiz-id="${doc.id}">Jogar Quiz</button>
+                `;
+                quizzesList.appendChild(quizItem);
+            });
+        })
+        .catch(error => {
+            displayError(`Erro ao carregar quizzes: ${error.message}`);
+        });
+}
 
-    function addQuestion() {
-        currentQuestionIndex++;
-        const questionBlock = document.createElement('div');
-        questionBlock.classList.add('question-block');
-        questionBlock.innerHTML = `
-            <h4>Pergunta ${currentQuestionIndex}</h4>
-            <input type="text" placeholder="Digite a pergunta...">
-            <div class="alternatives-container">
-                <label>
-                    <input type="radio" name="correct-answer-${currentQuestionIndex}" value="0">
-                    <input type="text" class="alternative-input" placeholder="Alternativa 1">
-                </label>
-                <label>
-                    <input type="radio" name="correct-answer-${currentQuestionIndex}" value="1">
-                    <input type="text" class="alternative-input" placeholder="Alternativa 2">
-                </label>
-                <label>
-                    <input type="radio" name="correct-answer-${currentQuestionIndex}" value="2">
-                    <input type="text" class="alternative-input" placeholder="Alternativa 3">
-                </label>
-                <label>
-                    <input type="radio" name="correct-answer-${currentQuestionIndex}" value="3">
-                    <input type="text" class="alternative-input" placeholder="Alternativa 4">
-                </label>
+createQuizBtn.addEventListener('click', () => {
+    showModal('Criar Novo Quiz', `
+        <input type="text" id="modal-quiz-title" placeholder="Título do Quiz">
+        <button id="add-question-btn">Adicionar Pergunta</button>
+        <div id="modal-quiz-questions"></div>
+        <button id="save-quiz-btn">Salvar Quiz</button>
+    `);
+
+    const modalQuizQuestionsDiv = document.getElementById('modal-quiz-questions');
+    let questionsArray = [];
+
+    document.getElementById('add-question-btn').addEventListener('click', () => {
+        const questionNumber = questionsArray.length + 1;
+        const questionHtml = `
+            <div class="modal-question">
+                <h4>Pergunta ${questionNumber}</h4>
+                <input type="text" placeholder="Enunciado da Pergunta" class="modal-question-text"><br>
+                <input type="text" placeholder="Alternativa A" class="modal-option" data-option="A"><br>
+                <input type="text" placeholder="Alternativa B" class="modal-option" data-option="B"><br>
+                <input type="text" placeholder="Alternativa C" class="modal-option" data-option="C"><br>
+                <input type="text" placeholder="Alternativa D" class="modal-option" data-option="D"><br>
+                <input type="text" placeholder="Letra da Resposta Correta (A, B, C, D)" class="modal-correct-answer"><br>
             </div>
         `;
-        questionsContainer.appendChild(questionBlock);
+        modalQuizQuestionsDiv.insertAdjacentHTML('beforeend', questionHtml);
+    });
 
-        // Add event listeners to radio buttons to ensure only one is selected per question set
-        const radioGroup = questionBlock.querySelectorAll(`input[type="radio"][name="correct-answer-${currentQuestionIndex}"]`);
-        radioGroup.forEach(radio => {
-            radio.addEventListener('change', () => {
-                radioGroup.forEach(r => r.checked = false);
-                radio.checked = true;
+    document.getElementById('save-quiz-btn').addEventListener('click', async () => {
+        const quizTitle = document.getElementById('modal-quiz-title').value;
+        if (!quizTitle) {
+            alert('Por favor, insira um título para o quiz.');
+            return;
+        }
+
+        const questionElements = modalQuizQuestionsDiv.querySelectorAll('.modal-question');
+        questionsArray = [];
+
+        questionElements.forEach(qElement => {
+            const questionText = qElement.querySelector('.modal-question-text').value;
+            const options = {};
+            qElement.querySelectorAll('.modal-option').forEach(opt => {
+                options[opt.dataset.option] = opt.value;
             });
-        });
-    }
+            const correctAnswer = qElement.querySelector('.modal-correct-answer').value.toUpperCase();
 
-    // --- Playing Quiz ---
-    function startQuiz(quizId) {
-        const quiz = quizzes.find(q => q.id === quizId);
-        if (!quiz) {
-            alert('Quiz não encontrado!');
-            return;
-        }
-        currentQuizData = quiz;
-        currentQuestionIndex = 0;
-        score = 0;
-        correctAnswersCount = 0;
-        incorrectAnswersCount = 0;
-
-        playQuizTitle.textContent = quiz.title;
-        showPage('play-quiz');
-        renderQuestion();
-    }
-
-    function renderQuestion() {
-        if (!currentQuizData || currentQuestionIndex >= currentQuizData.questions.length) {
-            showQuizResult();
-            return;
-        }
-
-        const questionData = currentQuizData.questions[currentQuestionIndex];
-        document.getElementById('quiz-progress').textContent = `Pergunta ${currentQuestionIndex + 1} de ${currentQuizData.questions.length}`;
-        questionDisplay.textContent = questionData.question;
-        alternativesDisplay.innerHTML = '';
-
-        const shuffledAlternatives = shuffleArray([...questionData.alternatives]);
-        const correctAnswerIndex = questionData.alternatives.indexOf(questionData.correctAnswerIndex); // Find original index
-
-        shuffledAlternatives.forEach((alt, index) => {
-            const label = document.createElement('label');
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.name = 'quiz-answer';
-            radio.value = index; // Use index of shuffled array for selection
-            label.appendChild(radio);
-            label.appendChild(document.createTextNode(alt));
-            alternativesDisplay.appendChild(label);
-        });
-
-        // Hide/show buttons
-        nextQuestionBtn.style.display = 'none';
-        finishQuizBtn.style.display = 'none';
-        refazerQuizBtn.style.display = 'none';
-        document.getElementById('backToQuizListBtn').style.display = 'none';
-
-        // Add event listeners to radio buttons for this question
-        alternativesDisplay.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                // After selecting an answer, show the next/finish button
-                if (currentQuestionIndex < currentQuizData.questions.length - 1) {
-                    nextQuestionBtn.style.display = 'block';
-                } else {
-                    finishQuizBtn.style.display = 'block';
-                }
-            });
-        });
-    }
-
-    nextQuestionBtn.addEventListener('click', () => {
-        const selectedAnswerRadio = alternativesDisplay.querySelector('input[type="radio"]:checked');
-        if (!selectedAnswerRadio) {
-            alert('Por favor, selecione uma alternativa.');
-            return;
-        }
-
-        const selectedIndex = parseInt(selectedAnswerRadio.value);
-        const questionData = currentQuizData.questions[currentQuestionIndex];
-        const questionAlternatives = Array.from(alternativesDisplay.querySelectorAll('label')).map(label => label.textContent.trim());
-
-        // Find the original index of the selected alternative in the original question data
-        const selectedAlternativeText = questionAlternatives[selectedIndex];
-        const originalCorrectAnswerIndex = questionData.correctAnswerIndex;
-        const originalCorrectAlternativeText = questionData.alternatives[originalCorrectAnswerIndex];
-
-        if (selectedAlternativeText === originalCorrectAlternativeText) {
-            score += POINTS_PER_CORRECT_ANSWER;
-            correctAnswersCount++;
-            selectedAnswerRadio.parentElement.classList.add('correct');
-        } else {
-            incorrectAnswersCount++;
-            selectedAnswerRadio.parentElement.classList.add('incorrect');
-            // Highlight the correct answer
-            const correctLabel = alternativesDisplay.querySelector(`label:nth-child(${originalCorrectAnswerIndex + 1})`);
-            if (correctLabel) {
-                correctLabel.classList.add('correct');
+            if (questionText && options.A && options.B && options.C && options.D && correctAnswer) {
+                questionsArray.push({
+                    text: questionText,
+                    options: options,
+                    correctAnswer: correctAnswer
+                });
+            } else {
+                alert('Por favor, preencha todos os campos para cada pergunta.');
+                return; // Stop saving if any question is incomplete
             }
-        }
-
-        // Disable further selection for this question
-        alternativesDisplay.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
-
-        currentQuestionIndex++;
-        setTimeout(() => {
-            renderQuestion();
-        }, 1500); // Delay to show feedback
-    });
-
-    finishQuizBtn.addEventListener('click', showQuizResult);
-
-    function showQuizResult() {
-        saveQuizHistory();
-        showPage('quiz-result');
-        resultQuizTitle.textContent = currentQuizData.title;
-        scoreDisplay.textContent = `${score} pontos`;
-        correctAnswersDisplay.textContent = correctAnswersCount;
-        incorrectAnswersDisplay.textContent = incorrectAnswersCount;
-
-        // Update user stats
-        if (!userStats[currentUser]) {
-            userStats[currentUser] = { name: currentUser, totalScore: 0, quizzesPlayed: 0 };
-        }
-        userStats[currentUser].totalScore += score;
-        userStats[currentUser].quizzesPlayed++;
-        saveUserStats();
-
-        // Show buttons
-        refazerQuizBtnResult.style.display = 'block';
-        backToQuizListBtnResult.style.display = 'block';
-        nextQuestionBtn.style.display = 'none';
-        finishQuizBtn.style.display = 'none';
-    }
-
-    refazerQuizBtn.addEventListener('click', () => {
-        startQuiz(currentQuizData.id); // Refazer current quiz
-    });
-
-    refazerQuizBtnResult.addEventListener('click', () => {
-        startQuiz(currentQuizData.id); // Refazer current quiz
-    });
-
-    backToQuizListBtn.forEach(btn => {
-        btn.addEventListener('click', () => showPage('quiz-list'));
-    });
-    backToQuizListBtnResult.addEventListener('click', () => showPage('quiz-list'));
-
-
-    // --- Scoring and History ---
-    function saveUserStats() {
-        localStorage.setItem(LOCAL_STORAGE_KEY_USER_STATS, JSON.stringify(userStats));
-    }
-
-    function saveQuizHistory() {
-        const historyEntry = {
-            quizTitle: currentQuizData.title,
-            score: score,
-            correct: correctAnswersCount,
-            incorrect: incorrectAnswersCount,
-            date: new Date().toLocaleString(),
-            userName: currentUser
-        };
-        quizHistory.push(historyEntry);
-        // Keep only the last X entries if needed, for now, save all
-        localStorage.setItem(LOCAL_STORAGE_KEY_HISTORY, JSON.stringify(quizHistory));
-    }
-
-    function renderHistory() {
-        historicoListUl.innerHTML = '';
-        if (quizHistory.length === 0) {
-            historicoListUl.innerHTML = '<li>Nenhum quiz realizado ainda.</li>';
-            return;
-        }
-        // Filter history by current user if needed, for now show all
-        const userHistory = quizHistory.filter(entry => entry.userName === currentUser);
-
-        userHistory.sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date descending
-
-        userHistory.forEach(entry => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <span>${entry.quizTitle}</span>
-                <span>Pontuação: ${entry.score} (${entry.correct} acertos)</span>
-                <small>${entry.date}</small>
-            `;
-            historicoListUl.appendChild(li);
         });
-    }
 
-    // --- Ranking ---
-    function renderRanking() {
-        rankingListUl.innerHTML = '';
-        const sortedUsers = Object.values(userStats).sort((a, b) => b.totalScore - a.totalScore);
-
-        if (sortedUsers.length === 0) {
-            rankingListUl.innerHTML = '<li>Nenhum usuário registrado para mostrar o ranking.</li>';
+        if (questionsArray.length === 0) {
+            alert('Adicione pelo menos uma pergunta ao quiz.');
             return;
         }
 
-        sortedUsers.forEach((user, index) => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <span>${index + 1}. ${user.name}</span>
-                <span>${user.totalScore} pontos</span>
-            `;
-            rankingListUl.appendChild(li);
-        });
-    }
-
-    // --- Utility Functions ---
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+        try {
+            await db.collection('subjects').doc(currentSubjectId).collection('quizzes').add({
+                title: quizTitle,
+                questions: questionsArray,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            hideModal();
+            loadQuizzes(currentSubjectId);
+        } catch (error) {
+            displayError(`Erro ao salvar quiz: ${error.message}`);
         }
-        return array;
-    }
-
-    // --- Initial Load ---
-    updateUserNameDisplay();
-    showPage('home'); // Start on the home page
+    });
 });
+
+// Event delegation for playing quizzes
+quizzesList.addEventListener('click', (event) => {
+    if (event.target.classList.contains('play-quiz-btn')) {
+        currentQuizId = event.target.dataset.quizId;
+        playQuiz(currentSubjectId, currentQuizId);
+    }
+});
+
+function playQuiz(subjectId, quizId) {
+    db.collection('subjects').doc(subjectId).collection('quizzes').doc(quizId).get()
+        .then(doc => {
+            if (!doc.exists) {
+                alert('Quiz não encontrado.');
+                return;
+            }
+            currentQuizData = { id: doc.id, ...doc.data() };
+            currentQuestionIndex = 0;
+            userScore = 0;
+            correctAnswersCount = 0;
+            displayQuestion();
+            showSection('subject-detail-section'); // Ensure we are on the detail page
+            quizPlayContainer.classList.remove('hidden');
+        })
+        .catch(error => {
+            displayError(`Erro ao carregar quiz: ${error.message}`);
+        });
+}
+
+function displayQuestion() {
+    if (!currentQuizData || currentQuestionIndex >= currentQuizData.questions.length) {
+        showQuizResults();
+        return;
+    }
+
+    const question = currentQuizData.questions[currentQuestionIndex];
+    questionContainer.innerHTML = `
+        <p>${question.text}</p>
+        <div id="options-container"></div>
+    `;
+    optionsContainer = document.getElementById('options-container'); // Re-get element
+
+    const options = Object.entries(question.options);
+    options.forEach(([key, value]) => {
+        const button = document.createElement('button');
+        button.textContent = `${key}: ${value}`;
+        button.dataset.option = key;
+        button.addEventListener('click', handleOptionClick);
+        optionsContainer.appendChild(button);
+    });
+
+    nextQuestionBtn.textContent = 'Próximo';
+    nextQuestionBtn.classList.add('hidden'); // Hide until an option is selected
+    quizResults.classList.add('hidden');
+    quizPlayContainer.classList.remove('hidden');
+}
+
+function handleOptionClick(event) {
+    const selectedOption = event.target.dataset.option;
+    const question = currentQuizData.questions[currentQuestionIndex];
+    const isCorrect = (selectedOption === question.correctAnswer);
+
+    // Disable all option buttons
+    optionsContainer.querySelectorAll('button').forEach(btn => {
+        btn.disabled = true;
+        btn.classList.remove('selected');
+        if (btn.dataset.option === question.correctAnswer) {
+            btn.classList.add('correct');
+        } else if (btn.dataset.option === selectedOption) {
+            btn.classList.add('incorrect');
+        }
+    });
+
+    // Update score and count
+    if (isCorrect) {
+        userScore += 10;
+        correctAnswersCount++;
+    }
+
+    event.target.classList.add('selected'); // Highlight selected option
+
+    nextQuestionBtn.textContent = 'Próximo';
+    nextQuestionBtn.classList.remove('hidden');
+}
+
+nextQuestionBtn.addEventListener('click', () => {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < currentQuizData.questions.length) {
+        displayQuestion();
+    } else {
+        showQuizResults();
+    }
+});
+
+function showQuizResults() {
+    document.getElementById('final-score').textContent = userScore;
+    document.getElementById('correct-answers').textContent = correctAnswersCount;
+    quizResults.classList.remove('hidden');
+    nextQuestionBtn.classList.add('hidden');
+    questionContainer.classList.add('hidden'); // Hide question container
+
+    // Save quiz history
+    saveQuizHistory(currentQuizData.title, userScore, correctAnswersCount);
+
+    // Update user points in Firestore
+    updateUserPoints(userScore);
+}
+
+async function saveQuizHistory(quizTitle, score, correctAnswers) {
+    if (!currentUser) return;
+    try {
+        await db.collection('users').doc(currentUser.uid).collection('history').add({
+            quizName: quizTitle,
+            score: score,
+            correctAnswers: correctAnswers,
+            playedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            subjectId: currentSubjectId // Optional: link to subject
+        });
+    } catch (error) {
+        displayError(`Erro ao salvar histórico do quiz: ${error.message}`);
+    }
+}
+
+async function updateUserPoints(pointsToAdd) {
+    if (!currentUser) return;
+    try {
+        const userRef = db.collection('users').doc(currentUser.uid);
+        await userRef.update({
+            points: firebase.firestore.FieldValue.increment(pointsToAdd)
+        });
+        // Update local profile display
+        profilePointsSpan.textContent = parseInt(profilePointsSpan.textContent) + pointsToAdd;
+    } catch (error) {
+        displayError(`Erro ao atualizar pontos do usuário: ${error.message}`);
+    }
+}
+
+playAgainBtn.addEventListener('click', () => {
+    // Reset UI for playing again
+    questionContainer.classList.remove('hidden');
+    quizResults.classList.add('hidden');
+    currentQuestionIndex = 0;
+    userScore = 0;
+    correctAnswersCount = 0;
+    displayQuestion();
+});
+
+backToDashboardBtn.addEventListener('click', () => {
+    quizPlayContainer.classList.add('hidden'); // Hide quiz play area
+    subjectDetailSection.classList.add('hidden');
+    loadDashboard(); // Reload dashboard to show subjects
+    showSection('dashboard-section');
+});
+
+// --- Ranking ---
+viewRankingBtn.addEventListener('click', loadRanking);
+
+function loadRanking() {
+    const rankingList = document.getElementById('ranking-list');
+    rankingList.innerHTML = ''; // Clear previous ranking
+
+    db.collection('users').orderBy('points', 'desc').limit(20).get() // Limit to top 20
+        .then(snapshot => {
+            if (snapshot.empty) {
+                rankingList.innerHTML = '<li>Nenhum usuário encontrado para exibir o ranking.</li>';
+                return;
+            }
+            snapshot.forEach((doc, index) => {
+                const user = doc.data();
+                const rankItem = document.createElement('li');
+                rankItem.innerHTML = `
+                    <span>${user.name}</span>
+                    <span>Sala: ${user.class}</span>
+                    <span>Pontos: ${user.points || 0}</span>
+                `;
+                rankingList.appendChild(rankItem);
+            });
+            showSection('ranking-section');
+        })
+        .catch(error => {
+            displayError(`Erro ao carregar ranking: ${error.message}`);
+        });
+}
+
+backToDashboardFromRankingBtn.addEventListener('click', () => {
+    rankingSection.classList.add('hidden');
+    showSection('dashboard-section');
+});
+
+// --- History ---
+viewHistoryBtn.addEventListener('click', loadHistory);
+
+function loadHistory() {
+    const historyList = document.getElementById('history-list');
+    historyList.innerHTML = ''; // Clear previous history
+
+    if (!currentUser) {
+        historyList.innerHTML = '<li>Faça login para ver seu histórico.</li>';
+        showSection('history-section');
+        return;
+    }
+
+    db.collection('users').doc(currentUser.uid).collection('history').orderBy('playedAt', 'desc').get()
+        .then(snapshot => {
+            if (snapshot.empty) {
+                historyList.innerHTML = '<li>Você ainda não jogou nenhum quiz.</li>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const historyEntry = doc.data();
+                const historyItem = document.createElement('li');
+                const playedDate = historyEntry.playedAt ? historyEntry.playedAt.toDate().toLocaleString() : 'Data indisponível';
+                historyItem.innerHTML = `
+                    <strong>${historyEntry.quizName}</strong>
+                    <p>Pontuação: ${historyEntry.score} (${historyEntry.correctAnswers} acertos)</p>
+                    <small>Jogada em: ${playedDate}</small>
+                `;
+                historyList.appendChild(historyItem);
+            });
+            showSection('history-section');
+        })
+        .catch(error => {
+            displayError(`Erro ao carregar histórico: ${error.message}`);
+        });
+}
+
+backToDashboardFromHistoryBtn.addEventListener('click', () => {
+    historySection.classList.add('hidden');
+    showSection('dashboard-section');
+});
+
+// --- Close Modal Button ---
+closeModalBtn.addEventListener('click', hideModal);
+modalOverlay.addEventListener('click', hideModal); // Close modal when clicking overlay
+
+// --- Initial Load ---
+// `onAuthStateChanged` will handle showing the correct section initially.
