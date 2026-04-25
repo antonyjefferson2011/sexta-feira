@@ -22,11 +22,11 @@ auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
         document.getElementById('login-container').style.display = 'none';
-        document.getElementById('app-container').style.display = 'block';
+        document.getElementById('app-container').style.display = 'flex';
         loadUserData();
         showScreen('home');
     } else {
-        document.getElementById('login-container').style.display = 'block';
+        document.getElementById('login-container').style.display = 'flex';
         document.getElementById('app-container').style.display = 'none';
     }
 });
@@ -34,7 +34,7 @@ auth.onAuthStateChanged(user => {
 document.getElementById('login-btn').addEventListener('click', () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    auth.signInWithEmailAndPassword(email, password).catch(error => alert(error.message));
+    auth.signInWithEmailAndPassword(email, password).catch(error => alert('Erro: ' + error.message));
 });
 
 document.getElementById('register-btn').addEventListener('click', () => {
@@ -44,7 +44,7 @@ document.getElementById('register-btn').addEventListener('click', () => {
     const cls = document.getElementById('class').value;
     auth.createUserWithEmailAndPassword(email, password).then(cred => {
         db.collection('users').doc(cred.user.uid).set({ name, email, class: cls, points: 0 });
-    }).catch(error => alert(error.message));
+    }).catch(error => alert('Erro: ' + error.message));
 });
 
 document.getElementById('google-login-btn').addEventListener('click', () => {
@@ -61,7 +61,7 @@ document.getElementById('google-login-btn').addEventListener('click', () => {
                 });
             }
         });
-    }).catch(error => alert(error.message));
+    }).catch(error => alert('Erro: ' + error.message));
 });
 
 document.getElementById('show-register').addEventListener('click', () => {
@@ -97,11 +97,24 @@ function loadUserData() {
 
 // Subjects
 document.getElementById('create-subject-btn').addEventListener('click', () => {
-    const title = prompt('Nome da Matéria');
-    const description = prompt('Descrição');
+    showScreen('subject-create');
+});
+
+document.getElementById('save-subject-btn').addEventListener('click', () => {
+    const title = document.getElementById('subject-title').value;
+    const description = document.getElementById('subject-description').value;
     if (title && description) {
-        db.collection('subjects').add({ title, description }).then(() => loadSubjects());
+        db.collection('subjects').add({ title, description }).then(() => {
+            showScreen('subjects');
+            loadSubjects();
+        });
+    } else {
+        alert('Preencha todos os campos.');
     }
+});
+
+document.getElementById('cancel-subject-btn').addEventListener('click', () => {
+    showScreen('subjects');
 });
 
 function loadSubjects() {
@@ -112,7 +125,7 @@ function loadSubjects() {
             const data = doc.data();
             const card = document.createElement('div');
             card.className = 'card';
-            card.textContent = data.title;
+            card.innerHTML = `<h3>${data.title}</h3><p>${data.description}</p>`;
             card.addEventListener('click', () => openSubject(doc.id, data));
             list.appendChild(card);
         });
@@ -121,8 +134,8 @@ function loadSubjects() {
 
 function openSubject(id, data) {
     currentSubjectId = id;
-    document.getElementById('subject-title').textContent = data.title;
-    document.getElementById('subject-description').textContent = data.description;
+    document.getElementById('subject-title-display').textContent = data.title;
+    document.getElementById('subject-description-display').textContent = data.description;
     showScreen('subject');
     loadQuizzes();
 }
@@ -166,12 +179,18 @@ document.getElementById('save-quiz-btn').addEventListener('click', () => {
         const c = q.querySelector('.alt-c').value;
         const d = q.querySelector('.alt-d').value;
         const correct = q.querySelector('.correct-answer').value;
-        questions.push({ text, options: { A: a, B: b, C: c, D: d }, correct });
+        if (text && a && b && c && d && correct) {
+            questions.push({ text, options: { A: a, B: b, C: c, D: d }, correct });
+        }
     });
-    db.collection('quizzes').add({ title, subjectId: currentSubjectId, questions }).then(() => {
-        showScreen('subject');
-        loadQuizzes();
-    });
+    if (title && questions.length > 0) {
+        db.collection('quizzes').add({ title, subjectId: currentSubjectId, questions }).then(() => {
+            showScreen('subject');
+            loadQuizzes();
+        });
+    } else {
+        alert('Preencha o título e pelo menos uma pergunta.');
+    }
 });
 
 document.getElementById('back-to-subject-btn').addEventListener('click', () => {
@@ -186,7 +205,7 @@ function loadQuizzes() {
             const data = doc.data();
             const card = document.createElement('div');
             card.className = 'card';
-            card.textContent = data.title;
+            card.innerHTML = `<h3>${data.title}</h3><p>${data.questions.length} perguntas</p>`;
             card.addEventListener('click', () => playQuiz(doc.id, data));
             list.appendChild(card);
         });
@@ -275,7 +294,7 @@ function loadRanking() {
             const data = doc.data();
             const item = document.createElement('div');
             item.className = 'card';
-            item.innerHTML = `<p>${data.name} - ${data.class} - ${data.points} pontos</p>`;
+            item.innerHTML = `<p><strong>${data.name}</strong> - ${data.class} - ${data.points} pontos</p>`;
             list.appendChild(item);
         });
     });
@@ -290,7 +309,7 @@ function loadHistory() {
             const data = doc.data();
             const item = document.createElement('div');
             item.className = 'card';
-            item.innerHTML = `<p>${data.name} - ${data.score} pontos - ${data.date.toDate().toLocaleDateString()}</p>`;
+            item.innerHTML = `<p><strong>${data.name}</strong> - ${data.score} pontos - ${data.date.toDate().toLocaleDateString()}</p>`;
             list.appendChild(item);
         });
     });
