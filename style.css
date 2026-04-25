@@ -212,10 +212,6 @@ p {
     gap: 8px;
 }
 
-.btn-icon-element {
-    font-size: 18px;
-}
-
 /* ==================== INPUTS ====================*/
 .form-group {
     margin-bottom: 16px;
@@ -260,6 +256,7 @@ p {
     font-family: inherit;
     color: var(--text);
     outline: none;
+    width: 100%;
 }
 
 .form-input::placeholder {
@@ -270,6 +267,16 @@ textarea.form-input {
     font-family: inherit;
     resize: vertical;
     min-height: 100px;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+}
+
+textarea.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 /* ==================== MENSAGENS ====================*/
@@ -715,6 +722,65 @@ textarea.form-input {
     color: var(--text);
 }
 
+/* ==================== TÓPICOS ====================*/
+.topics-grid {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.topic-item {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid var(--border);
+    border-left: 4px solid var(--primary);
+}
+
+.topic-item:hover {
+    background: var(--border);
+    transform: translateX(4px);
+}
+
+.topic-item h5 {
+    color: var(--primary);
+    margin-bottom: 8px;
+    font-size: 15px;
+}
+
+.topic-item p {
+    font-size: 13px;
+    color: var(--text-light);
+    line-height: 1.4;
+    max-height: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topic-detail {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    margin-bottom: 16px;
+}
+
+.topic-detail h5 {
+    color: var(--primary);
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+.topic-detail p {
+    color: var(--text);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* ==================== QUIZZES ====================*/
 .quizzes-grid {
     display: grid;
     gap: 12px;
@@ -874,14 +940,18 @@ textarea.form-input {
     color: var(--text);
 }
 
-.answer-btn:hover {
+.answer-btn:hover:not(:disabled) {
     border-color: var(--primary);
     background: rgba(37, 99, 235, 0.05);
     transform: translateX(4px);
 }
 
-.answer-btn:active {
+.answer-btn:active:not(:disabled) {
     transform: translateX(2px);
+}
+
+.answer-btn:disabled {
+    cursor: not-allowed;
 }
 
 .answer-btn.selected {
@@ -1253,11 +1323,16 @@ textarea.form-input {
 /* ==================== ADM ====================*/
 .adm-header {
     margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 }
 
 .adm-header h2 {
     color: var(--danger);
     margin: 0;
+    flex: 1;
 }
 
 .adm-panel {
@@ -1293,11 +1368,19 @@ textarea.form-input {
     justify-content: space-between;
     align-items: center;
     border: 2px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.adm-item-info {
+    flex: 1;
+    min-width: 150px;
 }
 
 .adm-item-info h4 {
     color: var(--text);
     margin-bottom: 4px;
+    font-size: 15px;
 }
 
 .adm-item-info p {
@@ -1428,6 +1511,19 @@ textarea.form-input {
 
     .chat-window {
         height: 400px;
+    }
+
+    .adm-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .adm-item-actions {
+        width: 100%;
+    }
+
+    .adm-item-actions button {
+        flex: 1;
     }
 }
 
@@ -1562,4 +1658,75 @@ textarea.form-input {
 
     .result-box {
         padding: 20px;
-        border-
+        border-radius: 14px;
+    }
+
+    .result-box h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .score-number {
+        font-size: 48px;
+    }
+
+    .profile-header {
+        padding: 24px;
+        border-radius: 16px;
+    }
+
+    .profile-avatar {
+        font-size: 48px;
+    }
+
+    .profile-header h2 {
+        font-size: 20px;
+    }
+
+    .profile-section {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .chat-window {
+        height: 350px;
+    }
+
+    .bottom-nav {
+        height: 70px;
+    }
+
+    .nav-icon {
+        font-size: 20px;
+    }
+
+    .nav-label {
+        font-size: 11px;
+    }
+
+    .btn-back {
+        padding: 8px 12px;
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    .form-box {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .form-box h3,
+    .form-box h4 {
+        font-size: 18px;
+        margin-bottom: 14px;
+    }
+
+    .adm-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .adm-header h2 {
+        width: 100%;
+    }
+}
