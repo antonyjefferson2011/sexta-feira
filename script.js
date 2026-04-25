@@ -868,5 +868,168 @@ async function admAddPts(){ const pts=parseInt($('adm-add-pts')?.value); if(!pts
 
 // ========== CLOSE MODALS ==========
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ document.querySelectorAll('[id^="modal-"]').forEach(m=>{ if(m.style.display==='flex') m.style.display='none'; }); } });
+// ============================================================
+// QUIZ NORMAL (Formulário tradicional)
+// ============================================================
+let questoesNormais = [];
+let questaoCount = 0;
 
+function addQuestaoNormal() {
+  questaoCount++;
+  const idx = questoesNormais.length;
+  
+  questoesNormais.push({
+    pergunta: '',
+    alternativas: ['', '', '', ''],
+    correta: 0
+  });
+
+  const container = document.getElementById('qn-questoes-container');
+  if (!container) return;
+
+  const div = document.createElement('div');
+  div.id = 'qn-questao-' + idx;
+  div.style.cssText = 'background:var(--input-bg); border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid var(--border);';
+  
+  div.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <strong style="color:var(--text);">Questão ${idx + 1}</strong>
+      ${idx > 0 ? `<button onclick="removerQuestaoNormal(${idx})" style="background:#fee2e2; color:#dc2626; border:none; padding:4px 10px; border-radius:8px; cursor:pointer; font-weight:600; font-size:12px;">🗑 Remover</button>` : ''}
+    </div>
+    
+    <div style="margin-bottom:10px;">
+      <label style="font-size:11px; font-weight:600; color:var(--text3);">PERGUNTA</label>
+      <input type="text" placeholder="Digite a pergunta..." oninput="questoesNormais[${idx}].pergunta = this.value" 
+             style="width:100%; padding:8px; border:2px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; outline:none; margin-top:4px;" />
+    </div>
+
+    <div style="margin-bottom:8px;">
+      <label style="font-size:11px; font-weight:600; color:var(--text3);">ALTERNATIVAS (marque a correta)</label>
+      ${['A', 'B', 'C', 'D'].map((letra, i) => `
+        <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+          <input type="radio" name="qn-correta-${idx}" value="${i}" ${i === 0 ? 'checked' : ''} 
+                 onchange="questoesNormais[${idx}].correta = ${i}" style="width:18px; height:18px; cursor:pointer;" />
+          <span style="font-weight:700; font-size:13px; color:var(--text); width:20px;">${letra})</span>
+          <input type="text" placeholder="Alternativa ${letra}" oninput="questoesNormais[${idx}].alternativas[${i}] = this.value"
+                 style="flex:1; padding:8px; border:2px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; outline:none;" />
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  container.appendChild(div);
+}
+
+function removerQuestaoNormal(idx) {
+  questoesNormais.splice(idx, 1);
+  questaoCount--;
+  
+  // Reconstruir o container
+  const container = document.getElementById('qn-questoes-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  questoesNormais = [];
+  questaoCount = 0;
+  
+  // Recriar todas as questões restantes (opcional: só remove e não recria)
+  // Vamos apenas remover o elemento visual
+  const el = document.getElementById('qn-questao-' + idx);
+  if (el) el.remove();
+  
+  // Reindexar
+  const divs = container.querySelectorAll('[id^="qn-questao-"]');
+  divs.forEach((div, i) => {
+    div.id = 'qn-questao-' + i;
+    const title = div.querySelector('strong');
+    if (title) title.textContent = 'Questão ' + (i + 1);
+  });
+}
+
+function salvarQuizNormal() {
+  const nome = document.getElementById('qn-nome')?.value?.trim();
+  const tempo = parseInt(document.getElementById('qn-tempo')?.value) || 30;
+
+  if (!nome) { showToast('Nome do quiz é obrigatório', 'error'); return; }
+  if (!STATE.currentMateriaId) { showToast('Acesse uma matéria primeiro!', 'error'); return; }
+
+  // Validar questões
+  const validas = questoesNormais.filter(q => 
+    q.pergunta.trim() && 
+    q.alternativas.filter(a => a.trim()).length >= 2
+  );
+
+  if (validas.length === 0) {
+    showToast('Adicione pelo menos 1 questão completa!', 'error');
+    return;
+  }
+
+  const quiz = {
+    nome,
+    tempo,
+    materiaId: STATE.currentMateriaId,
+    questoes: validas,
+    autorId: STATE.user.uid,
+    autorNome: STATE.userData.username,
+    totalPlays: 0,
+    createdAt: Date.now()
+  };
+
+  db.ref('quizzes/' + STATE.currentMateriaId).push(quiz).then(() => {
+    closeModal('modal-quiz-normal');
+    
+    // Limpar formulário
+    document.getElementById('qn-nome').value = '';
+    document.getElementById('qn-tempo').value = '30';
+    document.getElementById('qn-questoes-container').innerHTML = '';
+    questoesNormais = [];
+    questaoCount = 0;
+    
+    addPts(30);
+    showToast('Quiz "' + nome + '" criado com ' + validas.length + ' questões! 🎮', 'success');
+    
+    // Recarregar quizzes da matéria
+    if (STATE.currentMateriaId) {
+      db.ref('quizzes/' + STATE.currentMateriaId).once('value').then(snap => {
+        const q = snap.val();
+        const c = document.getElementById('quizzes-materia');
+        if (c && q) {
+          c.innerHTML = Object.entries(q).map(([qid, quiz]) => `
+            <div style="background:var(--card); border-radius:12px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+              <div>
+                <strong style="color:var(--text);">🎮 ${esc(quiz.nome)}</strong>
+                <br><span style="font-size:12px;color:var(--text3);">${quiz.questoes?.length || 0} questões · ${quiz.tempo || 30}s</span>
+              </div>
+              <button onclick="startQuiz('${STATE.currentMateriaId}','${qid}')" 
+                      style="background:#6C5CE7; color:white; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer;">▶ Jogar</button>
+            </div>
+          `).join('');
+        }
+      });
+    }
+
+    addQuestaoNormal(); // Deixar uma questão pronta para o próximo quiz
+  }).catch(err => {
+    showToast('Erro ao salvar quiz', 'error');
+    console.error(err);
+  });
+}
+
+// Inicializar com 1 questão ao abrir o modal
+function showModal(id) {
+  const m = document.getElementById(id);
+  if (m) {
+    m.style.display = 'flex';
+    
+    // Se for o modal de quiz normal, resetar
+    if (id === 'modal-quiz-normal') {
+      questoesNormais = [];
+      questaoCount = 0;
+      document.getElementById('qn-questoes-container').innerHTML = '';
+      document.getElementById('qn-nome').value = '';
+      document.getElementById('qn-tempo').value = '30';
+      addQuestaoNormal(); // Já começa com 1 questão
+    }
+  }
+}
 console.log('✅ Sexta-Feira Studies PRONTO!');

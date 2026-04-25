@@ -346,9 +346,11 @@
       <div id="materias-grid"></div>
     </div>
 
-    <!-- DETALHE MATÉRIA -->
+       <!-- DETALHE MATÉRIA -->
     <div id="screen-materia-detalhe" style="display:none;">
       <button onclick="showScreen('materias')" style="background:none; border:none; cursor:pointer; font-weight:600; color:var(--text3); margin-bottom:15px; font-size:15px;">← Voltar</button>
+      
+      <!-- Hero da Matéria -->
       <div style="background:linear-gradient(135deg, #6C5CE7, #a855f7); color:white; border-radius:20px; padding:25px; margin-bottom:20px;">
         <div style="display:flex; align-items:center; gap:15px;">
           <span id="materia-hero-icon" style="font-size:50px;">📚</span>
@@ -359,13 +361,22 @@
           </div>
         </div>
       </div>
-      <button onclick="showModal('modal-topico')" style="background:#6C5CE7; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:700; cursor:pointer; margin-bottom:20px;">+ Novo Tópico</button>
+
+      <!-- Botões de ação -->
+      <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <button onclick="showModal('modal-topico')" style="background:#6C5CE7; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px;">+ Novo Tópico</button>
+        <button onclick="showModal('modal-quiz-normal')" style="background:#10b981; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px;">+ Quiz Normal</button>
+        <button onclick="showModal('modal-quiz-cmd')" style="background:#f59e0b; color:white; border:none; padding:10px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px;">+ Quiz /cmd</button>
+      </div>
+
+      <!-- Tópicos -->
       <div style="font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">📝 Tópicos</div>
       <div id="topicos-list"></div>
+
+      <!-- Quizzes -->
       <div style="font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin:20px 0 10px;">🎮 Quizzes</div>
       <div id="quizzes-materia"></div>
     </div>
-
     <!-- TÓPICO DETALHE -->
     <div id="screen-topico-detalhe" style="display:none;">
       <button onclick="showScreen('materia-detalhe')" style="background:none; border:none; cursor:pointer; font-weight:600; color:var(--text3); margin-bottom:15px;">← Voltar</button>
@@ -592,6 +603,43 @@
 </div><!-- FIM APP -->
 
 <!-- ==================== MODAIS ==================== -->
+<!-- Modal Quiz NORMAL -->
+<div id="modal-quiz-normal" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
+  <div onclick="closeModal('modal-quiz-normal')" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
+  <div style="position:relative; background:var(--card); color:var(--text); border-radius:20px; padding:25px; width:90%; max-width:550px; max-height:90vh; overflow-y:auto;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="margin:0;">🎮 Criar Quiz</h3>
+      <button onclick="closeModal('modal-quiz-normal')" style="background:var(--border); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; color:var(--text); font-size:16px;">✕</button>
+    </div>
+
+    <!-- Nome do Quiz -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px; font-weight:700; color:var(--text3);">NOME DO QUIZ *</label>
+      <input type="text" id="qn-nome" placeholder="Ex: Quiz de Matemática" style="width:100%; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:10px; outline:none;" />
+    </div>
+
+    <!-- Tempo por questão -->
+    <div style="margin-bottom:15px;">
+      <label style="font-size:11px; font-weight:700; color:var(--text3);">TEMPO POR QUESTÃO (segundos)</label>
+      <input type="number" id="qn-tempo" value="30" min="10" max="120" style="width:100%; padding:10px; border:2px solid var(--border); background:var(--input-bg); color:var(--text); border-radius:10px; outline:none;" />
+    </div>
+
+    <!-- Container das questões -->
+    <div id="qn-questoes-container" style="margin-bottom:15px;">
+      <!-- Questões adicionadas dinamicamente -->
+    </div>
+
+    <!-- Botão adicionar questão -->
+    <button onclick="addQuestaoNormal()" style="width:100%; padding:10px; background:var(--border); color:var(--text); border:2px dashed var(--text3); border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; margin-bottom:15px;">
+      + Adicionar Questão
+    </button>
+
+    <button onclick="salvarQuizNormal()" style="width:100%; padding:14px; background:#6C5CE7; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px;">
+      💾 Salvar Quiz
+    </button>
+  </div>
+</div>
 <div id="modal-materia" style="display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center;">
   <div onclick="closeModal('modal-materia')" style="position:absolute; inset:0; background:rgba(0,0,0,0.6);"></div>
   <div style="position:relative; background:var(--card); color:var(--text); border-radius:20px; padding:25px; width:90%; max-width:450px; max-height:90vh; overflow-y:auto;">
