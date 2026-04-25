@@ -1,3 +1,4 @@
+// ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
     apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
     authDomain: "sexta-feira-fb01a.firebaseapp.com",
@@ -11,6 +12,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// ==================== GLOBAL STATE ====================
 let currentUser = null;
 let currentSubject = null;
 let currentQuiz = null;
@@ -19,7 +21,13 @@ let currentQuestionIndex = 0;
 let currentScore = 0;
 let selectedAnswers = [];
 
-// AUTH STATE
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', () => {
+    setupAuthEventListeners();
+    setupAppEventListeners();
+});
+
+// ==================== AUTH STATE ====================
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
@@ -36,6 +44,7 @@ auth.onAuthStateChanged(async (user) => {
                     points: 0,
                     createdAt: new Date()
                 });
+                console.log('Novo usuário criado:', user.uid);
             }
         } catch (error) {
             console.error('Erro ao carregar usuário:', error);
@@ -49,54 +58,263 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// UI FUNCTIONS
+// ==================== AUTH EVENT LISTENERS ====================
+function setupAuthEventListeners() {
+    // Toggle entre login e signup
+    document.getElementById('link-to-signup')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleAuthForm();
+    });
+
+    document.getElementById('link-to-login')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleAuthForm();
+    });
+
+    // Login
+    document.getElementById('btn-login')?.addEventListener('click', handleLogin);
+    document.getElementById('login-email')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+    });
+    document.getElementById('login-password')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+    });
+
+    // Signup
+    document.getElementById('btn-signup')?.addEventListener('click', handleSignup);
+    document.getElementById('signup-password')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSignup();
+    });
+
+    // Google Login
+    document.getElementById('btn-google-login')?.addEventListener('click', handleGoogleLogin);
+    document.getElementById('btn-google-signup')?.addEventListener('click', handleGoogleSignup);
+
+    // Logout
+    document.getElementById('btn-logout')?.addEventListener('click', handleLogout);
+}
+
+function toggleAuthForm() {
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+
+    loginForm.classList.toggle('active');
+    signupForm.classList.toggle('active');
+
+    clearAuthMessages();
+}
+
+function clearAuthMessages() {
+    document.getElementById('login-error').classList.remove('show');
+    document.getElementById('signup-error').classList.remove('show');
+    document.getElementById('signup-success').classList.remove('show');
+}
+
+function showAuthError(message, isSignup = false) {
+    const errorId = isSignup ? 'signup-error' : 'login-error';
+    const errorEl = document.getElementById(errorId);
+    errorEl.textContent = '❌ ' + message;
+    errorEl.classList.add('show');
+    setTimeout(() => errorEl.classList.remove('show'), 5000);
+}
+
+function showAuthSuccess(message) {
+    const successEl = document.getElementById('signup-success');
+    successEl.textContent = '✅ ' + message;
+    successEl.classList.add('show');
+    setTimeout(() => successEl.classList.remove('show'), 3000);
+}
+
+async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+
+    if (!email || !password) {
+        showAuthError('Preencha todos os campos');
+        return;
+    }
+
+    const btn = document.getElementById('btn-login');
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        console.log('Login realizado com sucesso');
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+    } catch (error) {
+        console.error('Erro de login:', error.code);
+        
+        if (error.code === 'auth/user-not-found') {
+            showAuthError('Usuário não encontrado');
+        } else if (error.code === 'auth/wrong-password') {
+            showAuthError('Senha incorreta');
+        } else if (error.code === 'auth/invalid-email') {
+            showAuthError('Email inválido');
+        } else if (error.code === 'auth/too-many-requests') {
+            showAuthError('Muitas tentativas. Tente novamente mais tarde');
+        } else {
+            showAuthError(error.message);
+        }
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+    }
+}
+
+async function handleSignup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value.trim();
+    const classroom = document.getElementById('signup-class').value.trim();
+
+    if (!name || !email || !password || !classroom) {
+        showAuthError('Preencha todos os campos', true);
+        return;
+    }
+
+    if (password.length < 6) {
+        showAuthError('Senha deve ter pelo menos 6 caracteres', true);
+        return;
+    }
+
+    if (!email.includes('@')) {
+        showAuthError('Email inválido', true);
+        return;
+    }
+
+    const btn = document.getElementById('btn-signup');
+    btn.disabled = true;
+    btn.textContent = 'Criando...';
+
+    try {
+        const result = await auth.createUserWithEmailAndPassword(email, password);
+        await result.user.updateProfile({ displayName: name });
+
+        await db.collection('users').doc(result.user.uid).set({
+            name: name,
+            email: email,
+            class: classroom,
+            points: 0,
+            createdAt: new Date()
+        });
+
+        console.log('Dados enviados com sucesso');
+        console.log('Usuário criado:', {
+            uid: result.user.uid,
+            name: name,
+            email: email,
+            class: classroom
+        });
+
+        showAuthSuccess('Conta criada com sucesso! Redirecionando...');
+
+        setTimeout(() => {
+            document.getElementById('signup-name').value = '';
+            document.getElementById('signup-email').value = '';
+            document.getElementById('signup-password').value = '';
+            document.getElementById('signup-class').value = '';
+            toggleAuthForm();
+        }, 1500);
+    } catch (error) {
+        console.error('Erro de cadastro:', error.code);
+
+        if (error.code === 'auth/email-already-in-use') {
+            showAuthError('Email já cadastrado', true);
+        } else if (error.code === 'auth/weak-password') {
+            showAuthError('Senha muito fraca', true);
+        } else if (error.code === 'auth/invalid-email') {
+            showAuthError('Email inválido', true);
+        } else {
+            showAuthError(error.message, true);
+        }
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Criar Conta';
+    }
+}
+
+async function handleGoogleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const btn = document.getElementById('btn-google-login');
+    btn.disabled = true;
+
+    try {
+        await auth.signInWithPopup(provider);
+        console.log('Login com Google realizado com sucesso');
+    } catch (error) {
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showAuthError('Erro ao fazer login com Google');
+            console.error('Erro Google Login:', error);
+        }
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function handleGoogleSignup() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const btn = document.getElementById('btn-google-signup');
+    btn.disabled = true;
+
+    try {
+        await auth.signInWithPopup(provider);
+        console.log('Cadastro com Google realizado com sucesso');
+    } catch (error) {
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showAuthError('Erro ao cadastrar com Google', true);
+            console.error('Erro Google Signup:', error);
+        }
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function handleLogout() {
+    try {
+        await auth.signOut();
+        console.log('Logout realizado com sucesso');
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+    }
+}
+
+// ==================== UI FUNCTIONS ====================
 function showAuth() {
-    document.getElementById('authContainer').style.display = 'flex';
-    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('auth-container').style.display = 'flex';
+    document.getElementById('app-container').style.display = 'none';
 }
 
 function showApp() {
-    document.getElementById('authContainer').style.display = 'none';
-    document.getElementById('appContainer').style.display = 'flex';
+    document.getElementById('auth-container').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
     showScreen('home');
 }
 
-function toggleAuthForm(event) {
-    event.preventDefault();
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    
-    if (loginForm.style.display === 'none') {
-        loginForm.style.display = 'block';
-        signupForm.style.display = 'none';
-    } else {
-        loginForm.style.display = 'none';
-        signupForm.style.display = 'block';
+async function updateUserInfo() {
+    try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const userData = userDoc.data();
+
+        document.getElementById('user-name-display').textContent = userData.name || 'Usuário';
+        document.getElementById('home-user-name').textContent = userData.name || 'Usuário';
+        document.getElementById('home-user-class').textContent = userData.class || 'Não definida';
+        document.getElementById('home-user-points').textContent = userData.points || 0;
+    } catch (error) {
+        console.error('Erro ao atualizar info do usuário:', error);
     }
-    
-    document.getElementById('authError').classList.remove('show');
 }
 
-function showError(message) {
-    const errorDiv = document.getElementById('authError');
-    errorDiv.textContent = message;
-    errorDiv.classList.add('show');
-    setTimeout(() => errorDiv.classList.remove('show'), 5000);
-}
-
-function showScreen(screenName, event) {
-    if (event) {
-        event.preventDefault();
-    }
-    
+function showScreen(screenName) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenName + 'Screen').classList.add('active');
-    
+    document.getElementById('screen-' + screenName).classList.add('active');
+
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
-    
+
     if (screenName === 'home') {
-        updateHomeScreen();
+        updateUserInfo();
     } else if (screenName === 'subjects') {
         loadSubjects();
     } else if (screenName === 'ranking') {
@@ -106,533 +324,37 @@ function showScreen(screenName, event) {
     }
 }
 
-async function updateUserInfo() {
-    try {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const userData = userDoc.data();
-        
-        document.getElementById('userNameHeader').textContent = userData.name || 'Usuário';
-        document.getElementById('homeName').textContent = userData.name || 'Usuário';
-        document.getElementById('homeClass').textContent = userData.class || 'Não definida';
-        document.getElementById('homePoints').textContent = userData.points || 0;
-    } catch (error) {
-        console.error('Erro ao atualizar info:', error);
-    }
-}
-
-async function updateHomeScreen() {
-    await updateUserInfo();
-}
-
-// AUTH FUNCTIONS
-document.getElementById('loginBtn')?.addEventListener('click', async () => {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-    
-    if (!email || !password) {
-        showError('Preencha todos os campos');
-        return;
-    }
-    
-    try {
-        document.getElementById('loginBtn').disabled = true;
-        document.getElementById('loginBtn').textContent = 'Entrando...';
-        
-        await auth.signInWithEmailAndPassword(email, password);
-        
-        document.getElementById('loginBtn').disabled = false;
-        document.getElementById('loginBtn').textContent = 'Entrar';
-    } catch (error) {
-        document.getElementById('loginBtn').disabled = false;
-        document.getElementById('loginBtn').textContent = 'Entrar';
-        
-        if (error.code === 'auth/user-not-found') {
-            showError('Usuário não encontrado');
-        } else if (error.code === 'auth/wrong-password') {
-            showError('Senha incorreta');
-        } else if (error.code === 'auth/invalid-email') {
-            showError('Email inválido');
-        } else {
-            showError('Erro: ' + error.message);
-        }
-    }
-});
-
-document.getElementById('signupBtn')?.addEventListener('click', async () => {
-    const name = document.getElementById('signupName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value.trim();
-    const classroom = document.getElementById('signupClass').value.trim();
-    
-    if (!name || !email || !password || !classroom) {
-        showError('Preencha todos os campos');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showError('Senha deve ter pelo menos 6 caracteres');
-        return;
-    }
-    
-    try {
-        document.getElementById('signupBtn').disabled = true;
-        document.getElementById('signupBtn').textContent = 'Criando...';
-        
-        const result = await auth.createUserWithEmailAndPassword(email, password);
-        await result.user.updateProfile({ displayName: name });
-        
-        await db.collection('users').doc(result.user.uid).set({
-            name: name,
-            email: email,
-            class: classroom,
-            points: 0,
-            createdAt: new Date()
+// ==================== APP EVENT LISTENERS ====================
+function setupAppEventListeners() {
+    // Navegação
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const screen = btn.getAttribute('data-screen');
+            showScreen(screen);
         });
-        
-        document.getElementById('signupBtn').disabled = false;
-        document.getElementById('signupBtn').textContent = 'Criar Conta';
-    } catch (error) {
-        document.getElementById('signupBtn').disabled = false;
-        document.getElementById('signupBtn').textContent = 'Criar Conta';
-        
-        if (error.code === 'auth/email-already-in-use') {
-            showError('Email já cadastrado');
-        } else if (error.code === 'auth/weak-password') {
-            showError('Senha muito fraca');
-        } else if (error.code === 'auth/invalid-email') {
-            showError('Email inválido');
-        } else {
-            showError('Erro: ' + error.message);
-        }
-    }
-});
-
-document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-        document.getElementById('googleLoginBtn').disabled = true;
-        await auth.signInWithPopup(provider);
-        document.getElementById('googleLoginBtn').disabled = false;
-    } catch (error) {
-        document.getElementById('googleLoginBtn').disabled = false;
-        showError('Erro: ' + error.message);
-    }
-});
-
-document.getElementById('googleSignupBtn')?.addEventListener('click', async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-        document.getElementById('googleSignupBtn').disabled = true;
-        await auth.signInWithPopup(provider);
-        document.getElementById('googleSignupBtn').disabled = false;
-    } catch (error) {
-        document.getElementById('googleSignupBtn').disabled = false;
-        showError('Erro: ' + error.message);
-    }
-});
-
-document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    try {
-        await auth.signOut();
-    } catch (error) {
-        showError('Erro ao sair: ' + error.message);
-    }
-});
-
-// SUBJECTS
-async function loadSubjects() {
-    const subjectsList = document.getElementById('subjectsList');
-    const subjectDetail = document.getElementById('subjectDetail');
-    
-    if (currentSubject) {
-        subjectDetail.style.display = 'block';
-        subjectsList.style.display = 'none';
-        await loadSubjectDetail();
-        return;
-    }
-    
-    subjectsList.style.display = 'grid';
-    subjectDetail.style.display = 'none';
-    
-    try {
-        const snapshot = await db.collection('subjects').get();
-        subjectsList.innerHTML = '';
-        
-        if (snapshot.empty) {
-            subjectsList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666;">Nenhuma matéria criada ainda</p>';
-        }
-        
-        snapshot.forEach(doc => {
-            const subject = doc.data();
-            const card = document.createElement('div');
-            card.className = 'subject-card';
-            card.innerHTML = `
-                <h3>${subject.title}</h3>
-                <p>${subject.description}</p>
-            `;
-            card.onclick = () => {
-                currentSubject = { id: doc.id, ...subject };
-                loadSubjects();
-            };
-            subjectsList.appendChild(card);
-        });
-    } catch (error) {
-        console.error('Erro ao carregar matérias:', error);
-        showError('Erro ao carregar matérias');
-    }
-}
-
-async function loadSubjectDetail() {
-    try {
-        document.getElementById('subjectDetailTitle').textContent = currentSubject.title;
-        document.getElementById('subjectDetailDesc').textContent = currentSubject.description;
-        
-        const quizzesList = document.getElementById('quizzesList');
-        quizzesList.innerHTML = '';
-        
-        const snapshot = await db.collection('quizzes').where('subjectId', '==', currentSubject.id).get();
-        
-        if (snapshot.empty) {
-            quizzesList.innerHTML = '<p style="color: #666;">Nenhum quiz nesta matéria</p>';
-        }
-        
-        snapshot.forEach(doc => {
-            const quiz = doc.data();
-            const item = document.createElement('div');
-            item.className = 'quiz-item';
-            item.innerHTML = `
-                <span class="quiz-item-name">${quiz.title}</span>
-                <button class="quiz-item-btn" onclick="startQuiz('${doc.id}')">Jogar</button>
-            `;
-            quizzesList.appendChild(item);
-        });
-    } catch (error) {
-        console.error('Erro ao carregar detalhes:', error);
-        showError('Erro ao carregar detalhes');
-    }
-}
-
-function backToSubjects() {
-    currentSubject = null;
-    loadSubjects();
-}
-
-function openCreateSubject() {
-    document.getElementById('createSubjectForm').style.display = 'block';
-}
-
-function closeCreateSubject() {
-    document.getElementById('createSubjectForm').style.display = 'none';
-    document.getElementById('subjectTitle').value = '';
-    document.getElementById('subjectDesc').value = '';
-}
-
-async function createSubject() {
-    const title = document.getElementById('subjectTitle').value.trim();
-    const description = document.getElementById('subjectDesc').value.trim();
-    
-    if (!title || !description) {
-        showError('Preencha todos os campos');
-        return;
-    }
-    
-    try {
-        await db.collection('subjects').add({
-            title: title,
-            description: description,
-            createdAt: new Date()
-        });
-        
-        closeCreateSubject();
-        loadSubjects();
-    } catch (error) {
-        console.error('Erro ao criar matéria:', error);
-        showError('Erro: ' + error.message);
-    }
-}
-
-// QUIZ
-function openCreateQuiz() {
-    document.getElementById('createQuizForm').style.display = 'block';
-    document.getElementById('questionsContainer').innerHTML = '';
-    addQuestion();
-}
-
-function closeCreateQuiz() {
-    document.getElementById('createQuizForm').style.display = 'none';
-    document.getElementById('quizTitle').value = '';
-}
-
-function addQuestion() {
-    const container = document.getElementById('questionsContainer');
-    const index = container.children.length;
-    
-    const questionBox = document.createElement('div');
-    questionBox.className = 'question-box';
-    questionBox.innerHTML = `
-        <h5>Pergunta ${index + 1}</h5>
-        <input type="text" placeholder="Enunciado da pergunta" class="question-text-${index}">
-        <input type="text" placeholder="Alternativa A" class="question-alt-${index}-0">
-        <input type="text" placeholder="Alternativa B" class="question-alt-${index}-1">
-        <input type="text" placeholder="Alternativa C" class="question-alt-${index}-2">
-        <input type="text" placeholder="Alternativa D" class="question-alt-${index}-3">
-        <select class="question-correct-${index}">
-            <option value="">Resposta correta</option>
-            <option value="0">A</option>
-            <option value="1">B</option>
-            <option value="2">C</option>
-            <option value="3">D</option>
-        </select>
-        <button type="button" onclick="removeQuestion(${index})">Remover</button>
-    `;
-    
-    container.appendChild(questionBox);
-}
-
-function removeQuestion(index) {
-    const boxes = document.querySelectorAll('.question-box');
-    if (boxes[index]) {
-        boxes[index].remove();
-    }
-}
-
-async function saveQuiz() {
-    const title = document.getElementById('quizTitle').value.trim();
-    const questionBoxes = document.querySelectorAll('.question-box');
-    
-    if (!title || questionBoxes.length === 0) {
-        showError('Preencha todos os campos');
-        return;
-    }
-    
-    const questions = [];
-    
-    for (let i = 0; i < questionBoxes.length; i++) {
-        const text = document.querySelector(`.question-text-${i}`)?.value.trim();
-        const alternatives = [
-            document.querySelector(`.question-alt-${i}-0`)?.value.trim(),
-            document.querySelector(`.question-alt-${i}-1`)?.value.trim(),
-            document.querySelector(`.question-alt-${i}-2`)?.value.trim(),
-            document.querySelector(`.question-alt-${i}-3`)?.value.trim()
-        ];
-        const correct = parseInt(document.querySelector(`.question-correct-${i}`)?.value);
-        
-        if (!text || alternatives.some(a => !a) || isNaN(correct)) {
-            showError('Preencha todas as perguntas corretamente');
-            return;
-        }
-        
-        questions.push({
-            text: text,
-            alternatives: alternatives,
-            correct: correct
-        });
-    }
-    
-    try {
-        await db.collection('quizzes').add({
-            title: title,
-            subjectId: currentSubject.id,
-            questions: questions,
-            createdAt: new Date()
-        });
-        
-        closeCreateQuiz();
-        loadSubjectDetail();
-    } catch (error) {
-        console.error('Erro ao salvar quiz:', error);
-        showError('Erro: ' + error.message);
-    }
-}
-
-async function startQuiz(quizId) {
-    try {
-        const quizDoc = await db.collection('quizzes').doc(quizId).get();
-        currentQuiz = { id: quizId, ...quizDoc.data() };
-        currentQuestions = currentQuiz.questions;
-        currentQuestionIndex = 0;
-        currentScore = 0;
-        selectedAnswers = new Array(currentQuestions.length).fill(-1);
-        
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('quizScreen').classList.add('active');
-        
-        showQuestion();
-    } catch (error) {
-        console.error('Erro ao iniciar quiz:', error);
-        showError('Erro ao iniciar quiz');
-    }
-}
-
-function showQuestion() {
-    const question = currentQuestions[currentQuestionIndex];
-    
-    document.getElementById('questionText').textContent = question.text;
-    document.getElementById('progressText').textContent = `Pergunta ${currentQuestionIndex + 1} de ${currentQuestions.length}`;
-    
-    const percentage = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
-    document.getElementById('progressFill').style.width = percentage + '%';
-    
-    const answersContainer = document.getElementById('answersContainer');
-    answersContainer.innerHTML = '';
-    
-    question.alternatives.forEach((alt, index) => {
-        const btn = document.createElement('button');
-        btn.className = 'answer-btn';
-        btn.textContent = alt;
-        btn.type = 'button';
-        btn.onclick = () => selectAnswer(index);
-        answersContainer.appendChild(btn);
     });
-    
-    document.getElementById('nextQuestionBtn').style.display = 'none';
-}
 
-function selectAnswer(index) {
-    selectedAnswers[currentQuestionIndex] = index;
-    
-    const question = currentQuestions[currentQuestionIndex];
-    const buttons = document.querySelectorAll('.answer-btn');
-    
-    buttons.forEach((btn, i) => {
-        btn.disabled = true;
-        btn.classList.remove('selected', 'correct', 'incorrect');
-        if (i === question.correct) {
-            btn.classList.add('correct');
-        } else if (i === index && index !== question.correct) {
-            btn.classList.add('incorrect');
-        }
+    // Cards da home
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', () => {
+            const screen = card.getAttribute('data-screen');
+            showScreen(screen);
+        });
     });
-    
-    if (index === question.correct) {
-        currentScore += 10;
-    }
-    
-    setTimeout(() => {
-        document.getElementById('nextQuestionBtn').style.display = 'block';
-    }, 500);
-}
 
-function nextQuestion() {
-    currentQuestionIndex++;
-    
-    if (currentQuestionIndex < currentQuestions.length) {
-        showQuestion();
-    } else {
-        finishQuiz();
-    }
-}
+    // Subjects
+    document.getElementById('btn-new-subject')?.addEventListener('click', openCreateSubject);
+    document.getElementById('btn-cancel-subject')?.addEventListener('click', closeCreateSubject);
+    document.getElementById('btn-create-subject')?.addEventListener('click', createSubject);
 
-async function finishQuiz() {
-    try {
-        const userRef = db.collection('users').doc(currentUser.uid);
-        const userDoc = await userRef.get();
-        const userData = userDoc.data();
-        
-        const newPoints = (userData.points || 0) + currentScore;
-        await userRef.update({ points: newPoints });
-        
-        const historyRef = db.collection('history').doc(currentUser.uid);
-        const historyDoc = await historyRef.get();
-        
-        let historyItems = [];
-        if (historyDoc.exists) {
-            historyItems = historyDoc.data().items || [];
-        }
-        
-        historyItems.push({
-            quizTitle: currentQuiz.title,
-            subjectTitle: currentSubject.title,
-            score: currentScore,
-            date: new Date().toLocaleString('pt-BR')
-        });
-        
-        await historyRef.set({ items: historyItems });
-        
-        document.getElementById('resultScore').textContent = currentScore;
-        document.getElementById('resultMessage').textContent = 
-            currentScore >= 50 ? 'Parabéns! Você foi bem! 🎉' : 'Continue estudando! 💪';
-        
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('quizResultScreen').classList.add('active');
-    } catch (error) {
-        console.error('Erro ao finalizar quiz:', error);
-        showError('Erro ao finalizar quiz');
-    }
-}
+    // Quiz
+    document.getElementById('btn-new-quiz')?.addEventListener('click', openCreateQuiz);
+    document.getElementById('btn-cancel-quiz')?.addEventListener('click', closeCreateQuiz);
+    document.getElementById('btn-save-quiz')?.addEventListener('click', saveQuiz);
+    document.getElementById('btn-add-question')?.addEventListener('click', addQuestion);
 
-// RANKING
-async function loadRanking() {
-    try {
-        const rankingList = document.getElementById('rankingList');
-        rankingList.innerHTML = '';
-        
-        const snapshot = await db.collection('users').orderBy('points', 'desc').limit(50).get();
-        
-        if (snapshot.empty) {
-            rankingList.innerHTML = '<p style="text-align: center; color: #666;">Nenhum usuário ainda</p>';
-            return;
-        }
-        
-        let position = 1;
-        snapshot.forEach(doc => {
-            const user = doc.data();
-            const item = document.createElement('div');
-            item.className = 'ranking-item';
-            
-            let positionClass = '';
-            if (position === 1) positionClass = 'gold';
-            else if (position === 2) positionClass = 'silver';
-            else if (position === 3) positionClass = 'bronze';
-            
-            item.innerHTML = `
-                <div class="ranking-position ${positionClass}">${position}º</div>
-                <div class="ranking-info">
-                    <div class="ranking-name">${user.name || 'Usuário'}</div>
-                    <div class="ranking-class">${user.class || 'Não definida'}</div>
-                </div>
-                <div class="ranking-points">${user.points || 0} pts</div>
-            `;
-            
-            rankingList.appendChild(item);
-            position++;
-        });
-    } catch (error) {
-        console.error('Erro ao carregar ranking:', error);
-        showError('Erro ao carregar ranking');
-    }
-}
-
-// HISTORY
-async function loadHistory() {
-    try {
-        const historyList = document.getElementById('historyList');
-        historyList.innerHTML = '';
-        
-        const historyDoc = await db.collection('history').doc(currentUser.uid).get();
-        
-        if (!historyDoc.exists || !historyDoc.data().items || historyDoc.data().items.length === 0) {
-            historyList.innerHTML = '<p style="text-align:center;color:#666;">Nenhum quiz jogado ainda</p>';
-            return;
-        }
-        
-        const items = historyDoc.data().items.reverse();
-        
-        items.forEach(item => {
-            const element = document.createElement('div');
-            element.className = 'history-item';
-            element.innerHTML = `
-                <div class="history-item-title">${item.quizTitle}</div>
-                <div class="history-item-info">
-                    <span>${item.subjectTitle}</span>
-                    <span>${item.date}</span>
-                    <span class="history-item-score">${item.score} pts</span>
-                </div>
-            `;
-            historyList.appendChild(element);
-        });
-    } catch (error) {
-        console.error('Erro ao carregar histórico:', error);
-        showError('Erro ao carregar histórico');
-    }
-}
+    // Back buttons
+    document.getElementById('btn-back-subjects')?.addEventListener('click', backToSubjects);
+    document.getElementById('btn-back-quiz')?.addEventListener('click', backToSubjects);
+    document.getElementById('btn-back-result')?.addEventListener('click', backToSubjects);
+    document.getElementById('btn-back-result-home')?.addEventListener('click', backToSubjects
