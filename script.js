@@ -150,17 +150,6 @@ function setBtnLoading(btn, loading) {
   btn.disabled = loading;
 }
 
-// ============================================================
-// SPLASH
-// ============================================================
-setTimeout(() => {
-  const splash = document.getElementById('splash-screen');
-  if (splash) {
-    splash.style.opacity = '0';
-    splash.style.transition = 'opacity 0.5s';
-    setTimeout(() => { splash.style.display = 'none'; }, 500);
-  }
-}, 2000);
 
 // ============================================================
 // AUTH
@@ -168,22 +157,21 @@ setTimeout(() => {
 
 auth.onAuthStateChanged(async (user) => {
   console.log('🔐 Auth:', user ? user.uid : 'Ninguém');
+ 
   
-  // REMOVER SPLASH IMEDIATAMENTE
-  forceRemoveSplash();
-  
+
   if (user) {
     STATE.user = user;
+   
     
-    // Carregar dados do usuário
     const snap = await db.ref('usuarios/' + user.uid).once('value');
     STATE.userData = snap.val();
     
+    
     if (!STATE.userData) {
-  
       STATE.userData = {
         uid: user.uid,
-        username: user.email?.split('@')[0] || 'user',
+        username: user.email?.split('@')[0] || 'estudante',
         email: user.email || '',
         avatar: '🎓',
         bio: '',
@@ -197,7 +185,6 @@ auth.onAuthStateChanged(async (user) => {
       await db.ref('usuarios/' + user.uid).set(STATE.userData);
     }
     
-    // Mostrar app
     hideEl('auth-screen');
     showEl('app');
     updateUI();
@@ -212,7 +199,6 @@ auth.onAuthStateChanged(async (user) => {
     showAuthTab('login');
   }
 });
-
 function showAuthTab(tab) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.auth-tab').forEach(t => {
