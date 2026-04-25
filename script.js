@@ -430,7 +430,11 @@ function renderQ() {
   $('quiz-question').textContent = q.pergunta;
   const pf = $('quiz-progress-fill');
   if (pf) pf.style.width = ((g.i) / g.q.length * 100) + '%';
-  $('quiz-options').innerHTML = q.alternativas.map((a, i) => `<button onclick="selectA(${i})" style="display:block;width:100%;padding:14px;margin-bottom:8px;border:2px solid var(--border);border-radius:12px;background:var(--card);text-align:left;font-size:15px;cursor:pointer;"><span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--border);text-align:center;line-height:24px;font-weight:700;font-size:13px;margin-right:10px;">${['A','B','C','D'][i]}</span>${esc(a)}</button>`).join('');
+ $('quiz-options').innerHTML = q.alternativas.map((a,i)=>`
+  <button onclick="selectA(${i})" id="opt-${i}" style="display:block;width:100%;padding:14px;margin-bottom:8px;border:2px solid var(--border);border-radius:12px;background:var(--card);text-align:left;font-size:15px;cursor:pointer;transition:0.2s;">
+    <span class="opt-letter" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;font-weight:700;font-size:14px;margin-right:12px;flex-shrink:0;">${['A','B','C','D'][i]}</span>${esc(a)}
+  </button>
+`).join('');
   clearInterval(g.timer);
   g.left = S.quiz.left || 30;
   $('quiz-timer').textContent = '⏱ ' + g.left + 's';
@@ -446,8 +450,18 @@ function selectA(c) {
   const g = S.quiz, q = g.q[g.i], corr = q.correta, ok = c === corr;
   document.querySelectorAll('#quiz-options button').forEach((b, i) => {
     b.disabled = true;
-    if (i === corr) b.style.cssText = 'background:#d1fae5;border-color:#10b981;';
-    if (i === c && !ok) b.style.cssText = 'background:#fee2e2;border-color:#ef4444;';
+  if(i===corr) {
+  b.style.background='#d1fae5';
+  b.style.borderColor='#10b981';
+  const letter = b.querySelector('.opt-letter');
+  if(letter) letter.style.background='#10b981';
+}
+if(i===c&&!ok) {
+  b.style.background='#fee2e2';
+  b.style.borderColor='#ef4444';
+  const letter = b.querySelector('.opt-letter');
+  if(letter) letter.style.background='#ef4444';
+}
   });
   if (ok) { const pts = Math.max(10, Math.round(10 + (g.left / 30) * 10)); g.score += pts; g.corr++; g.ans.push({ isCorrect: true, pts }); }
   else { g.ans.push({ isCorrect: false, pts: 0 }); }
@@ -585,15 +599,16 @@ async function toggleFollowUser(uid, btn) {
   if (snap.val()) {
     await ref.remove();
     await db.ref('seguindo/' + uid + '/' + S.user.uid).remove();
-    if (btn) btn.textContent = 'Seguir';
+    if (btn) { btn.textContent = '👥 Seguir'; btn.style.background = '#6C5CE7'; }
+    toast('Deixou de seguir', 'info');
   } else {
     await ref.set(true);
     await db.ref('seguindo/' + uid + '/' + S.user.uid).set(true);
     await db.ref('notificacoes/' + uid).push({ mensagem: '👥 ' + S.ud.username + ' te seguiu!', tipo: 'follow', lida: false, createdAt: Date.now() });
     if (btn) { btn.textContent = '✅ Seguindo'; btn.style.background = '#10b981'; }
+    toast('Seguindo! 👥', 'success');
   }
 }
-
 // ========== CHAT ==========
 function loadChat() {
   db.ref('chat_rooms').on('value', snap => {
@@ -769,7 +784,26 @@ async function verPerfil(uid) {
   viewingUserId = uid;
   const snap = await db.ref('usuarios/' + uid).once('value');
   const u = snap.val();
-  $('user-profile-content').innerHTML = `<div style="text-align:center;"><div style="font-size:60px;">${u.avatar||'?'}</div><h3>${esc(u.username)}</h3><p>${esc(u.bio||'')}</p><span>⭐ ${fmt(u.points)}</span> <span>👥 ${u.seguidores||0}</span><br><button class="btn btn-primary" onclick="toggleFollowUser('${uid}')" style="margin-top:10px;">Seguir</button><button class="btn btn-green" onclick="closeModal('user');openPV('${uid}')" style="margin-top:5px;">💬 Mensagem</button></div>`;
+  if (!u) return;
+  
+  $('user-profile-content').innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:60px;">${u.avatar || '🎓'}</div>
+      <h3>${esc(u.username || '?')}</h3>
+      <p style="color:var(--text3);">${esc(u.bio || 'Sem bio')}</p>
+      <div style="margin:10px 0;">
+        <span style="background:var(--hover);padding:5px 12px;border-radius:15px;font-weight:600;">⭐ ${fmt(u.points || 0)} pts</span>
+        <span style="background:var(--hover);padding:5px 12px;border-radius:15px;font-weight:600;margin-left:5px;">👥 ${u.seguidores || 0} seguidores</span>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="toggleFollowUser('${uid}');closeModal('user');" style="margin-top:8px;">
+        ${(await db.ref('seguidores/'+S.user.uid+'/'+uid).once('value')).val() ? '✅ Seguindo' : '👥 Seguir'}
+      </button>
+      <button class="btn btn-green btn-full" onclick="closeModal('user');navigate('chat');setTimeout(()=>openPV('${uid}'),500);" style="margin-top:5px;">
+        💬 Enviar Mensagem
+      </button>
+    </div>
+  `;
+  
   openModal('user');
 }
 
