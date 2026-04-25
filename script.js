@@ -585,11 +585,22 @@ async function searchUsers() {
 function renderUserList(users) {
   const arr = Object.entries(users).map(([id, u]) => ({ id, ...u })).sort((a, b) => (b.points || 0) - (a.points || 0));
   const c = $('descobrir-feed');
-  c.innerHTML = arr.map(u => `<div class="card" onclick="${u.id === S.user?.uid ? "navigate('perfil')" : "verPerfil('" + u.id + "')"}" style="cursor:pointer;display:flex;align-items:center;gap:10px;">
-    <div style="width:40px;height:40px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${u.avatar || '?'}</div>
-    <div style="flex:1;"><strong>${esc(u.username)}</strong> ${u.id === S.user?.uid ? '<span style="background:#6C5CE7;color:white;padding:2px 8px;border-radius:10px;font-size:10px;">Você</span>' : ''}<br><span style="font-size:12px;color:var(--text3);">⭐ ${fmt(u.points)} pts · 👥 ${u.seguidores || 0} seguidores</span></div>
-    ${u.id !== S.user?.uid ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();toggleFollowUser('${u.id}',this)">Seguir</button>` : ''}
-  </div>`).join('');
+  c.innerHTML = arr.map(u => {
+    const isMe = u.id === S.user?.uid;
+    const badges = [];
+    if (u.isProf) badges.push('<span style="color:#6C5CE7;font-size:14px;" title="Professor Verificado">✅</span>');
+    if (u.isAdmin) badges.push('<span style="color:#f59e0b;font-size:14px;" title="Administrador">⚙️</span>');
+    
+    return `<div class="card" onclick="${isMe ? "navigate('perfil')" : "verPerfil('" + u.id + "')"}" style="cursor:pointer;display:flex;align-items:center;gap:10px;">
+      <div style="width:40px;height:40px;border-radius:50%;background:${u.isProf ? 'linear-gradient(135deg,#6C5CE7,#10b981)' : '#6C5CE7'};color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;">${u.avatar || '🎓'}</div>
+      <div style="flex:1;">
+        <strong>${esc(u.username)} ${badges.join(' ')}</strong>
+        ${isMe ? '<span style="background:#6C5CE7;color:white;padding:2px 8px;border-radius:10px;font-size:10px;">Você</span>' : ''}
+        <br><span style="font-size:12px;color:var(--text3);">⭐ ${fmt(u.points)} pts · 👥 ${u.seguidores || 0} seguidores</span>
+      </div>
+      ${!isMe ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();toggleFollowUser('${u.id}',this)">Seguir</button>` : ''}
+    </div>`;
+  }).join('');
 }
 
 async function toggleFollowUser(uid, btn) {
@@ -772,19 +783,19 @@ function loadRanking() {
     const pos = arr.findIndex(u => u.uid === S.user?.uid);
     $('my-rank-num').textContent = pos >= 0 ? '#' + (pos + 1) : '#--';
     $('my-rank-pts').textContent = fmt(arr[pos]?.points || 0);
-    $('ranking-list').innerHTML = arr.slice(0, 50).map((u, i) => `<div class="card" onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;${u.uid===S.user?.uid?'background:var(--hover);':''}"><span style="font-weight:800;width:24px;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span><div style="width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${esc(u.avatar||'?')}</div><div style="flex:1;"><strong>${esc(u.username)}</strong>${u.uid===S.user?.uid?' (Você)':''}</div><span style="font-weight:700;color:#6C5CE7;">${fmt(u.points)}</span></div>`).join('');
+    $('ranking-list').innerHTML = arr.slice(0, 50).map((u, i) => `<div class="card" onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;${u.uid===S.user?.uid?'background:var(--hover);':''}"><span style="font-weight:800;width:24px;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span><div style="width:30px;height:30px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;">${esc(u.avatar||'?')}</div><div style="flex:1;"><strong>${esc(u.username)} ${u.isProf ? '✅' : ''}</strong>${u.uid===S.user?.uid?' (Você)':''}</div><span style="font-weight:700;color:#6C5CE7;">${fmt(u.points)}</span></div>`).join('');
   });
 }
 
 // ========== PERFIL ==========
 async function verPerfil(uid) {
+  if (!uid) return;
   if (uid === S.user?.uid) { navigate('perfil'); return; }
   viewingUserId = uid;
   const snap = await db.ref('usuarios/' + uid).once('value');
   const u = snap.val();
   if (!u) return;
 
-  // Verificar se segue ANTES de montar o HTML
   const fSnap = await db.ref('seguidores/' + S.user.uid + '/' + uid).once('value');
   const isFollowing = fSnap.val() ? true : false;
 
@@ -800,7 +811,7 @@ async function verPerfil(uid) {
       <button class="btn btn-primary btn-full" id="btn-follow-modal" onclick="toggleFollowUserModal('${uid}')" style="margin-top:8px;background:${isFollowing ? '#10b981' : '#6C5CE7'};">
         ${isFollowing ? '✅ Seguindo' : '👥 Seguir'}
       </button>
-      <button class="btn btn-green btn-full" onclick="closeModal('user');navigate('chat');setTimeout(()=>openPV('${uid}'),500);" style="margin-top:5px;">
+      <button class="btn btn-green btn-full" onclick="closeModal('user');navigate('chat');setTimeout(function(){openPV('${uid}');},500);" style="margin-top:5px;">
         💬 Enviar Mensagem
       </button>
     </div>
@@ -808,7 +819,6 @@ async function verPerfil(uid) {
 
   openModal('user');
 }
-
 // Nova função para seguir do modal
 async function toggleFollowUserModal(uid) {
   const ref = db.ref('seguidores/' + S.user.uid + '/' + uid);
@@ -865,6 +875,7 @@ async function loadPerfil() {
   if ((S.ud.points || 0) >= 1000) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e;">⭐ 1K</span>');
   if ((S.ud.quizzesPlayed || 0) >= 10) badges.push('<span class="badge" style="background:#dbeafe;color:#1d4ed8;">🎮 Gamer</span>');
   if (S.ud.isAdmin) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e;">⚙️ Admin</span>');
+  if (S.ud.isProf) badges.push('<span class="badge" style="background:#e0e7ff;color:#6C5CE7;">✅ Professor</span>');
   $('perfil-badges').innerHTML = badges.join('') || '<span class="badge">🌱 Novato</span>';
   const hs = await db.ref('historico/' + S.user.uid).once('value');
   const h = hs.val();
@@ -938,7 +949,21 @@ async function admLoad(tab, btn) {
   } else if (tab === 'usuarios') {
     const s = await db.ref('usuarios').once('value');
     const d = s.val();
-    c.innerHTML = d ? Object.values(d).map(u => `<div class="card" style="display:flex;justify-content:space-between;"><span>${u.avatar} ${esc(u.username)} · ${fmt(u.points)}</span>${!u.isAdmin && u.uid !== S.user?.uid ? `<button class="btn-red btn-sm" onclick="admDelUser('${u.uid}')">🗑</button>` : ''}</div>`).join('') : 'Nenhum';
+ c.innerHTML = d ? Object.values(d).map(u => `
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>
+      ${u.avatar} ${esc(u.username)} ${u.isProf ? '✅' : ''} ${u.isAdmin ? '⚙️' : ''} · ${fmt(u.points)} pts
+    </span>
+    <div style="display:flex;gap:5px;">
+      ${!u.isAdmin && u.uid !== S.user?.uid ? `
+        <button class="btn btn-sm" onclick="admToggleProf('${u.uid}')" style="background:${u.isProf ? '#fef3c7' : '#e0e0e0'};color:#333;box-shadow:none;font-size:11px;">
+          ${u.isProf ? '✅ Prof' : '👨‍🏫 Tornar Prof'}
+        </button>
+        <button class="btn-red btn-sm" onclick="admDelUser('${u.uid}')">🗑</button>
+      ` : ''}
+    </div>
+  </div>
+`).join('') : 'Nenhum';
   }
 }
 
@@ -968,5 +993,14 @@ document.addEventListener('keydown', (e) => {
     document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
   }
 });
-
+// ========== TORNAR PROFESSOR ==========
+async function admToggleProf(uid) {
+  const snap = await db.ref('usuarios/' + uid).once('value');
+  const u = snap.val();
+  if (!u) return;
+  const novoStatus = !u.isProf;
+  await db.ref('usuarios/' + uid).update({ isProf: novoStatus });
+  toast(novoStatus ? '✅ Agora é Professor!' : '❌ Removeu Professor', 'success');
+  admLoad('usuarios');
+}
 console.log('✅ Sexta-Feira Studies PRONTO!');
