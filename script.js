@@ -1,13 +1,11 @@
-// script.js
-
-// --- Firebase Configuration ---
+// Firebase Configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
-    authDomain: "sexta-feira-fb01a.firebaseapp.com",
-    projectId: "sexta-feira-fb01a",
-    storageBucket: "sexta-feira-fb01a.firebasestorage.app",
-    messagingSenderId: "82809140147",
-    appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
+  apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+  authDomain: "sexta-feira-fb01a.firebaseapp.com",
+  projectId: "sexta-feira-fb01a",
+  storageBucket: "sexta-feira-fb01a.firebasestorage.app",
+  messagingSenderId: "82809140147",
+  appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
 };
 
 // Initialize Firebase
@@ -17,152 +15,102 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- DOM Elements ---
-const authSection = document.getElementById('auth-section');
-const dashboardSection = document.getElementById('dashboard-section');
-const subjectsContainer = document.getElementById('subjects-container');
-const subjectsList = document.getElementById('subjects-list');
-const subjectDetailSection = document.getElementById('subject-detail-section');
-const currentSubjectTitle = document.getElementById('current-subject-title');
-const currentSubjectDescription = document.getElementById('current-subject-description');
-const topicsList = document.getElementById('topics-list');
-const quizzesList = document.getElementById('quizzes-list');
-const quizPlayContainer = document.getElementById('quiz-play-container');
+// DOM Elements
+const appDiv = document.getElementById('app');
+const authContainer = document.getElementById('auth-container');
+const mainAppDiv = document.getElementById('main-app');
+
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const classInput = document.getElementById('class');
+const registerBtn = document.getElementById('register-btn');
+const loginBtn = document.getElementById('login-btn');
+const googleLoginBtn = document.getElementById('google-login-btn');
+const authMessage = document.getElementById('auth-message');
+
+const welcomeMessageSpan = document.getElementById('welcome-message');
+const userPointsSpan = document.getElementById('points-value');
+const logoutBtn = document.getElementById('logout-btn');
+
+const navButtons = document.querySelectorAll('.nav-btn');
+const pages = document.querySelectorAll('.page');
+
+const homePage = document.getElementById('home-page');
+const subjectsPage = document.getElementById('subjects-page');
+const subjectDetailPage = document.getElementById('subject-detail-page');
+const quizPage = document.getElementById('quiz-page');
+const rankingPage = document.getElementById('ranking-page');
+const historyPage = document.getElementById('history-page');
+
+const homeUserNameSpan = document.getElementById('home-user-name');
+const homeUserClassSpan = document.getElementById('home-user-class');
+
+const subjectTitleInput = document.getElementById('subject-title');
+const subjectDescriptionInput = document.getElementById('subject-description');
+const addSubjectBtn = document.getElementById('add-subject-btn');
+const subjectsListDiv = document.getElementById('subjects-list');
+
+const currentSubjectTitleHeader = document.getElementById('current-subject-title');
+const currentSubjectDescriptionPara = document.getElementById('current-subject-description');
+const backToSubjectsBtn = document.getElementById('back-to-subjects-btn');
+const topicTitleInput = document.getElementById('topic-title');
+const addTopicBtn = document.getElementById('add-topic-btn');
+const topicsUl = document.getElementById('topics-ul');
+const quizTitleInput = document.getElementById('quiz-title');
+const addQuizBtn = document.getElementById('add-quiz-btn');
+const quizzesUl = document.getElementById('quizzes-ul');
+
+const quizTitleHeader = document.getElementById('quiz-title-header');
 const questionContainer = document.getElementById('question-container');
 const optionsContainer = document.getElementById('options-container');
 const nextQuestionBtn = document.getElementById('next-question-btn');
-const quizResults = document.getElementById('quiz-results');
-const rankingSection = document.getElementById('ranking-section');
-const historySection = document.getElementById('history-section');
-const loggedInUserSpan = document.getElementById('loggedInUser');
-const logoutBtn = document.getElementById('logout-btn');
-
-// Auth Inputs
-const loginEmailInput = document.getElementById('login-email');
-const loginPasswordInput = document.getElementById('login-password');
-const loginBtn = document.getElementById('login-btn');
-const signupNameInput = document.getElementById('signup-name');
-const signupEmailInput = document.getElementById('signup-email');
-const signupPasswordInput = document.getElementById('signup-password');
-const signupClassInput = document.getElementById('signup-class');
-const signupBtn = document.getElementById('signup-btn');
-
-// Profile Info
-const profileNameSpan = document.getElementById('profile-name');
-const profileClassSpan = document.getElementById('profile-class');
-const profilePointsSpan = document.getElementById('profile-points');
-
-// Modals
-const modalOverlay = document.getElementById('modal-overlay');
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modal-title');
-const modalBody = document.getElementById('modal-body');
-const closeModalBtn = document.getElementById('close-modal-btn');
-
-// Buttons
-const createSubjectBtn = document.getElementById('create-subject-btn');
-const viewRankingBtn = document.getElementById('view-ranking-btn');
+const submitQuizBtn = document.getElementById('submit-quiz-btn');
+const quizResultDiv = document.getElementById('quiz-result');
+const quizScoreSpan = document.getElementById('quiz-score');
+const quizTotalPossibleSpan = document.getElementById('quiz-total-possible');
 const viewHistoryBtn = document.getElementById('view-history-btn');
-const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
-const backToDashboardFromRankingBtn = document.getElementById('back-to-dashboard-from-ranking-btn');
-const backToDashboardFromHistoryBtn = document.getElementById('back-to-dashboard-from-history-btn');
-const createTopicBtn = document.getElementById('create-topic-btn');
-const createQuizBtn = document.getElementById('create-quiz-btn');
-const playAgainBtn = document.getElementById('play-again-btn');
 
-// --- State Variables ---
+const rankingListUl = document.getElementById('ranking-list');
+const historyListUl = document.getElementById('history-list');
+
+// State variables
 let currentUser = null;
 let currentSubjectId = null;
 let currentQuizId = null;
 let currentQuizData = null;
 let currentQuestionIndex = 0;
 let userScore = 0;
-let correctAnswersCount = 0;
+let quizHistory = [];
 
-// --- Helper Functions ---
-function showSection(sectionId) {
-    document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
-    const section = document.getElementById(sectionId);
-    if (section) {
-        section.classList.remove('hidden');
-        section.classList.add('animated-fade-in');
-    }
+// --- Authentication Functions ---
+
+function showAuthScreen() {
+    authContainer.classList.remove('hidden');
+    mainAppDiv.classList.add('hidden');
 }
 
-function showModal(title, contentHtml) {
-    modalTitle.textContent = title;
-    modalBody.innerHTML = contentHtml;
-    modalOverlay.classList.remove('hidden');
-    modal.classList.remove('hidden');
+function showMainApp() {
+    authContainer.classList.add('hidden');
+    mainAppDiv.classList.remove('hidden');
 }
 
-function hideModal() {
-    modalOverlay.classList.add('hidden');
-    modal.classList.add('hidden');
-    modalBody.innerHTML = ''; // Clear content
-}
-
-function displayError(message) {
-    console.error('Error:', message);
-    alert(`Ocorreu um erro: ${message}`);
-}
-
-function clearForm(formElement) {
-    formElement.querySelectorAll('input').forEach(input => input.value = '');
-}
-
-// --- Authentication ---
-auth.onAuthStateChanged(user => {
-    if (user) {
-        currentUser = user;
-        loggedInUserSpan.textContent = user.displayName || user.email;
-        logoutBtn.classList.remove('hidden');
-        fetchUserProfile();
-        loadDashboard();
-        showSection('dashboard-section');
-    } else {
-        currentUser = null;
-        loggedInUserSpan.textContent = '';
-        logoutBtn.classList.add('hidden');
-        showSection('auth-section');
-        clearForm(document.querySelector('#auth-section .auth-form:nth-of-type(1)')); // Clear login form
-        clearForm(document.querySelector('#auth-section .auth-form:nth-of-type(2)')); // Clear signup form
-    }
-});
-
-loginBtn.addEventListener('click', async () => {
-    const email = loginEmailInput.value;
-    const password = loginPasswordInput.value;
-
-    if (!email || !password) {
-        alert('Por favor, preencha todos os campos de login.');
-        return;
-    }
-
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-    } catch (error) {
-        displayError(`Falha ao fazer login: ${error.message}`);
-    }
-});
-
-signupBtn.addEventListener('click', async () => {
-    const name = signupNameInput.value;
-    const email = signupEmailInput.value;
-    const password = signupPasswordInput.value;
-    const className = signupClassInput.value;
+async function registerUser() {
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+    const className = classInput.value.trim();
 
     if (!name || !email || !password || !className) {
-        alert('Por favor, preencha todos os campos de cadastro.');
+        authMessage.textContent = "Por favor, preencha todos os campos.";
         return;
     }
 
     try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        await userCredential.user.updateProfile({ displayName: name });
+        const user = userCredential.user;
 
-        // Save user data to Firestore
-        await db.collection('users').doc(userCredential.user.uid).set({
+        await db.collection('users').doc(user.uid).set({
             name: name,
             email: email,
             class: className,
@@ -170,515 +118,647 @@ signupBtn.addEventListener('click', async () => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        alert('Conta criada com sucesso! Faça login para continuar.');
-        showSection('auth-section'); // Return to login
-        clearForm(document.querySelector('#auth-section .auth-form:nth-of-type(2)')); // Clear signup form
-
+        authMessage.textContent = "Cadastro realizado com sucesso! Faça login.";
+        // Clear form for login
+        nameInput.value = '';
+        emailInput.value = '';
+        passwordInput.value = '';
+        classInput.value = '';
     } catch (error) {
-        displayError(`Falha ao criar conta: ${error.message}`);
+        authMessage.textContent = `Erro no cadastro: ${error.message}`;
     }
-});
+}
 
-logoutBtn.addEventListener('click', async () => {
-    try {
-        await auth.signOut();
-        alert('Logout realizado com sucesso!');
-    } catch (error) {
-        displayError(`Falha ao fazer logout: ${error.message}`);
+async function loginUser() {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) {
+        authMessage.textContent = "Por favor, preencha email e senha.";
+        return;
     }
-});
-
-// --- User Profile ---
-async function fetchUserProfile() {
-    if (!currentUser) return;
 
     try {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        await auth.signInWithEmailAndPassword(email, password);
+        // onAuthStateChanged will handle the rest
+    } catch (error) {
+        authMessage.textContent = `Erro no login: ${error.message}`;
+    }
+}
+
+async function loginWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+
+        // Check if user exists in Firestore
+        const userDoc = await db.collection('users').doc(user.uid).get();
+
+        if (!userDoc.exists) {
+            // New user, save to Firestore
+            await db.collection('users').doc(user.uid).set({
+                name: user.displayName,
+                email: user.email,
+                class: '', // Google login doesn't provide class, user needs to set it later
+                points: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            // Prompt user for class if it's empty
+            promptForClass(user.uid);
+        }
+        // onAuthStateChanged will handle the rest
+    } catch (error) {
+        authMessage.textContent = `Erro no login com Google: ${error.message}`;
+    }
+}
+
+function logoutUser() {
+    auth.signOut().then(() => {
+        showAuthScreen();
+        currentUser = null;
+        // Clear app state
+        subjectsListDiv.innerHTML = '';
+        topicsUl.innerHTML = '';
+        quizzesUl.innerHTML = '';
+        questionContainer.innerHTML = '';
+        optionsContainer.innerHTML = '';
+        quizResultDiv.classList.add('hidden');
+        nextQuestionBtn.classList.add('hidden');
+        submitQuizBtn.classList.add('hidden');
+        currentQuestionIndex = 0;
+        userScore = 0;
+        currentSubjectId = null;
+        currentQuizId = null;
+        currentQuizData = null;
+        quizHistory = [];
+        authMessage.textContent = ''; // Clear any previous auth messages
+        // Reset form inputs
+        nameInput.value = '';
+        emailInput.value = '';
+        passwordInput.value = '';
+        classInput.value = '';
+    }).catch((error) => {
+        console.error("Erro ao fazer logout:", error);
+    });
+}
+
+// Function to prompt for class after Google login if class is empty
+async function promptForClass(uid) {
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (userDoc.exists && !userDoc.data().class) {
+        let userClass = prompt("Bem-vindo(a)! Por favor, insira sua sala (ex: 9A):");
+        if (userClass) {
+            await db.collection('users').doc(uid).update({ class: userClass.trim() });
+            updateUserInfoDisplay(userDoc.data().name, userClass.trim(), userDoc.data().points);
+        } else {
+            // If user cancels, still show app but class is empty
+            updateUserInfoDisplay(userDoc.data().name, '', userDoc.data().points);
+        }
+    }
+}
+
+
+// --- Firestore User Data Handling ---
+
+async function fetchUserData(uid) {
+    try {
+        const userDoc = await db.collection('users').doc(uid).get();
         if (userDoc.exists) {
-            const userData = userDoc.data();
-            profileNameSpan.textContent = userData.name;
-            profileClassSpan.textContent = userData.class;
-            profilePointsSpan.textContent = userData.points || 0;
+            return userDoc.data();
+        } else {
+            // This case should ideally not happen if registration is handled correctly
+            console.error("User document not found for UID:", uid);
+            return null;
         }
     } catch (error) {
-        displayError(`Erro ao carregar perfil do usuário: ${error.message}`);
+        console.error("Error fetching user data:", error);
+        return null;
     }
 }
 
-// --- Dashboard and Subjects ---
-function loadDashboard() {
-    subjectsList.innerHTML = ''; // Clear existing subjects
-    db.collection('subjects').where('ownerId', '==', currentUser.uid).get()
-        .then(snapshot => {
-            if (snapshot.empty) {
-                subjectsList.innerHTML = '<p>Você ainda não criou nenhuma matéria. Clique em "Criar Matéria" para começar!</p>';
-                return;
-            }
-            snapshot.forEach(doc => {
-                const subject = { id: doc.id, ...doc.data() };
-                const subjectCard = document.createElement('div');
-                subjectCard.classList.add('subject-card');
-                subjectCard.innerHTML = `
-                    <h4>${subject.name}</h4>
-                    <p>${subject.description}</p>
-                    <button class="view-subject-btn" data-subject-id="${subject.id}">Ver Matéria</button>
-                `;
-                subjectsList.appendChild(subjectCard);
-            });
-        })
-        .catch(error => {
-            displayError(`Erro ao carregar matérias: ${error.message}`);
-        });
+async function updateUserInfoDisplay(name, className, points) {
+    welcomeMessageSpan.textContent = `Olá, ${name}!`;
+    homeUserNameSpan.textContent = name;
+    homeUserClassSpan.textContent = className || 'Não definida';
+    userPointsSpan.textContent = points !== undefined ? points : '0';
 }
 
-createSubjectBtn.addEventListener('click', () => {
-    showModal('Criar Nova Matéria', `
-        <input type="text" id="modal-subject-name" placeholder="Nome da Matéria">
-        <textarea id="modal-subject-description" placeholder="Descrição da Matéria"></textarea>
-        <button id="save-subject-btn">Salvar Matéria</button>
-    `);
+async function updateUserPoints(uid, pointsToAdd) {
+    if (!currentUser) return;
+    try {
+        const userRef = db.collection('users').doc(uid);
+        const doc = await userRef.get();
+        const currentPoints = doc.data().points || 0;
+        await userRef.update({
+            points: currentPoints + pointsToAdd
+        });
+        userPointsSpan.textContent = currentPoints + pointsToAdd;
+        return currentPoints + pointsToAdd;
+    } catch (error) {
+        console.error("Error updating user points:", error);
+        return null;
+    }
+}
 
-    document.getElementById('save-subject-btn').addEventListener('click', async () => {
-        const name = document.getElementById('modal-subject-name').value;
-        const description = document.getElementById('modal-subject-description').value;
+// --- Navigation and Page Management ---
 
-        if (!name || !description) {
-            alert('Por favor, preencha nome e descrição da matéria.');
-            return;
-        }
+function showPage(pageId) {
+    pages.forEach(page => page.classList.remove('active'));
+    navButtons.forEach(btn => btn.classList.remove('active'));
 
-        try {
-            await db.collection('subjects').add({
-                name: name,
-                description: description,
-                ownerId: currentUser.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            hideModal();
-            loadDashboard();
-        } catch (error) {
-            displayError(`Erro ao criar matéria: ${error.message}`);
-        }
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
+
+    const activeButton = document.querySelector(`.nav-btn[data-page="${pageId.replace('-page', '')}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+}
+
+navButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const pageId = button.getAttribute('data-page');
+        showPage(`${pageId}-page`);
+        // Load data specific to the page if needed
+        if (pageId === 'home') loadHomePage();
+        if (pageId === 'subjects') loadSubjects();
+        if (pageId === 'ranking') loadRanking();
+        if (pageId === 'history') loadHistory();
     });
 });
 
-// Event delegation for viewing subjects
-subjectsList.addEventListener('click', (event) => {
-    if (event.target.classList.contains('view-subject-btn')) {
-        currentSubjectId = event.target.dataset.subjectId;
+// --- Home Page Loading ---
+function loadHomePage() {
+    if (currentUser) {
+        fetchUserData(currentUser.uid).then(userData => {
+            if (userData) {
+                updateUserInfoDisplay(userData.name, userData.class, userData.points);
+                homeUserNameSpan.textContent = userData.name;
+                homeUserClassSpan.textContent = userData.class || 'Não definida';
+            }
+        });
+    }
+}
+
+// --- Subjects Management ---
+
+async function loadSubjects() {
+    subjectsListDiv.innerHTML = ''; // Clear previous list
+    try {
+        const snapshot = await db.collection('subjects').get();
+        if (snapshot.empty) {
+            subjectsListDiv.innerHTML = '<p>Nenhuma matéria encontrada. Crie uma!</p>';
+            return;
+        }
+        snapshot.forEach(doc => {
+            const subject = doc.data();
+            const subjectCard = document.createElement('div');
+            subjectCard.classList.add('subject-card');
+            subjectCard.innerHTML = `
+                <h3>${subject.title}</h3>
+                <p>${subject.description}</p>
+                <button class="view-subject-btn" data-id="${doc.id}">Ver Matéria</button>
+            `;
+            subjectsListDiv.appendChild(subjectCard);
+        });
+    } catch (error) {
+        console.error("Error loading subjects:", error);
+        subjectsListDiv.innerHTML = '<p>Erro ao carregar matérias.</p>';
+    }
+}
+
+async function addSubject() {
+    const title = subjectTitleInput.value.trim();
+    const description = subjectDescriptionInput.value.trim();
+
+    if (!title || !description) {
+        alert("Por favor, preencha o título e a descrição da matéria.");
+        return;
+    }
+
+    try {
+        await db.collection('subjects').add({
+            title: title,
+            description: description,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        subjectTitleInput.value = '';
+        subjectDescriptionInput.value = '';
+        loadSubjects(); // Reload the list
+    } catch (error) {
+        console.error("Error adding subject:", error);
+        alert("Erro ao adicionar matéria.");
+    }
+}
+
+subjectsListDiv.addEventListener('click', (e) => {
+    if (e.target.classList.contains('view-subject-btn')) {
+        currentSubjectId = e.target.getAttribute('data-id');
         loadSubjectDetails(currentSubjectId);
+        showPage('subject-detail');
     }
 });
 
-function loadSubjectDetails(subjectId) {
-    db.collection('subjects').doc(subjectId).get()
-        .then(doc => {
-            if (!doc.exists) {
-                alert('Matéria não encontrada.');
-                return;
-            }
-            const subjectData = doc.data();
-            currentSubjectTitle.textContent = subjectData.name;
-            currentSubjectDescription.textContent = subjectData.description;
+addSubjectBtn.addEventListener('click', addSubject);
 
-            loadTopics(subjectId);
-            loadQuizzes(subjectId);
+// --- Subject Detail and Content Management ---
 
-            showSection('subject-detail-section');
-        })
-        .catch(error => {
-            displayError(`Erro ao carregar detalhes da matéria: ${error.message}`);
-        });
-}
-
-function loadTopics(subjectId) {
-    topicsList.innerHTML = '';
-    db.collection('subjects').doc(subjectId).collection('topics').orderBy('createdAt').get()
-        .then(snapshot => {
-            if (snapshot.empty) {
-                topicsList.innerHTML = '<li>Nenhum tópico encontrado para esta matéria.</li>';
-                return;
-            }
-            snapshot.forEach(doc => {
-                const topic = { id: doc.id, ...doc.data() };
-                const topicItem = document.createElement('li');
-                topicItem.innerHTML = `
-                    <div>
-                        <strong>${topic.title}</strong>
-                        <p>${topic.content}</p>
-                    </div>
-                `;
-                topicsList.appendChild(topicItem);
-            });
-        })
-        .catch(error => {
-            displayError(`Erro ao carregar tópicos: ${error.message}`);
-        });
-}
-
-createTopicBtn.addEventListener('click', () => {
-    showModal('Criar Novo Tópico', `
-        <input type="text" id="modal-topic-title" placeholder="Título do Tópico">
-        <textarea id="modal-topic-content" placeholder="Conteúdo do Tópico"></textarea>
-        <button id="save-topic-btn">Salvar Tópico</button>
-    `);
-
-    document.getElementById('save-topic-btn').addEventListener('click', async () => {
-        const title = document.getElementById('modal-topic-title').value;
-        const content = document.getElementById('modal-topic-content').value;
-
-        if (!title || !content) {
-            alert('Por favor, preencha título e conteúdo do tópico.');
+async function loadSubjectDetails(subjectId) {
+    try {
+        const subjectDoc = await db.collection('subjects').doc(subjectId).get();
+        if (!subjectDoc.exists) {
+            alert("Matéria não encontrada!");
+            showPage('subjects-page');
             return;
         }
+        const subject = subjectDoc.data();
+        currentSubjectTitleHeader.textContent = subject.title;
+        currentSubjectDescriptionPara.textContent = subject.description;
 
-        try {
-            await db.collection('subjects').doc(currentSubjectId).collection('topics').add({
-                title: title,
-                content: content,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            hideModal();
-            loadTopics(currentSubjectId);
-        } catch (error) {
-            displayError(`Erro ao criar tópico: ${error.message}`);
-        }
-    });
-});
+        loadTopics(subjectId);
+        loadQuizzes(subjectId);
 
-function loadQuizzes(subjectId) {
-    quizzesList.innerHTML = '';
-    db.collection('subjects').doc(subjectId).collection('quizzes').get()
-        .then(snapshot => {
-            if (snapshot.empty) {
-                quizzesList.innerHTML = '<li>Nenhum quiz encontrado para esta matéria.</li>';
-                return;
-            }
-            snapshot.forEach(doc => {
-                const quiz = { id: doc.id, ...doc.data() };
-                const quizItem = document.createElement('li');
-                quizItem.classList.add('quiz-item');
-                quizItem.innerHTML = `
-                    <span class="quiz-item-title">${quiz.title}</span>
-                    <button class="play-quiz-btn" data-quiz-id="${doc.id}">Jogar Quiz</button>
-                `;
-                quizzesList.appendChild(quizItem);
-            });
-        })
-        .catch(error => {
-            displayError(`Erro ao carregar quizzes: ${error.message}`);
-        });
+    } catch (error) {
+        console.error("Error loading subject details:", error);
+        alert("Erro ao carregar detalhes da matéria.");
+    }
 }
 
-createQuizBtn.addEventListener('click', () => {
-    showModal('Criar Novo Quiz', `
-        <input type="text" id="modal-quiz-title" placeholder="Título do Quiz">
-        <button id="add-question-btn">Adicionar Pergunta</button>
-        <div id="modal-quiz-questions"></div>
-        <button id="save-quiz-btn">Salvar Quiz</button>
-    `);
-
-    const modalQuizQuestionsDiv = document.getElementById('modal-quiz-questions');
-    let questionsArray = [];
-
-    document.getElementById('add-question-btn').addEventListener('click', () => {
-        const questionNumber = questionsArray.length + 1;
-        const questionHtml = `
-            <div class="modal-question">
-                <h4>Pergunta ${questionNumber}</h4>
-                <input type="text" placeholder="Enunciado da Pergunta" class="modal-question-text"><br>
-                <input type="text" placeholder="Alternativa A" class="modal-option" data-option="A"><br>
-                <input type="text" placeholder="Alternativa B" class="modal-option" data-option="B"><br>
-                <input type="text" placeholder="Alternativa C" class="modal-option" data-option="C"><br>
-                <input type="text" placeholder="Alternativa D" class="modal-option" data-option="D"><br>
-                <input type="text" placeholder="Letra da Resposta Correta (A, B, C, D)" class="modal-correct-answer"><br>
-            </div>
-        `;
-        modalQuizQuestionsDiv.insertAdjacentHTML('beforeend', questionHtml);
-    });
-
-    document.getElementById('save-quiz-btn').addEventListener('click', async () => {
-        const quizTitle = document.getElementById('modal-quiz-title').value;
-        if (!quizTitle) {
-            alert('Por favor, insira um título para o quiz.');
+async function loadTopics(subjectId) {
+    topicsUl.innerHTML = '';
+    try {
+        const snapshot = await db.collection('subjects').doc(subjectId).collection('topics').orderBy('createdAt').get();
+        if (snapshot.empty) {
+            topicsUl.innerHTML = '<li>Nenhum tópico encontrado.</li>';
             return;
         }
-
-        const questionElements = modalQuizQuestionsDiv.querySelectorAll('.modal-question');
-        questionsArray = [];
-
-        questionElements.forEach(qElement => {
-            const questionText = qElement.querySelector('.modal-question-text').value;
-            const options = {};
-            qElement.querySelectorAll('.modal-option').forEach(opt => {
-                options[opt.dataset.option] = opt.value;
-            });
-            const correctAnswer = qElement.querySelector('.modal-correct-answer').value.toUpperCase();
-
-            if (questionText && options.A && options.B && options.C && options.D && correctAnswer) {
-                questionsArray.push({
-                    text: questionText,
-                    options: options,
-                    correctAnswer: correctAnswer
-                });
-            } else {
-                alert('Por favor, preencha todos os campos para cada pergunta.');
-                return; // Stop saving if any question is incomplete
-            }
+        snapshot.forEach(doc => {
+            const topic = doc.data();
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${topic.title}</span>`;
+            topicsUl.appendChild(li);
         });
+    } catch (error) {
+        console.error("Error loading topics:", error);
+        topicsUl.innerHTML = '<li>Erro ao carregar tópicos.</li>';
+    }
+}
 
-        if (questionsArray.length === 0) {
-            alert('Adicione pelo menos uma pergunta ao quiz.');
+async function addTopic() {
+    const topicTitle = topicTitleInput.value.trim();
+    if (!topicTitle) {
+        alert("Por favor, insira um título para o tópico.");
+        return;
+    }
+    if (!currentSubjectId) {
+        alert("Nenhuma matéria selecionada.");
+        return;
+    }
+
+    try {
+        await db.collection('subjects').doc(currentSubjectId).collection('topics').add({
+            title: topicTitle,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        topicTitleInput.value = '';
+        loadTopics(currentSubjectId);
+    } catch (error) {
+        console.error("Error adding topic:", error);
+        alert("Erro ao adicionar tópico.");
+    }
+}
+
+async function loadQuizzes(subjectId) {
+    quizzesUl.innerHTML = '';
+    try {
+        const snapshot = await db.collection('subjects').doc(subjectId).collection('quizzes').orderBy('createdAt').get();
+        if (snapshot.empty) {
+            quizzesUl.innerHTML = '<li>Nenhum quiz encontrado.</li>';
             return;
         }
+        snapshot.forEach(doc => {
+            const quiz = doc.data();
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${quiz.title}</span>
+                <button class="start-quiz-btn" data-quiz-id="${doc.id}">Jogar</button>
+            `;
+            quizzesUl.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Error loading quizzes:", error);
+        quizzesUl.innerHTML = '<li>Erro ao carregar quizzes.</li>';
+    }
+}
 
-        try {
-            await db.collection('subjects').doc(currentSubjectId).collection('quizzes').add({
-                title: quizTitle,
-                questions: questionsArray,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            hideModal();
-            loadQuizzes(currentSubjectId);
-        } catch (error) {
-            displayError(`Erro ao salvar quiz: ${error.message}`);
-        }
-    });
-});
+async function addQuiz() {
+    const quizTitle = quizTitleInput.value.trim();
+    if (!quizTitle) {
+        alert("Por favor, insira um título para o quiz.");
+        return;
+    }
+    if (!currentSubjectId) {
+        alert("Nenhuma matéria selecionada.");
+        return;
+    }
 
-// Event delegation for playing quizzes
-quizzesList.addEventListener('click', (event) => {
-    if (event.target.classList.contains('play-quiz-btn')) {
-        currentQuizId = event.target.dataset.quizId;
-        playQuiz(currentSubjectId, currentQuizId);
+    // For simplicity, we'll create a quiz with no questions initially.
+    // A more complex UI would be needed to add questions here.
+    try {
+        await db.collection('subjects').doc(currentSubjectId).collection('quizzes').add({
+            title: quizTitle,
+            questions: [], // Questions will be added via a separate mechanism or hardcoded for now
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        quizTitleInput.value = '';
+        loadQuizzes(currentSubjectId);
+    } catch (error) {
+        console.error("Error adding quiz:", error);
+        alert("Erro ao adicionar quiz.");
+    }
+}
+
+// Event listeners for subject detail page
+addTopicBtn.addEventListener('click', addTopic);
+addQuizBtn.addEventListener('click', addQuiz);
+backToSubjectsBtn.addEventListener('click', () => showPage('subjects-page'));
+
+quizzesUl.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('start-quiz-btn')) {
+        currentQuizId = e.target.getAttribute('data-quiz-id');
+        await startQuiz(currentSubjectId, currentQuizId);
     }
 });
 
-function playQuiz(subjectId, quizId) {
-    db.collection('subjects').doc(subjectId).collection('quizzes').doc(quizId).get()
-        .then(doc => {
-            if (!doc.exists) {
-                alert('Quiz não encontrado.');
-                return;
-            }
-            currentQuizData = { id: doc.id, ...doc.data() };
-            currentQuestionIndex = 0;
-            userScore = 0;
-            correctAnswersCount = 0;
-            displayQuestion();
-            showSection('subject-detail-section'); // Ensure we are on the detail page
-            quizPlayContainer.classList.remove('hidden');
-        })
-        .catch(error => {
-            displayError(`Erro ao carregar quiz: ${error.message}`);
-        });
+// --- Quiz Logic ---
+
+async function startQuiz(subjectId, quizId) {
+    try {
+        const quizDoc = await db.collection('subjects').doc(subjectId).collection('quizzes').doc(quizId).get();
+        if (!quizDoc.exists) {
+            alert("Quiz não encontrado!");
+            return;
+        }
+        currentQuizData = quizDoc.data();
+        currentQuizData.id = quizId; // Store quiz ID
+        currentQuestionIndex = 0;
+        userScore = 0;
+        quizResultDiv.classList.add('hidden');
+        nextQuestionBtn.classList.add('hidden');
+        submitQuizBtn.classList.remove('hidden');
+        quizTitleHeader.textContent = currentQuizData.title;
+
+        // For this example, we'll use hardcoded questions if the quiz has none.
+        // In a real app, questions would be added via UI.
+        if (!currentQuizData.questions || currentQuizData.questions.length === 0) {
+            currentQuizData.questions = [
+                {
+                    enunciado: "Qual a capital do Brasil?",
+                    alternatives: ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"],
+                    respostaCorreta: "Brasília"
+                },
+                {
+                    enunciado: "Quanto é 2 + 2?",
+                    alternatives: ["3", "4", "5", "6"],
+                    respostaCorreta: "4"
+                },
+                {
+                    enunciado: "Qual o maior planeta do nosso sistema solar?",
+                    alternatives: ["Terra", "Marte", "Júpiter", "Saturno"],
+                    respostaCorreta: "Júpiter"
+                }
+            ];
+            // Optionally save these hardcoded questions back to Firestore if they were empty
+            // await db.collection('subjects').doc(subjectId).collection('quizzes').doc(quizId).update({ questions: currentQuizData.questions });
+        }
+
+        displayQuestion();
+        showPage('quiz-page');
+    } catch (error) {
+        console.error("Error starting quiz:", error);
+        alert("Erro ao iniciar o quiz.");
+    }
 }
 
 function displayQuestion() {
     if (!currentQuizData || currentQuestionIndex >= currentQuizData.questions.length) {
-        showQuizResults();
+        endQuiz();
         return;
     }
 
     const question = currentQuizData.questions[currentQuestionIndex];
-    questionContainer.innerHTML = `
-        <p>${question.text}</p>
-        <div id="options-container"></div>
-    `;
-    optionsContainer = document.getElementById('options-container'); // Re-get element
+    questionContainer.querySelector('#question-text').textContent = question.enunciado;
+    optionsContainer.innerHTML = ''; // Clear previous options
 
-    const options = Object.entries(question.options);
-    options.forEach(([key, value]) => {
+    question.alternatives.forEach(alt => {
         const button = document.createElement('button');
-        button.textContent = `${key}: ${value}`;
-        button.dataset.option = key;
-        button.addEventListener('click', handleOptionClick);
+        button.textContent = alt;
+        button.classList.add('quiz-option');
+        button.addEventListener('click', () => selectOption(button, alt, question.respostaCorreta));
         optionsContainer.appendChild(button);
     });
 
-    nextQuestionBtn.textContent = 'Próximo';
-    nextQuestionBtn.classList.add('hidden'); // Hide until an option is selected
-    quizResults.classList.add('hidden');
-    quizPlayContainer.classList.remove('hidden');
-}
-
-function handleOptionClick(event) {
-    const selectedOption = event.target.dataset.option;
-    const question = currentQuizData.questions[currentQuestionIndex];
-    const isCorrect = (selectedOption === question.correctAnswer);
-
-    // Disable all option buttons
-    optionsContainer.querySelectorAll('button').forEach(btn => {
-        btn.disabled = true;
-        btn.classList.remove('selected');
-        if (btn.dataset.option === question.correctAnswer) {
-            btn.classList.add('correct');
-        } else if (btn.dataset.option === selectedOption) {
-            btn.classList.add('incorrect');
-        }
-    });
-
-    // Update score and count
-    if (isCorrect) {
-        userScore += 10;
-        correctAnswersCount++;
-    }
-
-    event.target.classList.add('selected'); // Highlight selected option
-
-    nextQuestionBtn.textContent = 'Próximo';
-    nextQuestionBtn.classList.remove('hidden');
-}
-
-nextQuestionBtn.addEventListener('click', () => {
-    currentQuestionIndex++;
-    if (currentQuestionIndex < currentQuizData.questions.length) {
-        displayQuestion();
-    } else {
-        showQuizResults();
-    }
-});
-
-function showQuizResults() {
-    document.getElementById('final-score').textContent = userScore;
-    document.getElementById('correct-answers').textContent = correctAnswersCount;
-    quizResults.classList.remove('hidden');
+    updateProgress();
     nextQuestionBtn.classList.add('hidden');
-    questionContainer.classList.add('hidden'); // Hide question container
-
-    // Save quiz history
-    saveQuizHistory(currentQuizData.title, userScore, correctAnswersCount);
-
-    // Update user points in Firestore
-    updateUserPoints(userScore);
+    submitQuizBtn.classList.remove('hidden'); // Show submit only on last question
 }
 
-async function saveQuizHistory(quizTitle, score, correctAnswers) {
-    if (!currentUser) return;
-    try {
-        await db.collection('users').doc(currentUser.uid).collection('history').add({
-            quizName: quizTitle,
-            score: score,
-            correctAnswers: correctAnswers,
-            playedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            subjectId: currentSubjectId // Optional: link to subject
+function updateProgress() {
+    const totalQuestions = currentQuizData.questions.length;
+    const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `${currentQuestionIndex + 1} de ${totalQuestions} perguntas`;
+}
+
+function selectOption(button, selectedAnswer, correctAnswer) {
+    const options = optionsContainer.querySelectorAll('.quiz-option');
+    options.forEach(opt => opt.disabled = true); // Disable all options after one is selected
+
+    button.classList.add('selected');
+
+    if (selectedAnswer === correctAnswer) {
+        userScore += 10;
+        button.classList.add('correct');
+    } else {
+        button.classList.add('incorrect');
+        // Highlight correct answer
+        options.forEach(opt => {
+            if (opt.textContent === correctAnswer) {
+                opt.classList.add('correct');
+            }
         });
-    } catch (error) {
-        displayError(`Erro ao salvar histórico do quiz: ${error.message}`);
     }
+
+    // Show next button after a short delay to see feedback
+    setTimeout(() => {
+        if (currentQuestionIndex < currentQuizData.questions.length - 1) {
+            nextQuestionBtn.classList.remove('hidden');
+            submitQuizBtn.classList.add('hidden');
+        } else {
+            submitQuizBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+        }
+    }, 1000);
 }
 
-async function updateUserPoints(pointsToAdd) {
-    if (!currentUser) return;
-    try {
-        const userRef = db.collection('users').doc(currentUser.uid);
-        await userRef.update({
-            points: firebase.firestore.FieldValue.increment(pointsToAdd)
-        });
-        // Update local profile display
-        profilePointsSpan.textContent = parseInt(profilePointsSpan.textContent) + pointsToAdd;
-    } catch (error) {
-        displayError(`Erro ao atualizar pontos do usuário: ${error.message}`);
-    }
-}
-
-playAgainBtn.addEventListener('click', () => {
-    // Reset UI for playing again
-    questionContainer.classList.remove('hidden');
-    quizResults.classList.add('hidden');
-    currentQuestionIndex = 0;
-    userScore = 0;
-    correctAnswersCount = 0;
+function nextQuestion() {
+    currentQuestionIndex++;
     displayQuestion();
-});
+}
 
-backToDashboardBtn.addEventListener('click', () => {
-    quizPlayContainer.classList.add('hidden'); // Hide quiz play area
-    subjectDetailSection.classList.add('hidden');
-    loadDashboard(); // Reload dashboard to show subjects
-    showSection('dashboard-section');
-});
+async function endQuiz() {
+    submitQuizBtn.classList.add('hidden');
+    nextQuestionBtn.classList.add('hidden');
+    questionContainer.classList.add('hidden');
+    document.getElementById('quiz-progress').classList.add('hidden');
+
+    quizResultDiv.classList.remove('hidden');
+    quizScoreSpan.textContent = userScore;
+    quizTotalPossibleSpan.textContent = currentQuizData.questions.length * 10;
+
+    // Save score to user's history
+    if (currentUser) {
+        try {
+            await db.collection('history').doc(currentUser.uid).collection('items').add({
+                quizTitle: currentQuizData.title,
+                score: userScore,
+                totalPossible: currentQuizData.questions.length * 10,
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            // Update user points
+            await updateUserPoints(currentUser.uid, userScore);
+        } catch (error) {
+            console.error("Error saving quiz history or updating points:", error);
+        }
+    }
+}
+
+nextQuestionBtn.addEventListener('click', nextQuestion);
+submitQuizBtn.addEventListener('click', endQuiz);
+viewHistoryBtn.addEventListener('click', () => showPage('history-page'));
 
 // --- Ranking ---
-viewRankingBtn.addEventListener('click', loadRanking);
 
-function loadRanking() {
-    const rankingList = document.getElementById('ranking-list');
-    rankingList.innerHTML = ''; // Clear previous ranking
-
-    db.collection('users').orderBy('points', 'desc').limit(20).get() // Limit to top 20
-        .then(snapshot => {
-            if (snapshot.empty) {
-                rankingList.innerHTML = '<li>Nenhum usuário encontrado para exibir o ranking.</li>';
-                return;
-            }
-            snapshot.forEach((doc, index) => {
-                const user = doc.data();
-                const rankItem = document.createElement('li');
-                rankItem.innerHTML = `
-                    <span>${user.name}</span>
-                    <span>Sala: ${user.class}</span>
-                    <span>Pontos: ${user.points || 0}</span>
-                `;
-                rankingList.appendChild(rankItem);
-            });
-            showSection('ranking-section');
-        })
-        .catch(error => {
-            displayError(`Erro ao carregar ranking: ${error.message}`);
+async function loadRanking() {
+    rankingListUl.innerHTML = '';
+    try {
+        const snapshot = await db.collection('users').orderBy('points', 'desc').get();
+        if (snapshot.empty) {
+            rankingListUl.innerHTML = '<li>Nenhum usuário encontrado.</li>';
+            return;
+        }
+        snapshot.forEach((doc, index) => {
+            const user = doc.data();
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${index + 1}. ${user.name}</span>
+                <span>${user.points} pontos</span>
+            `;
+            rankingListUl.appendChild(li);
         });
+    } catch (error) {
+        console.error("Error loading ranking:", error);
+        rankingListUl.innerHTML = '<li>Erro ao carregar ranking.</li>';
+    }
 }
-
-backToDashboardFromRankingBtn.addEventListener('click', () => {
-    rankingSection.classList.add('hidden');
-    showSection('dashboard-section');
-});
 
 // --- History ---
-viewHistoryBtn.addEventListener('click', loadHistory);
 
-function loadHistory() {
-    const historyList = document.getElementById('history-list');
-    historyList.innerHTML = ''; // Clear previous history
-
+async function loadHistory() {
+    historyListUl.innerHTML = '';
     if (!currentUser) {
-        historyList.innerHTML = '<li>Faça login para ver seu histórico.</li>';
-        showSection('history-section');
+        historyListUl.innerHTML = '<li>Faça login para ver seu histórico.</li>';
         return;
     }
-
-    db.collection('users').doc(currentUser.uid).collection('history').orderBy('playedAt', 'desc').get()
-        .then(snapshot => {
-            if (snapshot.empty) {
-                historyList.innerHTML = '<li>Você ainda não jogou nenhum quiz.</li>';
-                return;
-            }
-            snapshot.forEach(doc => {
-                const historyEntry = doc.data();
-                const historyItem = document.createElement('li');
-                const playedDate = historyEntry.playedAt ? historyEntry.playedAt.toDate().toLocaleString() : 'Data indisponível';
-                historyItem.innerHTML = `
-                    <strong>${historyEntry.quizName}</strong>
-                    <p>Pontuação: ${historyEntry.score} (${historyEntry.correctAnswers} acertos)</p>
-                    <small>Jogada em: ${playedDate}</small>
-                `;
-                historyList.appendChild(historyItem);
-            });
-            showSection('history-section');
-        })
-        .catch(error => {
-            displayError(`Erro ao carregar histórico: ${error.message}`);
+    try {
+        const snapshot = await db.collection('history').doc(currentUser.uid).collection('items').orderBy('date', 'desc').get();
+        if (snapshot.empty) {
+            historyListUl.innerHTML = '<li>Nenhum quiz jogado ainda.</li>';
+            return;
+        }
+        snapshot.forEach(doc => {
+            const item = doc.data();
+            const li = document.createElement('li');
+            const date = item.date ? item.date.toDate() : new Date();
+            const formattedDate = date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+            li.innerHTML = `
+                <strong>${item.quizTitle}</strong>
+                <span>Pontuação: ${item.score} / ${item.totalPossible}</span>
+                <span>Data: ${formattedDate}</span>
+            `;
+            historyListUl.appendChild(li);
         });
+    } catch (error) {
+        console.error("Error loading history:", error);
+        historyListUl.innerHTML = '<li>Erro ao carregar histórico.</li>';
+    }
 }
 
-backToDashboardFromHistoryBtn.addEventListener('click', () => {
-    historySection.classList.add('hidden');
-    showSection('dashboard-section');
+// --- Firebase Auth State Listener ---
+
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // User is signed in.
+        currentUser = user;
+        const userData = await fetchUserData(user.uid);
+
+        if (userData) {
+            // Check if class is set, especially for Google login
+            if (!userData.class && auth.currentUser.providerData[0].providerId === 'google.com') {
+                promptForClass(user.uid); // Prompt only if class is missing and it was a Google login
+            }
+            updateUserInfoDisplay(userData.name, userData.class, userData.points);
+            showMainApp();
+            showPage('home-page'); // Default to home page
+            loadHomePage(); // Load home page content
+        } else {
+            // User exists in auth but not in Firestore - should not happen with proper registration
+            console.error("User authenticated but not found in Firestore.");
+            logoutUser(); // Force logout if data is inconsistent
+        }
+    } else {
+        // User is signed out.
+        currentUser = null;
+        showAuthScreen();
+        // Clear any lingering app content
+        welcomeMessageSpan.textContent = '';
+        userPointsSpan.textContent = '0';
+        homeUserNameSpan.textContent = '';
+        homeUserClassSpan.textContent = '';
+        subjectsListDiv.innerHTML = '';
+        topicsUl.innerHTML = '';
+        quizzesUl.innerHTML = '';
+        questionContainer.innerHTML = '';
+        optionsContainer.innerHTML = '';
+        quizResultDiv.classList.add('hidden');
+        nextQuestionBtn.classList.add('hidden');
+        submitQuizBtn.classList.add('hidden');
+        currentQuestionIndex = 0;
+        userScore = 0;
+        currentSubjectId = null;
+        currentQuizId = null;
+        currentQuizData = null;
+        quizHistory = [];
+        authMessage.textContent = ''; // Clear any previous auth messages
+        // Reset form inputs
+        nameInput.value = '';
+        emailInput.value = '';
+        passwordInput.value = '';
+        classInput.value = '';
+    }
 });
 
-// --- Close Modal Button ---
-closeModalBtn.addEventListener('click', hideModal);
-modalOverlay.addEventListener('click', hideModal); // Close modal when clicking overlay
+// --- Event Listeners for Auth Buttons ---
+registerBtn.addEventListener('click', registerUser);
+loginBtn.addEventListener('click', loginUser);
+googleLoginBtn.addEventListener('click', loginWithGoogle);
+logoutBtn.addEventListener('click', logoutUser);
 
-// --- Initial Load ---
-// `onAuthStateChanged` will handle showing the correct section initially.
+// --- Initial Setup ---
+// The onAuthStateChanged listener will handle showing the correct screen on load.
