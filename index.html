@@ -7,126 +7,125 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Sexta-Feira Studies</h1>
-        <div id="user-info">
-            <span id="loggedInUser"></span>
-            <button id="logout-btn" class="hidden">Logout</button>
-        </div>
-    </header>
-
-    <main id="app-container">
-        <section id="auth-section" class="active">
-            <h2>Bem-vindo!</h2>
-            <div class="auth-form">
-                <h3>Login</h3>
-                <input type="email" id="login-email" placeholder="Email">
-                <input type="password" id="login-password" placeholder="Senha">
+    <div id="app">
+        <div id="auth-container" class="container">
+            <h1>Sexta-Feira Studies</h1>
+            <div id="login-form">
+                <h2>Login / Cadastro</h2>
+                <input type="text" id="name" placeholder="Nome Completo" required>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Senha" required>
+                <input type="text" id="class" placeholder="Sala (ex: 9A)" required>
+                <button id="register-btn">Cadastrar</button>
                 <button id="login-btn">Entrar</button>
+                <button id="google-login-btn">Entrar com Google</button>
+                <p id="auth-message"></p>
             </div>
-            <div class="auth-form">
-                <h3>Cadastro</h3>
-                <input type="text" id="signup-name" placeholder="Nome">
-                <input type="email" id="signup-email" placeholder="Email">
-                <input type="password" id="signup-password" placeholder="Senha">
-                <input type="text" id="signup-class" placeholder="Sala (ex: 9A)">
-                <button id="signup-btn">Criar Conta</button>
-            </div>
-        </section>
+        </div>
 
-        <section id="dashboard-section" class="hidden">
-            <div class="dashboard-header">
-                <div id="user-profile">
-                    <p><strong>Nome:</strong> <span id="profile-name"></span></p>
-                    <p><strong>Sala:</strong> <span id="profile-class"></span></p>
-                    <p><strong>Pontos:</strong> <span id="profile-points"></span></p>
+        <div id="main-app" class="hidden container">
+            <header>
+                <div id="user-info">
+                    <span id="welcome-message"></span>
+                    <span id="user-points">Pontos: <span id="points-value">0</span></span>
                 </div>
-                <div class="quick-actions">
-                    <button id="create-subject-btn">Criar Matéria</button>
-                    <button id="view-ranking-btn">Ver Ranking</button>
-                    <button id="view-history-btn">Ver Histórico</button>
-                </div>
-            </div>
+                <button id="logout-btn">Logout</button>
+            </header>
+            <nav>
+                <button class="nav-btn" data-page="home">🏠 Home</button>
+                <button class="nav-btn" data-page="subjects">📚 Matérias</button>
+                <button class="nav-btn" data-page="ranking">🏆 Ranking</button>
+                <button class="nav-btn" data-page="history">📜 Histórico</button>
+            </nav>
+            <main>
+                <section id="home-page" class="page active">
+                    <h2>Bem-vindo(a), <span id="home-user-name"></span>!</h2>
+                    <p>Sua sala: <span id="home-user-class"></span></p>
+                    <p>Comece seus estudos explorando as matérias ou desafie-se com um quiz!</p>
+                    <button class="nav-btn" data-page="subjects">Ver Matérias</button>
+                </section>
 
-            <div id="subjects-container" class="content-area">
-                <h2>Minhas Matérias</h2>
-                <div id="subjects-list" class="card-container">
-                    <!-- Matérias serão carregadas aqui -->
-                </div>
-            </div>
+                <section id="subjects-page" class="page">
+                    <h2>Matérias</h2>
+                    <div id="create-subject-form">
+                        <h3>Criar Nova Matéria</h3>
+                        <input type="text" id="subject-title" placeholder="Nome da Matéria">
+                        <textarea id="subject-description" placeholder="Descrição da Matéria"></textarea>
+                        <button id="add-subject-btn">Adicionar Matéria</button>
+                    </div>
+                    <div id="subjects-list" class="card-container">
+                        <!-- Subjects will be loaded here -->
+                    </div>
+                </section>
 
-            <div id="subject-detail-section" class="content-area hidden">
-                <h2 id="current-subject-title"></h2>
-                <p id="current-subject-description"></p>
-                <button id="back-to-dashboard-btn">Voltar para Matérias</button>
-                <button id="create-topic-btn">Adicionar Tópico</button>
-                <button id="create-quiz-btn">Criar Quiz</button>
+                <section id="subject-detail-page" class="page">
+                    <h2 id="current-subject-title"></h2>
+                    <p id="current-subject-description"></p>
+                    <button id="back-to-subjects-btn">Voltar às Matérias</button>
+                    <div id="topics-list">
+                        <h3>Tópicos</h3>
+                        <div id="create-topic-form">
+                            <input type="text" id="topic-title" placeholder="Nome do Tópico">
+                            <button id="add-topic-btn">Adicionar Tópico</button>
+                        </div>
+                        <ul id="topics-ul">
+                            <!-- Topics will be loaded here -->
+                        </ul>
+                    </div>
+                    <div id="quizzes-list">
+                        <h3>Quizzes</h3>
+                        <div id="create-quiz-form">
+                            <input type="text" id="quiz-title" placeholder="Nome do Quiz">
+                            <button id="add-quiz-btn">Criar Quiz</button>
+                        </div>
+                        <ul id="quizzes-ul">
+                            <!-- Quizzes will be loaded here -->
+                        </ul>
+                    </div>
+                </section>
 
-                <div id="topics-container">
-                    <h3>Tópicos</h3>
-                    <ul id="topics-list">
-                        <!-- Tópicos serão carregados aqui -->
-                    </ul>
-                </div>
-
-                <div id="quizzes-container">
-                    <h3>Quizzes Disponíveis</h3>
-                    <ul id="quizzes-list">
-                        <!-- Quizzes serão carregados aqui -->
-                    </ul>
-                </div>
-
-                <div id="quiz-play-container" class="hidden">
-                    <h3 id="quiz-title"></h3>
+                <section id="quiz-page" class="page">
+                    <h2 id="quiz-title-header"></h2>
+                    <div id="quiz-progress">
+                        <div id="progress-bar"></div>
+                        <span id="progress-text"></span>
+                    </div>
                     <div id="question-container">
                         <p id="question-text"></p>
                         <div id="options-container">
-                            <!-- Opções do quiz serão carregadas aqui -->
+                            <!-- Options will be loaded here -->
                         </div>
-                        <button id="next-question-btn">Próximo</button>
                     </div>
-                    <div id="quiz-results" class="hidden">
-                        <h4>Resultado do Quiz</h4>
-                        <p>Sua pontuação: <span id="final-score"></span></p>
-                        <p>Acertos: <span id="correct-answers"></span></p>
-                        <button id="play-again-btn">Jogar Novamente</button>
+                    <button id="next-question-btn" class="hidden">Próximo</button>
+                    <button id="submit-quiz-btn" class="hidden">Finalizar Quiz</button>
+                    <div id="quiz-result" class="hidden">
+                        <h3>Resultado do Quiz</h3>
+                        <p>Sua pontuação: <span id="quiz-score"></span></p>
+                        <p>Total de pontos possíveis: <span id="quiz-total-possible"></span></p>
+                        <button id="view-history-btn">Ver Histórico</button>
                     </div>
-                </div>
-            </div>
+                </section>
 
-            <div id="ranking-section" class="content-area hidden">
-                <h2>Ranking Global</h2>
-                <button id="back-to-dashboard-from-ranking-btn">Voltar</button>
-                <ol id="ranking-list">
-                    <!-- Ranking será carregado aqui -->
-                </ol>
-            </div>
+                <section id="ranking-page" class="page">
+                    <h2>Ranking Global</h2>
+                    <ul id="ranking-list">
+                        <!-- Ranking will be loaded here -->
+                    </ul>
+                </section>
 
-            <div id="history-section" class="content-area hidden">
-                <h2>Histórico de Quizzes</h2>
-                <button id="back-to-dashboard-from-history-btn">Voltar</button>
-                <ul id="history-list">
-                    <!-- Histórico será carregado aqui -->
-                </ul>
-            </div>
-        </section>
-    </main>
-
-    <div id="modal-overlay" class="hidden"></div>
-    <div id="modal" class="hidden">
-        <div id="modal-content">
-            <span id="close-modal-btn">&times;</span>
-            <h3 id="modal-title"></h3>
-            <div id="modal-body">
-                <!-- Conteúdo dinâmico do modal -->
-            </div>
+                <section id="history-page" class="page">
+                    <h2>Histórico de Quizzes</h2>
+                    <ul id="history-list">
+                        <!-- History will be loaded here -->
+                    </ul>
+                </section>
+            </main>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
