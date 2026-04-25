@@ -4,21 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#2563eb" />
-  <meta name="description" content="Sexta-Feira Studies — Aprenda com quizzes, tópicos e conecte-se com amigos!" />
-  <title>Sexta-Feira Studies — Aprenda. Conecte. Evolua.</title>
-  
-  <!-- Stylesheet -->
+  <title>Sexta-Feira Studies</title>
   <link rel="stylesheet" href="style.css" />
-  
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   
-  <!-- Firebase SDK (carregado primeiro para garantir disponibilidade) -->
+  <!-- FIREBASE SDK - Carregado como módulo -->
   <script type="module">
     // ============================================================
-    // FIREBASE INITIALIZATION
+    // IMPORTS
     // ============================================================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
@@ -28,9 +23,7 @@
       signOut, 
       onAuthStateChanged, 
       updateProfile,
-      sendPasswordResetEmail,
-      updateEmail,
-      updatePassword
+      sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
       getDatabase, 
@@ -43,17 +36,14 @@
       onValue, 
       off,
       query, 
-      orderByChild, 
-      orderByKey,
-      limitToFirst, 
-      limitToLast,
-      equalTo,
-      serverTimestamp,
-      increment,
-      runTransaction
+      orderByChild,
+      limitToFirst,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // Firebase Configuration
+    // ============================================================
+    // CONFIGURAÇÃO DO FIREBASE
+    // ============================================================
     const firebaseConfig = {
       apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
       authDomain: "sexta-feira-fb01a.firebaseapp.com",
@@ -61,41 +51,49 @@
       projectId: "sexta-feira-fb01a",
       storageBucket: "sexta-feira-fb01a.firebasestorage.app",
       messagingSenderId: "82809140147",
-      appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6",
-      measurementId: "G-DEZ5ZESQH7"
+      appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
     };
 
-    // Initialize Firebase
+    // ============================================================
+    // INICIALIZAÇÃO
+    // ============================================================
     let app, auth, db;
     
     try {
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getDatabase(app);
-      console.log('✅ Firebase inicializado com sucesso!');
-      console.log('📁 Database URL:', firebaseConfig.databaseURL);
+      console.log('✅ FIREBASE INICIALIZADO COM SUCESSO');
+      console.log('📁 Projeto:', firebaseConfig.projectId);
+      console.log('🔐 Auth:', auth ? 'OK' : 'FALHOU');
+      console.log('🗄️ Database:', db ? 'OK' : 'FALHOU');
     } catch (error) {
-      console.error('❌ Erro ao inicializar Firebase:', error);
+      console.error('❌ ERRO AO INICIALIZAR FIREBASE:', error.message);
+      console.error('Stack:', error.stack);
     }
 
-    // Export all Firebase functions globally
+    // ============================================================
+    // EXPORTAR PARA window._firebase
+    // ============================================================
     window._firebase = { 
-      app, auth, db, 
-      ref, set, get, push, update, remove, 
-      onValue, off, query, orderByChild, orderByKey,
-      limitToFirst, limitToLast, equalTo,
-      serverTimestamp, increment, runTransaction,
-      createUserWithEmailAndPassword, 
-      signInWithEmailAndPassword, 
-      signOut, 
-      onAuthStateChanged, 
+      app, auth, db,
+      ref, set, get, push, update, remove,
+      onValue, off, query, orderByChild, limitToFirst,
+      serverTimestamp,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged,
       updateProfile,
-      sendPasswordResetEmail,
-      updateEmail,
-      updatePassword
+      sendPasswordResetEmail
     };
     
-    console.log('🔧 Firebase modules exported to window._firebase');
+    console.log('🔧 Firebase exportado para window._firebase');
+    console.log('📋 Métodos disponíveis:', Object.keys(window._firebase).join(', '));
+    
+    // Disparar evento para avisar que o Firebase está pronto
+    window.dispatchEvent(new CustomEvent('firebase-ready'));
+    console.log('📢 Evento "firebase-ready" disparado');
   </script>
 </head>
 <body>
@@ -118,7 +116,7 @@
 </div>
 
 <!-- ==================== AUTH SCREEN ==================== -->
-<div id="auth-screen" class="screen hidden">
+<div id="auth-screen" class="screen" style="display: none;">
   <div class="auth-bg">
     <div class="auth-blob b1"></div>
     <div class="auth-blob b2"></div>
@@ -126,24 +124,22 @@
     <div class="auth-blob b4"></div>
   </div>
   
-  <div class="auth-container" id="auth-container">
-    <!-- Brand -->
+  <div class="auth-container">
     <div class="auth-brand">
       <span class="brand-icon">📚</span>
       <h1>Sexta-Feira Studies</h1>
       <p>Aprenda com quizzes, tópicos e amigos!</p>
     </div>
 
-    <!-- Auth Tabs -->
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login" id="tab-login">Entrar</button>
-      <button class="auth-tab" data-tab="register" id="tab-register">Cadastrar</button>
+      <button class="auth-tab active" data-tab="login" id="tab-login">🔑 Entrar</button>
+      <button class="auth-tab" data-tab="register" id="tab-register">✨ Cadastrar</button>
     </div>
 
-    <!-- Login Form -->
+    <!-- LOGIN FORM -->
     <div id="login-form" class="auth-form">
       <div class="field-group">
-        <label>E-mail</label>
+        <label>📧 E-mail</label>
         <div class="input-wrap">
           <span class="input-icon">✉️</span>
           <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email" />
@@ -151,35 +147,31 @@
       </div>
       
       <div class="field-group">
-        <label>Senha</label>
+        <label>🔒 Senha</label>
         <div class="input-wrap">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon">🔐</span>
           <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
-          <button class="toggle-pw" type="button" onclick="togglePassword('login-password', this)" title="Mostrar/ocultar senha">👁️</button>
+          <button class="toggle-pw" type="button" onclick="togglePassword('login-password', this)">👁️</button>
         </div>
       </div>
       
-      <div id="login-error" class="auth-error hidden"></div>
+      <div id="login-error" class="auth-error" style="display: none;"></div>
       
       <button class="btn-primary btn-full" id="btn-login" onclick="handleLogin()">
-        <span id="btn-login-text">Entrar na plataforma</span>
-        <div class="btn-loader hidden" id="btn-login-loader"></div>
+        <span id="btn-login-text">🚀 Entrar na plataforma</span>
+        <div class="btn-loader" id="btn-login-loader" style="display: none;"></div>
       </button>
       
       <p class="auth-hint">
-        Novo por aqui? 
-        <a href="#" onclick="switchAuthTab('register')">Crie sua conta grátis →</a>
-      </p>
-      
-      <p class="auth-hint" style="margin-top: 0.5rem;">
-        <a href="#" onclick="resetPassword()" style="font-size: 0.8rem; color: var(--text-muted);">Esqueceu a senha?</a>
+        Novo aqui? 
+        <a href="#" onclick="switchAuthTab('register')" style="color: #2563eb; font-weight: 600;">Crie sua conta grátis →</a>
       </p>
     </div>
 
-    <!-- Register Form -->
-    <div id="register-form" class="auth-form hidden">
+    <!-- REGISTER FORM -->
+    <div id="register-form" class="auth-form" style="display: none;">
       <div class="field-group">
-        <label>Nome completo</label>
+        <label>👤 Nome completo</label>
         <div class="input-wrap">
           <span class="input-icon">👤</span>
           <input type="text" id="reg-name" placeholder="Seu nome completo" autocomplete="name" />
@@ -187,7 +179,7 @@
       </div>
       
       <div class="field-group">
-        <label>E-mail</label>
+        <label>📧 E-mail</label>
         <div class="input-wrap">
           <span class="input-icon">✉️</span>
           <input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email" />
@@ -195,100 +187,94 @@
       </div>
       
       <div class="field-group">
-        <label>Senha</label>
+        <label>🔒 Senha (mínimo 6 caracteres)</label>
         <div class="input-wrap">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon">🔐</span>
           <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-          <button class="toggle-pw" type="button" onclick="togglePassword('reg-password', this)" title="Mostrar/ocultar senha">👁️</button>
+          <button class="toggle-pw" type="button" onclick="togglePassword('reg-password', this)">👁️</button>
         </div>
       </div>
       
       <div class="field-group">
-        <label>Confirmar senha</label>
+        <label>🔒 Confirmar senha</label>
         <div class="input-wrap">
-          <span class="input-icon">🔒</span>
+          <span class="input-icon">🔐</span>
           <input type="password" id="reg-confirm" placeholder="Repita a senha" autocomplete="new-password" />
         </div>
       </div>
       
-      <div id="reg-error" class="auth-error hidden"></div>
+      <div id="reg-error" class="auth-error" style="display: none;"></div>
       
       <button class="btn-primary btn-full" id="btn-register" onclick="handleRegister()">
-        <span id="btn-register-text">Criar minha conta</span>
-        <div class="btn-loader hidden" id="btn-register-loader"></div>
+        <span id="btn-register-text">✨ Criar minha conta</span>
+        <div class="btn-loader" id="btn-register-loader" style="display: none;"></div>
       </button>
       
       <p class="auth-hint">
         Já tem conta? 
-        <a href="#" onclick="switchAuthTab('login')">Fazer login →</a>
+        <a href="#" onclick="switchAuthTab('login')" style="color: #2563eb; font-weight: 600;">Fazer login →</a>
       </p>
     </div>
   </div>
 </div>
 
-<!-- ==================== MAIN APP ==================== -->
-<div id="app" class="hidden">
+<!-- ==================== APP PRINCIPAL ==================== -->
+<div id="app" style="display: none;">
 
-  <!-- TOP BAR -->
+  <!-- TOPBAR -->
   <header class="topbar">
     <div class="topbar-left">
-      <button class="menu-btn" onclick="toggleSidebar()" aria-label="Abrir menu">☰</button>
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <span class="topbar-brand">📚 Sexta-Feira Studies</span>
     </div>
     <div class="topbar-right">
-      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn" aria-label="Notificações">
-        🔔 
-        <span class="notif-badge hidden" id="notif-count">0</span>
+      <button class="notif-btn" onclick="showScreen('notificacoes')" id="notif-btn">
+        🔔 <span class="notif-badge" id="notif-count" style="display: none;">0</span>
       </button>
-      <div class="topbar-avatar" onclick="showScreen('perfil')" id="topbar-avatar" title="Ver perfil">?</div>
+      <div class="topbar-avatar" onclick="showScreen('perfil')" id="topbar-avatar">?</div>
     </div>
   </header>
 
   <!-- SIDEBAR -->
   <nav class="sidebar" id="sidebar">
-    <div class="sidebar-user" id="sidebar-user">
+    <div class="sidebar-user">
       <div class="sidebar-avatar" id="sidebar-avatar">?</div>
       <div>
         <div class="sidebar-name" id="sidebar-name">Carregando...</div>
         <div class="sidebar-pts" id="sidebar-pts">0 pts</div>
       </div>
     </div>
-    
     <div class="sidebar-menu">
-      <a class="nav-item active" data-screen="home" onclick="showScreen('home')">🏠 <span>Home</span></a>
-      <a class="nav-item" data-screen="materias" onclick="showScreen('materias')">📚 <span>Matérias</span></a>
-      <a class="nav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍 <span>Descobrir</span></a>
-      <a class="nav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆 <span>Ranking</span></a>
-      <a class="nav-item" data-screen="chat" onclick="showScreen('chat')">💬 <span>Chat</span></a>
-      <a class="nav-item" data-screen="perfil" onclick="showScreen('perfil')">👤 <span>Perfil</span></a>
-      <a class="nav-item" data-screen="notificacoes" onclick="showScreen('notificacoes')">🔔 <span>Notificações</span></a>
-      <a class="nav-item" data-screen="adm" id="nav-adm" style="display:none" onclick="showScreen('adm')">⚙️ <span>ADM</span></a>
+      <a class="nav-item active" data-screen="home" onclick="showScreen('home')">🏠 Home</a>
+      <a class="nav-item" data-screen="materias" onclick="showScreen('materias')">📚 Matérias</a>
+      <a class="nav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍 Descobrir</a>
+      <a class="nav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆 Ranking</a>
+      <a class="nav-item" data-screen="chat" onclick="showScreen('chat')">💬 Chat</a>
+      <a class="nav-item" data-screen="perfil" onclick="showScreen('perfil')">👤 Perfil</a>
+      <a class="nav-item" data-screen="notificacoes" onclick="showScreen('notificacoes')">🔔 Notificações</a>
+      <a class="nav-item" data-screen="adm" id="nav-adm" style="display:none" onclick="showScreen('adm')">⚙️ ADM</a>
     </div>
-    
     <div class="sidebar-bottom">
-      <button class="btn-logout" onclick="handleLogout()">🚪 Sair da conta</button>
+      <button class="btn-logout" onclick="handleLogout()">🚪 Sair</button>
     </div>
   </nav>
-  
-  <!-- Sidebar Overlay (mobile) -->
-  <div class="sidebar-overlay hidden" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" style="display: none;" onclick="toggleSidebar()"></div>
 
-  <!-- MAIN CONTENT -->
+  <!-- CONTEÚDO PRINCIPAL -->
   <main class="main-content" id="main-content">
 
-    <!-- ===== HOME SCREEN ===== -->
+    <!-- HOME -->
     <section id="screen-home" class="screen-section">
       <div class="screen-header">
         <div>
           <h2 id="home-greeting">Olá! 👋</h2>
-          <p class="screen-subtitle">Continue de onde parou</p>
+          <p class="screen-subtitle">Bem-vindo ao Sexta-Feira Studies</p>
         </div>
-        <div class="home-xp-badge" id="home-xp-badge">Nível 1</div>
+        <div class="home-xp-badge" id="home-xp-badge">🌱 Nível 1</div>
       </div>
 
-      <!-- Stats Grid -->
       <div class="stats-grid">
-        <div class="stat-card stat-blue">
+        <div class="stat-card stat-blue" onclick="showScreen('materias')" style="cursor:pointer;">
           <div class="stat-icon">📚</div>
           <div class="stat-info">
             <div class="stat-val" id="stat-materias">0</div>
@@ -309,7 +295,7 @@
             <div class="stat-label">Pontos</div>
           </div>
         </div>
-        <div class="stat-card stat-orange">
+        <div class="stat-card stat-orange" onclick="showScreen('ranking')" style="cursor:pointer;">
           <div class="stat-icon">🏆</div>
           <div class="stat-info">
             <div class="stat-val" id="stat-rank">#--</div>
@@ -318,128 +304,114 @@
         </div>
       </div>
 
-      <!-- Progress Bar -->
       <div class="card progress-card">
         <div class="progress-header">
-          <span>Progresso para o próximo nível</span>
+          <span>📈 Progresso para o próximo nível</span>
           <span id="progress-text">0 / 100 pts</span>
         </div>
         <div class="progress-track">
-          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+          <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
         </div>
       </div>
 
-      <!-- Quick Actions -->
       <div class="section-title">⚡ Ações rápidas</div>
       <div class="quick-actions">
         <button class="quick-btn" onclick="showScreen('materias')">
           <span class="qb-icon">📚</span>
-          <span>Ver Matérias</span>
-        </button>
-        <button class="quick-btn" onclick="showScreen('descobrir')">
-          <span class="qb-icon">🌍</span>
-          <span>Descobrir</span>
-        </button>
-        <button class="quick-btn" onclick="showScreen('ranking')">
-          <span class="qb-icon">🏆</span>
-          <span>Ranking</span>
+          <span>Matérias</span>
         </button>
         <button class="quick-btn" onclick="showModal('modal-nova-materia')">
           <span class="qb-icon">➕</span>
           <span>Nova Matéria</span>
         </button>
+        <button class="quick-btn" onclick="showScreen('ranking')">
+          <span class="qb-icon">🏆</span>
+          <span>Ranking</span>
+        </button>
+        <button class="quick-btn" onclick="showScreen('chat')">
+          <span class="qb-icon">💬</span>
+          <span>Chat</span>
+        </button>
       </div>
 
-      <!-- Feed Recente -->
       <div class="section-title">📰 Atividade recente</div>
       <div id="home-feed" class="feed-list">
-        <div class="empty-state">Carregando atividades...</div>
+        <div class="empty-state">📭 Carregando atividades...</div>
       </div>
     </section>
 
-    <!-- ===== MATÉRIAS SCREEN ===== -->
-    <section id="screen-materias" class="screen-section hidden">
+    <!-- MATÉRIAS -->
+    <section id="screen-materias" class="screen-section" style="display: none;">
       <div class="screen-header">
         <div>
           <h2>📚 Matérias</h2>
-          <p class="screen-subtitle">Organize seu aprendizado</p>
+          <p class="screen-subtitle">Organize seus estudos</p>
         </div>
         <button class="btn-primary btn-sm" onclick="showModal('modal-nova-materia')">+ Nova</button>
       </div>
-
       <div class="search-bar">
         <span>🔍</span>
         <input type="text" id="search-materias" placeholder="Buscar matérias..." oninput="filterMaterias()" />
       </div>
-
       <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all" onclick="setMateriaFilter('all', this)">Todas</button>
-        <button class="filter-tab" data-filter="mine" onclick="setMateriaFilter('mine', this)">Minhas</button>
-        <button class="filter-tab" data-filter="public" onclick="setMateriaFilter('public', this)">Públicas</button>
+        <button class="filter-tab active" data-filter="all" onclick="setMateriaFilter('all', this)">🌍 Todas</button>
+        <button class="filter-tab" data-filter="mine" onclick="setMateriaFilter('mine', this)">👤 Minhas</button>
+        <button class="filter-tab" data-filter="public" onclick="setMateriaFilter('public', this)">🌍 Públicas</button>
       </div>
-
       <div id="materias-grid" class="materias-grid">
-        <div class="empty-state">Carregando matérias...</div>
+        <div class="empty-state">⏳ Carregando matérias...</div>
       </div>
     </section>
 
-    <!-- ===== DETALHE MATÉRIA SCREEN ===== -->
-    <section id="screen-materia-detalhe" class="screen-section hidden">
+    <!-- DETALHE MATÉRIA -->
+    <section id="screen-materia-detalhe" class="screen-section" style="display: none;">
       <div class="screen-header">
-        <button class="btn-back" onclick="showScreen('materias')">← Voltar para Matérias</button>
-        <button class="btn-primary btn-sm" onclick="showModal('modal-novo-topico')">+ Novo Tópico</button>
+        <button class="btn-back" onclick="showScreen('materias')">← Voltar</button>
+        <button class="btn-primary btn-sm" onclick="showModal('modal-novo-topico')">+ Tópico</button>
       </div>
-
-      <div class="materia-hero" id="materia-hero">
+      <div class="materia-hero">
         <div class="materia-hero-icon" id="materia-hero-icon">📚</div>
         <div>
           <h2 id="materia-hero-nome">Matéria</h2>
-          <p id="materia-hero-desc">Descrição da matéria</p>
+          <p id="materia-hero-desc">Descrição</p>
           <div class="materia-hero-meta">
             <span id="materia-hero-autor">Por: --</span>
             <span id="materia-hero-topicos">0 tópicos</span>
           </div>
         </div>
       </div>
-
       <div class="section-title">📝 Tópicos</div>
       <div id="topicos-list" class="topicos-list">
-        <div class="empty-state">Nenhum tópico ainda. Crie o primeiro!</div>
+        <div class="empty-state">Nenhum tópico ainda</div>
       </div>
-
-      <div class="section-title">🎮 Quizzes desta matéria</div>
+      <div class="section-title">🎮 Quizzes</div>
       <div id="quizzes-materia" class="quizzes-list">
-        <div class="empty-state">Nenhum quiz ainda.</div>
+        <div class="empty-state">Nenhum quiz ainda</div>
       </div>
-      <button class="btn-secondary btn-full mt-2" onclick="showModal('modal-novo-quiz')">+ Criar Quiz</button>
     </section>
 
-    <!-- ===== DETALHE TÓPICO SCREEN ===== -->
-    <section id="screen-topico-detalhe" class="screen-section hidden">
+    <!-- DETALHE TÓPICO -->
+    <section id="screen-topico-detalhe" class="screen-section" style="display: none;">
       <div class="screen-header">
-        <button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar para Matéria</button>
+        <button class="btn-back" onclick="showScreen('materia-detalhe')">← Voltar</button>
       </div>
-      <div class="topico-content card" id="topico-content">
+      <div class="topico-content card">
         <h2 id="topico-title">Tópico</h2>
         <div class="topico-meta" id="topico-meta"></div>
         <div class="topico-body" id="topico-body"></div>
       </div>
-      
       <div class="section-title">💬 Comentários</div>
-      <div id="topico-comentarios" class="comentarios-list">
-        <div class="empty-state">Sem comentários ainda. Seja o primeiro!</div>
-      </div>
-      
+      <div id="topico-comentarios" class="comentarios-list"></div>
       <div class="comentario-form">
-        <input type="text" id="new-comment" placeholder="Escreva um comentário..." onkeydown="if(event.key==='Enter')addComment()" />
+        <input type="text" id="new-comment" placeholder="Escreva um comentário..." />
         <button class="btn-primary btn-sm" onclick="addComment()">Enviar</button>
       </div>
     </section>
 
-    <!-- ===== QUIZ GAME SCREEN ===== -->
-    <section id="screen-quiz" class="screen-section hidden">
+    <!-- QUIZ GAME -->
+    <section id="screen-quiz" class="screen-section" style="display: none;">
       <div class="quiz-header">
-        <button class="btn-back" onclick="exitQuiz()">← Sair do Quiz</button>
+        <button class="btn-back" onclick="exitQuiz()">← Sair</button>
         <div class="quiz-progress-wrap">
           <div class="quiz-q-counter" id="quiz-q-counter">1/10</div>
           <div class="quiz-progress-track">
@@ -448,116 +420,61 @@
         </div>
         <div class="quiz-timer" id="quiz-timer">⏱ 30s</div>
       </div>
-
       <div class="quiz-body">
-        <div class="quiz-card" id="quiz-card">
+        <div class="quiz-card">
           <div class="quiz-q-num" id="quiz-q-num">Questão 1</div>
-          <div class="quiz-question" id="quiz-question">Carregando pergunta...</div>
+          <div class="quiz-question" id="quiz-question">Carregando...</div>
           <div class="quiz-options" id="quiz-options"></div>
         </div>
       </div>
-
       <div class="quiz-footer">
         <div class="quiz-score-live">⭐ <span id="quiz-score-live">0</span> pts</div>
       </div>
     </section>
 
-    <!-- ===== RESULTADO SCREEN ===== -->
-    <section id="screen-resultado" class="screen-section hidden">
+    <!-- RESULTADO -->
+    <section id="screen-resultado" class="screen-section" style="display: none;">
       <div class="resultado-container">
         <div class="resultado-emoji" id="resultado-emoji">🎉</div>
         <h2 id="resultado-titulo">Parabéns!</h2>
-        <p id="resultado-subtitulo">Quiz finalizado com sucesso</p>
-
+        <p id="resultado-subtitulo">Quiz finalizado</p>
         <div class="resultado-stats">
-          <div class="res-stat">
-            <div class="res-val" id="res-acertos">0</div>
-            <div class="res-label">Acertos</div>
-          </div>
-          <div class="res-stat">
-            <div class="res-val" id="res-total">0</div>
-            <div class="res-label">Total</div>
-          </div>
-          <div class="res-stat">
-            <div class="res-val" id="res-pontos">+0</div>
-            <div class="res-label">Pontos</div>
-          </div>
-          <div class="res-stat">
-            <div class="res-val" id="res-tempo">0s</div>
-            <div class="res-label">Tempo</div>
-          </div>
+          <div class="res-stat"><div class="res-val" id="res-acertos">0</div><div class="res-label">Acertos</div></div>
+          <div class="res-stat"><div class="res-val" id="res-total">0</div><div class="res-label">Total</div></div>
+          <div class="res-stat"><div class="res-val" id="res-pontos">+0</div><div class="res-label">Pontos</div></div>
+          <div class="res-stat"><div class="res-val" id="res-tempo">0s</div><div class="res-label">Tempo</div></div>
         </div>
-
-        <div class="resultado-barra">
-          <div class="resultado-barra-fill" id="resultado-barra-fill" style="width:0%"></div>
-        </div>
-        <p class="resultado-pct" id="resultado-pct">0% de acerto</p>
-
+        <div class="resultado-barra"><div class="resultado-barra-fill" id="resultado-barra-fill"></div></div>
+        <p class="resultado-pct" id="resultado-pct">0%</p>
         <div class="resultado-review" id="resultado-review"></div>
-
         <div class="resultado-actions">
-          <button class="btn-primary" onclick="showScreen('home')">🏠 Voltar ao início</button>
-          <button class="btn-secondary" onclick="showScreen('ranking')">🏆 Ver Ranking</button>
+          <button class="btn-primary" onclick="showScreen('home')">🏠 Início</button>
+          <button class="btn-secondary" onclick="showScreen('ranking')">🏆 Ranking</button>
         </div>
       </div>
     </section>
 
-    <!-- ===== RANKING SCREEN ===== -->
-    <section id="screen-ranking" class="screen-section hidden">
+    <!-- RANKING -->
+    <section id="screen-ranking" class="screen-section" style="display: none;">
       <div class="screen-header">
-        <div>
-          <h2>🏆 Ranking</h2>
-          <p class="screen-subtitle">Os melhores estudantes</p>
-        </div>
+        <div><h2>🏆 Ranking</h2><p class="screen-subtitle">Top estudantes</p></div>
       </div>
-
       <div class="podio" id="podio">
-        <div class="podio-item p2">
-          <div class="podio-avatar" id="podio2-av">?</div>
-          <div class="podio-name" id="podio2-name">--</div>
-          <div class="podio-pts" id="podio2-pts">0</div>
-          <div class="podio-place">2°</div>
-        </div>
-        <div class="podio-item p1">
-          <div class="podio-crown">👑</div>
-          <div class="podio-avatar" id="podio1-av">?</div>
-          <div class="podio-name" id="podio1-name">--</div>
-          <div class="podio-pts" id="podio1-pts">0</div>
-          <div class="podio-place">1°</div>
-        </div>
-        <div class="podio-item p3">
-          <div class="podio-avatar" id="podio3-av">?</div>
-          <div class="podio-name" id="podio3-name">--</div>
-          <div class="podio-pts" id="podio3-pts">0</div>
-          <div class="podio-place">3°</div>
-        </div>
+        <div class="podio-item p2"><div class="podio-avatar" id="podio2-av">?</div><div class="podio-name" id="podio2-name">--</div><div class="podio-pts" id="podio2-pts">0</div><div class="podio-place">2°</div></div>
+        <div class="podio-item p1"><div class="podio-crown">👑</div><div class="podio-avatar" id="podio1-av">?</div><div class="podio-name" id="podio1-name">--</div><div class="podio-pts" id="podio1-pts">0</div><div class="podio-place">1°</div></div>
+        <div class="podio-item p3"><div class="podio-avatar" id="podio3-av">?</div><div class="podio-name" id="podio3-name">--</div><div class="podio-pts" id="podio3-pts">0</div><div class="podio-place">3°</div></div>
       </div>
-
-      <div class="my-rank-card" id="my-rank-card">
-        <span>🏅 Sua posição:</span>
-        <span class="my-rank-num" id="my-rank-num">#--</span>
-        <span id="my-rank-pts">0 pts</span>
-      </div>
-
-      <div id="ranking-list" class="ranking-list">
-        <div class="empty-state">Carregando ranking...</div>
-      </div>
+      <div class="my-rank-card"><span>Sua posição:</span> <span class="my-rank-num" id="my-rank-num">#--</span> <span id="my-rank-pts">0 pts</span></div>
+      <div id="ranking-list" class="ranking-list"><div class="empty-state">Carregando...</div></div>
     </section>
 
-    <!-- ===== DESCOBRIR SCREEN ===== -->
-    <section id="screen-descobrir" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>🌍 Descobrir</h2>
-          <p class="screen-subtitle">Feed global da comunidade</p>
-        </div>
-      </div>
-
-      <!-- Post Creator -->
+    <!-- DESCOBRIR -->
+    <section id="screen-descobrir" class="screen-section" style="display: none;">
+      <div class="screen-header"><div><h2>🌍 Descobrir</h2><p class="screen-subtitle">Feed da comunidade</p></div></div>
       <div class="post-creator card">
         <div class="post-creator-row">
           <div class="pc-avatar" id="pc-avatar">?</div>
-          <input type="text" id="new-post-text" placeholder="Compartilhe algo com a comunidade..." class="post-input" onkeydown="if(event.key==='Enter')createPost()" />
+          <input type="text" id="new-post-text" placeholder="O que você quer compartilhar?" class="post-input" />
         </div>
         <div class="post-creator-actions">
           <div class="post-type-btns">
@@ -568,56 +485,30 @@
           <button class="btn-primary btn-sm" onclick="createPost()">Publicar</button>
         </div>
       </div>
-
-      <!-- Feed Filter -->
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all" onclick="setFeedFilter('all', this)">Todos</button>
         <button class="filter-tab" data-filter="post" onclick="setFeedFilter('post', this)">Posts</button>
         <button class="filter-tab" data-filter="dica" onclick="setFeedFilter('dica', this)">Dicas</button>
         <button class="filter-tab" data-filter="duvida" onclick="setFeedFilter('duvida', this)">Dúvidas</button>
       </div>
-
-      <div id="descobrir-feed" class="feed-list">
-        <div class="empty-state">Carregando feed...</div>
-      </div>
+      <div id="descobrir-feed" class="feed-list"><div class="empty-state">Carregando feed...</div></div>
     </section>
 
-    <!-- ===== CHAT SCREEN ===== -->
-    <section id="screen-chat" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>💬 Chat</h2>
-          <p class="screen-subtitle">Converse com a comunidade</p>
-        </div>
-      </div>
-
+    <!-- CHAT -->
+    <section id="screen-chat" class="screen-section" style="display: none;">
+      <div class="screen-header"><div><h2>💬 Chat</h2><p class="screen-subtitle">Converse com a comunidade</p></div></div>
       <div class="chat-layout">
         <div class="chat-rooms" id="chat-rooms">
-          <div class="chat-rooms-header">
-            <span>Salas</span>
-            <button class="btn-sm btn-primary" onclick="showModal('modal-nova-sala')">+</button>
-          </div>
-          <div id="rooms-list">
-            <div class="room-item"><div class="room-name">Carregando salas...</div></div>
-          </div>
+          <div class="chat-rooms-header"><span>Salas</span><button class="btn-sm btn-primary" onclick="showModal('modal-nova-sala')">+</button></div>
+          <div id="rooms-list"><div class="room-item">Carregando...</div></div>
         </div>
-
         <div class="chat-window" id="chat-window">
-          <div class="chat-no-room" id="chat-no-room">
-            <div class="empty-state">💬 Selecione uma sala para começar a conversar</div>
-          </div>
-          <div class="chat-room-view hidden" id="chat-room-view">
-            <div class="chat-room-header">
-              <div class="chat-room-info">
-                <strong id="chat-room-name">Sala</strong>
-                <span id="chat-room-members">0 membros</span>
-              </div>
-            </div>
-            <div class="chat-messages" id="chat-messages">
-              <div class="empty-state">Sem mensagens ainda. Diga olá! 👋</div>
-            </div>
+          <div class="chat-no-room" id="chat-no-room"><div class="empty-state">Selecione uma sala</div></div>
+          <div class="chat-room-view" id="chat-room-view" style="display: none;">
+            <div class="chat-room-header"><div class="chat-room-info"><strong id="chat-room-name">Sala</strong><span id="chat-room-members"></span></div></div>
+            <div class="chat-messages" id="chat-messages"></div>
             <div class="chat-input-row">
-              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter')sendChatMessage()" />
+              <input type="text" id="chat-msg-input" placeholder="Digite sua mensagem..." />
               <button class="btn-primary btn-sm" onclick="sendChatMessage()">Enviar</button>
             </div>
           </div>
@@ -625,112 +516,133 @@
       </div>
     </section>
 
-    <!-- ===== PERFIL SCREEN ===== -->
-    <section id="screen-perfil" class="screen-section hidden">
+    <!-- PERFIL -->
+    <section id="screen-perfil" class="screen-section" style="display: none;">
       <div class="perfil-hero">
         <div class="perfil-avatar-wrap">
           <div class="perfil-avatar" id="perfil-avatar">?</div>
-          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')" title="Mudar avatar">✏️</button>
+          <button class="perfil-avatar-edit" onclick="showModal('modal-edit-avatar')">✏️</button>
         </div>
         <h2 id="perfil-name">--</h2>
         <p id="perfil-email">--</p>
         <div class="perfil-badges" id="perfil-badges"></div>
       </div>
-
       <div class="perfil-stats">
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-pts">0</div>
-          <div class="pstat-label">Pontos</div>
-        </div>
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-quizzes">0</div>
-          <div class="pstat-label">Quizzes</div>
-        </div>
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-materias">0</div>
-          <div class="pstat-label">Matérias</div>
-        </div>
-        <div class="pstat">
-          <div class="pstat-val" id="pstat-seguidores">0</div>
-          <div class="pstat-label">Seguidores</div>
-        </div>
+        <div class="pstat"><div class="pstat-val" id="pstat-pts">0</div><div class="pstat-label">Pontos</div></div>
+        <div class="pstat"><div class="pstat-val" id="pstat-quizzes">0</div><div class="pstat-label">Quizzes</div></div>
+        <div class="pstat"><div class="pstat-val" id="pstat-materias">0</div><div class="pstat-label">Matérias</div></div>
+        <div class="pstat"><div class="pstat-val" id="pstat-seguidores">0</div><div class="pstat-label">Seguidores</div></div>
       </div>
-
-      <!-- Edit Profile Card -->
       <div class="card mt-2">
         <div class="section-title">✏️ Editar perfil</div>
-        <div class="field-group">
-          <label>Nome</label>
-          <div class="input-wrap">
-            <input type="text" id="edit-name" placeholder="Seu nome" />
-          </div>
-        </div>
-        <div class="field-group">
-          <label>Bio</label>
-          <textarea id="edit-bio" placeholder="Fale sobre você..." rows="3"></textarea>
-        </div>
-        <button class="btn-primary btn-full" onclick="saveProfile()">💾 Salvar perfil</button>
+        <div class="field-group"><label>Nome</label><div class="input-wrap"><input type="text" id="edit-name" /></div></div>
+        <div class="field-group"><label>Bio</label><textarea id="edit-bio" rows="3"></textarea></div>
+        <button class="btn-primary btn-full" onclick="saveProfile()">💾 Salvar</button>
       </div>
-
-      <!-- Histórico de Quizzes -->
-      <div class="section-title">📋 Histórico de quizzes</div>
-      <div id="perfil-historico" class="historico-list">
-        <div class="empty-state">Nenhum quiz realizado ainda</div>
-      </div>
+      <div class="section-title">📋 Histórico</div>
+      <div id="perfil-historico" class="historico-list"><div class="empty-state">Nenhum quiz ainda</div></div>
     </section>
 
-    <!-- ===== NOTIFICAÇÕES SCREEN ===== -->
-    <section id="screen-notificacoes" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>🔔 Notificações</h2>
-        </div>
-        <button class="btn-sm btn-secondary" onclick="markAllNotificationsRead()">✓ Marcar todas lidas</button>
-      </div>
-      <div id="notificacoes-list" class="notif-list">
-        <div class="empty-state">Sem notificações</div>
-      </div>
+    <!-- NOTIFICAÇÕES -->
+    <section id="screen-notificacoes" class="screen-section" style="display: none;">
+      <div class="screen-header"><div><h2>🔔 Notificações</h2></div><button class="btn-sm btn-secondary" onclick="markAllRead()">✓ Marcar lidas</button></div>
+      <div id="notificacoes-list" class="notif-list"><div class="empty-state">Sem notificações</div></div>
     </section>
 
-    <!-- ===== ADM SCREEN ===== -->
-    <section id="screen-adm" class="screen-section hidden">
-      <div class="screen-header">
-        <div>
-          <h2>⚙️ Painel Administrativo</h2>
-          <p class="screen-subtitle">Controle total da plataforma</p>
-        </div>
-      </div>
-
+    <!-- ADM -->
+    <section id="screen-adm" class="screen-section" style="display: none;">
+      <div class="screen-header"><div><h2>⚙️ Painel ADM</h2></div></div>
       <div class="stats-grid">
-        <div class="stat-card stat-blue">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-users">0</div>
-            <div class="stat-label">Usuários</div>
-          </div>
-        </div>
-        <div class="stat-card stat-purple">
-          <div class="stat-icon">📚</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-materias">0</div>
-            <div class="stat-label">Matérias</div>
-          </div>
-        </div>
-        <div class="stat-card stat-green">
-          <div class="stat-icon">🎮</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-quizzes">0</div>
-            <div class="stat-label">Quizzes</div>
-          </div>
-        </div>
-        <div class="stat-card stat-orange">
-          <div class="stat-icon">💬</div>
-          <div class="stat-info">
-            <div class="stat-val" id="adm-total-posts">0</div>
-            <div class="stat-label">Posts</div>
-          </div>
-        </div>
+        <div class="stat-card stat-blue"><div class="stat-icon">👥</div><div class="stat-info"><div class="stat-val" id="adm-total-users">0</div><div class="stat-label">Usuários</div></div></div>
+        <div class="stat-card stat-purple"><div class="stat-icon">📚</div><div class="stat-info"><div class="stat-val" id="adm-total-materias">0</div><div class="stat-label">Matérias</div></div></div>
+        <div class="stat-card stat-green"><div class="stat-icon">🎮</div><div class="stat-info"><div class="stat-val" id="adm-total-quizzes">0</div><div class="stat-label">Quizzes</div></div></div>
+        <div class="stat-card stat-orange"><div class="stat-icon">💬</div><div class="stat-info"><div class="stat-val" id="adm-total-posts">0</div><div class="stat-label">Posts</div></div></div>
       </div>
+      <div id="adm-users-list" class="adm-list"></div>
+    </section>
 
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setAdmTab('usuarios', this)">👥 Us
+  </main>
+
+  <!-- BOTTOM NAV (MOBILE) -->
+  <nav class="bottom-nav">
+    <a class="bnav-item active" data-screen="home" onclick="showScreen('home')">🏠<span>Home</span></a>
+    <a class="bnav-item" data-screen="materias" onclick="showScreen('materias')">📚<span>Matérias</span></a>
+    <a class="bnav-item" data-screen="descobrir" onclick="showScreen('descobrir')">🌍<span>Feed</span></a>
+    <a class="bnav-item" data-screen="ranking" onclick="showScreen('ranking')">🏆<span>Ranking</span></a>
+    <a class="bnav-item" data-screen="chat" onclick="showScreen('chat')">💬<span>Chat</span></a>
+  </nav>
+</div>
+
+<!-- ==================== MODAIS ==================== -->
+<!-- Modal Nova Matéria -->
+<div class="modal" id="modal-nova-materia" style="display: none;">
+  <div class="modal-backdrop" onclick="closeModal('modal-nova-materia')"></div>
+  <div class="modal-box">
+    <div class="modal-header"><h3>📚 Nova Matéria</h3><button class="modal-close" onclick="closeModal('modal-nova-materia')">✕</button></div>
+    <div class="modal-body">
+      <div class="field-group"><label>Nome *</label><input type="text" id="nm-nome" placeholder="Ex: Matemática" /></div>
+      <div class="field-group"><label>Descrição</label><textarea id="nm-desc" rows="3" placeholder="Descreva a matéria..."></textarea></div>
+      <div class="field-group"><label>Visibilidade</label>
+        <select id="nm-vis"><option value="public">🌍 Pública</option><option value="private">🔒 Privada</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-nova-materia')">Cancelar</button>
+      <button class="btn-primary" onclick="criarMateria()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Tópico -->
+<div class="modal" id="modal-novo-topico" style="display: none;">
+  <div class="modal-backdrop" onclick="closeModal('modal-novo-topico')"></div>
+  <div class="modal-box">
+    <div class="modal-header"><h3>📝 Novo Tópico</h3><button class="modal-close" onclick="closeModal('modal-novo-topico')">✕</button></div>
+    <div class="modal-body">
+      <div class="field-group"><label>Título *</label><input type="text" id="nt-titulo" placeholder="Título do tópico" /></div>
+      <div class="field-group"><label>Conteúdo *</label><textarea id="nt-conteudo" rows="6" placeholder="Escreva o conteúdo..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-novo-topico')">Cancelar</button>
+      <button class="btn-primary" onclick="criarTopico()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nova Sala -->
+<div class="modal" id="modal-nova-sala" style="display: none;">
+  <div class="modal-backdrop" onclick="closeModal('modal-nova-sala')"></div>
+  <div class="modal-box">
+    <div class="modal-header"><h3>💬 Nova Sala</h3><button class="modal-close" onclick="closeModal('modal-nova-sala')">✕</button></div>
+    <div class="modal-body">
+      <div class="field-group"><label>Nome *</label><input type="text" id="ns-nome" placeholder="Nome da sala" /></div>
+      <div class="field-group"><label>Descrição</label><input type="text" id="ns-desc" placeholder="Sobre o que é?" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('modal-nova-sala')">Cancelar</button>
+      <button class="btn-primary" onclick="criarSala()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Avatar -->
+<div class="modal" id="modal-edit-avatar" style="display: none;">
+  <div class="modal-backdrop" onclick="closeModal('modal-edit-avatar')"></div>
+  <div class="modal-box">
+    <div class="modal-header"><h3>✏️ Escolher Avatar</h3><button class="modal-close" onclick="closeModal('modal-edit-avatar')">✕</button></div>
+    <div class="modal-body"><div class="avatar-grid" id="avatar-grid"></div></div>
+    <div class="modal-footer"><button class="btn-primary" onclick="saveAvatar()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- CONFETTI CANVAS -->
+<canvas id="confetti-canvas" class="confetti-canvas" style="display: none;"></canvas>
+
+<!-- ==================== APP SCRIPT ==================== -->
+<script src="script.js"></script>
+
+</body>
+</html>
