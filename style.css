@@ -126,6 +126,20 @@ p {
     box-shadow: 0 0px 0 var(--border-dark);
 }
 
+.btn-success {
+    background: var(--success);
+    color: white;
+    box-shadow: 0 4px 0 var(--success-dark);
+}
+
+.btn-success:hover:not(:disabled) {
+    box-shadow: 0 6px 0 var(--success-dark);
+}
+
+.btn-success:active:not(:disabled) {
+    box-shadow: 0 0px 0 var(--success-dark);
+}
+
 .btn-danger {
     background: var(--danger);
     color: white;
@@ -974,45 +988,118 @@ textarea.form-input:focus {
     font-weight: 800;
 }
 
-/* ==================== RESULTADO ====================*/
+/* ==================== RESULTADO DO QUIZ ====================*/
+.result-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 180px);
+    padding: 20px;
+}
+
 .result-box {
     background: var(--bg);
-    padding: 32px;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: var(--shadow-sm);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
     max-width: 500px;
-    margin: 0 auto;
+    width: 100%;
+    overflow: hidden;
 }
 
-.result-box h2 {
+.result-header {
+    background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+    color: white;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.result-header h2 {
+    color: white;
+    margin: 0;
     font-size: 28px;
-    margin-bottom: 28px;
-    color: var(--text);
 }
 
-.result-score {
-    margin-bottom: 28px;
+.result-score-section {
+    display: flex;
+    justify-content: center;
+    padding: 32px 24px;
+    background: var(--bg-light);
+}
+
+.result-score-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
 }
 
 .score-number {
-    font-size: 56px;
+    font-size: 48px;
     font-weight: 800;
-    color: var(--primary);
     line-height: 1;
 }
 
 .score-label {
-    font-size: 16px;
-    color: var(--text-light);
+    font-size: 14px;
     margin-top: 8px;
     font-weight: 600;
+    opacity: 0.9;
+}
+
+.result-details {
+    padding: 28px 24px;
 }
 
 .result-message {
-    font-size: 16px;
-    color: var(--text-light);
+    font-size: 18px;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: 700;
+}
+
+.result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
     margin-bottom: 28px;
+}
+
+.stat {
+    background: var(--bg-light);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid var(--border);
+}
+
+.stat-icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.stat-text {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.stat-text strong {
+    color: var(--text);
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.result-box .btn-primary {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
 }
 
 /* ==================== RANKING ====================*/
@@ -1084,6 +1171,108 @@ textarea.form-input:focus {
     font-weight: 800;
     color: var(--primary);
     white-space: nowrap;
+}
+
+/* ==================== DESCOBRIR ====================*/
+.discover-header {
+    margin-bottom: 24px;
+}
+
+.discover-header h2 {
+    margin-bottom: 16px;
+}
+
+.discover-search {
+    margin-bottom: 16px;
+}
+
+.discover-search input {
+    width: 100%;
+}
+
+.discover-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+}
+
+.discover-tab {
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-light);
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.discover-tab:hover {
+    color: var(--text);
+}
+
+.discover-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.discover-tab-content {
+    display: none;
+}
+
+.discover-tab-content.active {
+    display: block;
+}
+
+.discover-list {
+    display: grid;
+    gap: 12px;
+}
+
+.discover-item {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 2px solid var(--border);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.discover-item:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.discover-item-info {
+    flex: 1;
+    min-width: 150px;
+}
+
+.discover-item-info h4 {
+    color: var(--text);
+    margin-bottom: 4px;
+    font-size: 15px;
+}
+
+.discover-item-info p {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.discover-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.discover-item-actions button {
+    padding: 10px 16px;
+    font-size: 13px;
 }
 
 /* ==================== CHAT ====================*/
@@ -1488,8 +1677,18 @@ textarea.form-input:focus {
         padding: 20px;
     }
 
-    .result-box {
-        padding: 24px;
+    .result-container {
+        min-height: auto;
+        padding: 20px;
+    }
+
+    .result-score-circle {
+        width: 120px;
+        height: 120px;
+    }
+
+    .score-number {
+        font-size: 36px;
     }
 
     .screen-header {
@@ -1524,6 +1723,10 @@ textarea.form-input:focus {
 
     .adm-item-actions button {
         flex: 1;
+    }
+
+    .result-stats {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1656,18 +1859,47 @@ textarea.form-input:focus {
         border-radius: 10px;
     }
 
-    .result-box {
-        padding: 20px;
-        border-radius: 14px;
+    .result-container {
+        min-height: auto;
+        padding: 16px;
     }
 
-    .result-box h2 {
+    .result-box {
+        border-radius: 16px;
+    }
+
+    .result-header {
+        padding: 24px 16px;
+    }
+
+    .result-header h2 {
         font-size: 24px;
-        margin-bottom: 20px;
+    }
+
+    .result-score-section {
+        padding: 24px 16px;
+    }
+
+    .result-score-circle {
+        width: 100px;
+        height: 100px;
     }
 
     .score-number {
-        font-size: 48px;
+        font-size: 32px;
+    }
+
+    .score-label {
+        font-size: 12px;
+    }
+
+    .result-details {
+        padding: 20px 16px;
+    }
+
+    .result-message {
+        font-size: 16px;
+        margin-bottom: 20px;
     }
 
     .profile-header {
@@ -1728,5 +1960,14 @@ textarea.form-input:focus {
 
     .adm-header h2 {
         width: 100%;
+    }
+
+    .discover-tabs {
+        flex-wrap: wrap;
+    }
+
+    .discover-tab {
+        flex: 1;
+        min-width: 120px;
     }
 }
