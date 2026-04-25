@@ -211,9 +211,30 @@
       </div>
     </div>
 
-    <!-- RANKING -->
-    <div id="screen-ranking" class="screen"><h2>🏆 Ranking</h2><div style="display:flex;justify-content:center;gap:15px;margin:20px 0" id="podio"></div><div class="card" style="background:var(--hover)"><span>Sua posição: <strong id="my-rank-num">#--</strong></span> <span id="my-rank-pts">0 pts</span></div><div id="ranking-list" style="margin-top:15px"></div></div>
-
+      <!-- RANKING -->
+    <div id="screen-ranking" class="screen">
+      <h2>🏆 Ranking</h2>
+      
+      <!-- Botões de alternar -->
+      <div style="display:flex;gap:8px;margin-bottom:15px;">
+        <button class="btn btn-primary btn-sm" id="rank-btn-alunos" onclick="switchRanking('alunos', this)">🎓 Alunos</button>
+        <button class="btn btn-sm" id="rank-btn-professores" onclick="switchRanking('professores', this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none;">✅ Professores</button>
+      </div>
+      
+      <!-- Pódio -->
+      <div style="display:flex;justify-content:center;gap:15px;margin:20px 0;" id="podio"></div>
+      
+      <!-- Minha posição -->
+      <div class="card" style="background:var(--hover);">
+        <span>Sua posição: <strong id="my-rank-num">#--</strong></span>
+        <span id="my-rank-pts" style="margin-left:10px;">0 pts</span>
+        <span id="my-rank-mode" style="font-size:11px;color:var(--text3);margin-left:10px;"></span>
+      </div>
+      
+      <!-- Lista -->
+      <div id="ranking-list" style="margin-top:15px;"></div>
+    </div>
+    
     <!-- FEED -->
     <div id="screen-descobrir" class="screen">
       <h2>🌍 Feed Global</h2>
