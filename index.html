@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,127 +6,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sexta-Feira Studies</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
+            authDomain: "sexta-feira-fb01a.firebaseapp.com",
+            projectId: "sexta-feira-fb01a",
+            storageBucket: "sexta-feira-fb01a.appspot.com",
+            messagingSenderId: "82809140147",
+            appId: "1:82809140147:web:2a3f3ece3e81c33b0b91c6"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
 </head>
 <body>
-    <div id="app">
-        <div id="auth-container" class="container">
-            <h1>Sexta-Feira Studies</h1>
-            <div id="login-form">
-                <h2>Login / Cadastro</h2>
-                <input type="text" id="name" placeholder="Nome Completo" required>
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Senha" required>
-                <input type="text" id="class" placeholder="Sala (ex: 9A)" required>
-                <button id="register-btn">Cadastrar</button>
-                <button id="login-btn">Entrar</button>
-                <button id="google-login-btn">Entrar com Google</button>
-                <p id="auth-message"></p>
-            </div>
+    <div id="app" class="hidden">
+        <div id="home" class="screen">
+            <h1>Bem-vindo, <span id="userName"></span>!</h1>
+            <p>Sala: <span id="userClass"></span></p>
+            <button onclick="navigateTo('subjects')">Ir para Matérias</button>
         </div>
-
-        <div id="main-app" class="hidden container">
-            <header>
-                <div id="user-info">
-                    <span id="welcome-message"></span>
-                    <span id="user-points">Pontos: <span id="points-value">0</span></span>
-                </div>
-                <button id="logout-btn">Logout</button>
-            </header>
-            <nav>
-                <button class="nav-btn" data-page="home">🏠 Home</button>
-                <button class="nav-btn" data-page="subjects">📚 Matérias</button>
-                <button class="nav-btn" data-page="ranking">🏆 Ranking</button>
-                <button class="nav-btn" data-page="history">📜 Histórico</button>
-            </nav>
-            <main>
-                <section id="home-page" class="page active">
-                    <h2>Bem-vindo(a), <span id="home-user-name"></span>!</h2>
-                    <p>Sua sala: <span id="home-user-class"></span></p>
-                    <p>Comece seus estudos explorando as matérias ou desafie-se com um quiz!</p>
-                    <button class="nav-btn" data-page="subjects">Ver Matérias</button>
-                </section>
-
-                <section id="subjects-page" class="page">
-                    <h2>Matérias</h2>
-                    <div id="create-subject-form">
-                        <h3>Criar Nova Matéria</h3>
-                        <input type="text" id="subject-title" placeholder="Nome da Matéria">
-                        <textarea id="subject-description" placeholder="Descrição da Matéria"></textarea>
-                        <button id="add-subject-btn">Adicionar Matéria</button>
-                    </div>
-                    <div id="subjects-list" class="card-container">
-                        <!-- Subjects will be loaded here -->
-                    </div>
-                </section>
-
-                <section id="subject-detail-page" class="page">
-                    <h2 id="current-subject-title"></h2>
-                    <p id="current-subject-description"></p>
-                    <button id="back-to-subjects-btn">Voltar às Matérias</button>
-                    <div id="topics-list">
-                        <h3>Tópicos</h3>
-                        <div id="create-topic-form">
-                            <input type="text" id="topic-title" placeholder="Nome do Tópico">
-                            <button id="add-topic-btn">Adicionar Tópico</button>
-                        </div>
-                        <ul id="topics-ul">
-                            <!-- Topics will be loaded here -->
-                        </ul>
-                    </div>
-                    <div id="quizzes-list">
-                        <h3>Quizzes</h3>
-                        <div id="create-quiz-form">
-                            <input type="text" id="quiz-title" placeholder="Nome do Quiz">
-                            <button id="add-quiz-btn">Criar Quiz</button>
-                        </div>
-                        <ul id="quizzes-ul">
-                            <!-- Quizzes will be loaded here -->
-                        </ul>
-                    </div>
-                </section>
-
-                <section id="quiz-page" class="page">
-                    <h2 id="quiz-title-header"></h2>
-                    <div id="quiz-progress">
-                        <div id="progress-bar"></div>
-                        <span id="progress-text"></span>
-                    </div>
-                    <div id="question-container">
-                        <p id="question-text"></p>
-                        <div id="options-container">
-                            <!-- Options will be loaded here -->
-                        </div>
-                    </div>
-                    <button id="next-question-btn" class="hidden">Próximo</button>
-                    <button id="submit-quiz-btn" class="hidden">Finalizar Quiz</button>
-                    <div id="quiz-result" class="hidden">
-                        <h3>Resultado do Quiz</h3>
-                        <p>Sua pontuação: <span id="quiz-score"></span></p>
-                        <p>Total de pontos possíveis: <span id="quiz-total-possible"></span></p>
-                        <button id="view-history-btn">Ver Histórico</button>
-                    </div>
-                </section>
-
-                <section id="ranking-page" class="page">
-                    <h2>Ranking Global</h2>
-                    <ul id="ranking-list">
-                        <!-- Ranking will be loaded here -->
-                    </ul>
-                </section>
-
-                <section id="history-page" class="page">
-                    <h2>Histórico de Quizzes</h2>
-                    <ul id="history-list">
-                        <!-- History will be loaded here -->
-                    </ul>
-                </section>
-            </main>
+        <div id="subjects" class="screen hidden">
+            <h2>Matérias</h2>
+            <input type="text" id="subjectTitle" placeholder="Nome da Matéria">
+            <input type="text" id="subjectDescription" placeholder="Descrição">
+            <button onclick="createSubject()">Criar Matéria</button>
+            <div id="subjectList"></div>
         </div>
+        <div id="quizzes" class="screen hidden">
+            <h2>Quiz</h2>
+            <input type="text" id="quizTitle" placeholder="Título do Quiz">
+            <div id="questions"></div>
+            <button onclick="createQuiz()">Criar Quiz</button>
+        </div>
+        <div id="ranking" class="screen hidden">
+            <h2>Ranking Global</h2>
+            <div id="rankingList"></div>
+        </div>
+        <div id="history" class="screen hidden">
+            <h2>Histórico</h2>
+            <div id="historyList"></div>
+        </div>
+        <button onclick="logout()">Sair</button>
     </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <div id="login" class="screen">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Senha">
+        <input type="text" id="name" placeholder="Nome">
+        <input type="text" id="class" placeholder="Sala">
+        <button onclick="register()">Cadastrar</button>
+        <button onclick="login()">Entrar</button>
+        <button onclick="loginWithGoogle()">Entrar com Google</button>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
