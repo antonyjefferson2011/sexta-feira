@@ -17,10 +17,13 @@ let currentQuiz = null;
 let quizQuestions = [];
 let currentQuestionIndex = 0;
 let score = 0;
+let isAdmin = false;
 
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
+        isAdmin = user.email === 'antony.jefferson.2011@gmail.com';
+        document.getElementById('admin-panel').style.display = isAdmin ? 'block' : 'none';
         document.getElementById('login-container').style.display = 'none';
         document.getElementById('app-container').style.display = 'flex';
         loadUserData();
@@ -85,6 +88,8 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 function showScreen(screen) {
     document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
     document.getElementById(`${screen}-screen`).style.display = 'block';
+    if (screen === 'chat') loadChat();
+    if (screen === 'admin') loadAdminData();
 }
 
 function loadUserData() {
@@ -126,6 +131,16 @@ function loadSubjects() {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `<h3>${data.title}</h3><p>${data.description}</p>`;
+            if (isAdmin) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Excluir matéria?')) db.collection('subjects').doc(doc.id).delete().then(() => loadSubjects());
+                });
+                card.appendChild(deleteBtn);
+            }
             card.addEventListener('click', () => openSubject(doc.id, data));
             list.appendChild(card);
         });
@@ -137,11 +152,29 @@ function openSubject(id, data) {
     document.getElementById('subject-title-display').textContent = data.title;
     document.getElementById('subject-description-display').textContent = data.description;
     showScreen('subject');
+    loadTopics();
     loadQuizzes();
 }
 
 document.getElementById('back-to-subjects-btn').addEventListener('click', () => {
     showScreen('subjects');
+});
+
+document.getElementById('create-topic-btn').addEventListener('click', () => {
+    showScreen('topic-create');
+});
+
+document.getElementById('save-topic-btn').addEventListener('click', () => {
+    const title = document.getElementById('topic-title').value;
+    const content = document.getElementById('topic-content').value;
+    if (title && content) {
+        db.collection('topics').add({ title, content, subjectId: currentSubjectId }).then(() => {
+            showScreen('subject');
+            loadTopics();
+        });
+    } else {
+        alert('Preencha todos os campos.');
+    }
 });
 
 document.getElementById('create-quiz-btn').addEventListener('click', () => {
@@ -197,6 +230,30 @@ document.getElementById('back-to-subject-btn').addEventListener('click', () => {
     showScreen('subject');
 });
 
+function loadTopics() {
+    db.collection('topics').where('subjectId', '==', currentSubjectId).get().then(snapshot => {
+        const list = document.getElementById('topics-list');
+        list.innerHTML = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<h3>${data.title}</h3><p>${data.content.substring(0, 100)}...</p>`;
+            if (isAdmin) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Excluir tópico?')) db.collection('topics').doc(doc.id).delete().then(() => loadTopics());
+                });
+                card.appendChild(deleteBtn);
+            }
+            list.appendChild(card);
+        });
+    });
+}
+
 function loadQuizzes() {
     db.collection('quizzes').where('subjectId', '==', currentSubjectId).get().then(snapshot => {
         const list = document.getElementById('quizzes-list');
@@ -206,6 +263,16 @@ function loadQuizzes() {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `<h3>${data.title}</h3><p>${data.questions.length} perguntas</p>`;
+            if (isAdmin) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Excluir quiz?')) db.collection('quizzes').doc(doc.id).delete().then(() => loadQuizzes());
+                });
+                card.appendChild(deleteBtn);
+            }
             card.addEventListener('click', () => playQuiz(doc.id, data));
             list.appendChild(card);
         });
@@ -314,6 +381,77 @@ function loadHistory() {
         });
     });
 }
+
+// Chat
+function loadChat() {
+    db.collection('chat').orderBy('timestamp').onSnapshot(snapshot => {
+        const messages = document.getElementById('chat-messages');
+        messages.innerHTML = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-message';
+            msgDiv.innerHTML = `<strong>${data.user}:</strong> ${data.message}`;
+            messages.appendChild(msgDiv);
+        });
+        messages.scrollTop = messages.scrollHeight;
+    });
+}
+
+document.getElementById('send-message-btn').addEventListener('click', () => {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (message) {
+        db.collection('chat').add({
+            user: currentUser.displayName || currentUser.email,
+            message,
+            timestamp: new Date()
+        });
+        input.value = '';
+    }
+});
+
+document.getElementById('chat-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('send-message-btn').click();
+});
+
+// Admin
+function loadAdminData() {
+    // Subjects
+    db.collection('subjects').get().then(snapshot => {
+        const list = document.getElementById('admin-subjects-list');
+        list.innerHTML = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const item = document.createElement('div');
+            item.className = 'card';
+            item.innerHTML = `<h3>${data.title}</h3><p>${data.description}</p><button class="btn-secondary delete-admin" data-id="${doc.id}" data-type="subject">Excluir</button>`;
+            list.appendChild(item);
+        });
+    });
+    // Quizzes
+    db.collection('quizzes').get().then(snapshot => {
+        const list = document.getElementById('admin-quizzes-list');
+        list.innerHTML = '';
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const item = document.createElement('div');
+            item.className = 'card';
+            item.innerHTML = `<h3>${data.title}</h3><p>${data.questions.length} perguntas</p><button class="btn-secondary delete-admin" data-id="${doc.id}" data-type="quiz">Excluir</button>`;
+            list.appendChild(item);
+        });
+    });
+}
+
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('delete-admin')) {
+        const id = e.target.dataset.id;
+        const type = e.target.dataset.type;
+        if (confirm(`Excluir ${type}?`)) {
+            db.collection(type === 'subject' ? 'subjects' : 'quizzes').doc(id).delete().then(() => loadAdminData());
+        }
+    }
+});
 
 // Load data on screen show
 document.querySelector('[data-screen="subjects"]').addEventListener('click', loadSubjects);
