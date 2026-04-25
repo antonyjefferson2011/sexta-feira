@@ -599,7 +599,7 @@
         </div>
       </div>
     </div>
-
+<a class="nav-link" onclick="showScreen('chat')" style="display:flex; align-items:center; gap:10px; padding:12px 20px; cursor:pointer; font-weight:600; color:var(--text2); text-decoration:none;">💬 Chat</a>
     <!-- PERFIL -->
     <div id="screen-perfil" style="display:none;">
       <div style="text-align:center; padding:30px 20px; background:linear-gradient(135deg, var(--hover), #e0e7ff); border-radius:20px; margin-bottom:20px;">
@@ -665,13 +665,12 @@
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav" style="position:fixed; bottom:0; left:0; right:0; height:60px; display:flex; align-items:center; z-index:100;">
-    <div onclick="showScreen('home')" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:var(--text3);">🏠<br>Home</div>
-    <div onclick="showScreen('descobrir')" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:var(--text3);">🌍<br>Feed</div>
-    <div onclick="showScreen('materias')" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:var(--text3);">📚<br>Matérias</div>
-    <div onclick="showScreen('ranking')" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:var(--text3);">🏆<br>Ranking</div>
-    <div onclick="showScreen('perfil')" style="flex:1; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:var(--text3);">👤<br>Perfil</div>
+    <div onclick="showScreen('home')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🏠<br>Home</div>
+    <div onclick="showScreen('descobrir')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🌍<br>Feed</div>
+    <div onclick="showScreen('chat')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">💬<br>Chat</div>
+    <div onclick="showScreen('ranking')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">🏆<br>Ranking</div>
+    <div onclick="showScreen('perfil')" class="bnav-item" style="flex:1; text-align:center; cursor:pointer; font-size:10px; font-weight:600; color:var(--text3);">👤<br>Perfil</div>
   </div>
-
 </div><!-- FIM APP -->
 
 <!-- ==================== MODAIS ==================== -->

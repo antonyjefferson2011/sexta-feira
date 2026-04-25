@@ -1524,36 +1524,133 @@ async function sendInvites() {
   selectedInviteUsers = [];
 }
 
-// ============================================================
-// ATUALIZAR verPerfil PARA INCLUIR BOTÃO DE CHAT
-// ============================================================
-const originalVerPerfil = verPerfil;
-verPerfil = async function(uid) {
-  await originalVerPerfil(uid);
-  
-  // Adicionar botão de chat no modal
-  setTimeout(() => {
-    const content = document.getElementById('user-profile-content');
-    if (content && uid !== STATE.user?.uid) {
-      // Verificar se já tem botão de chat
-      if (!content.querySelector('#btn-chat-pv')) {
-        const btnContainer = content.querySelector('div');
-        if (btnContainer) {
-          const chatBtn = document.createElement('button');
-          chatBtn.id = 'btn-chat-pv';
-          chatBtn.textContent = '💬 Enviar Mensagem';
-          chatBtn.style.cssText = 'width:100%; padding:10px; background:#6C5CE7; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:8px;';
-          chatBtn.onclick = function() {
-            closeModal('modal-user-profile');
-            openPrivateChat(uid);
-          };
-          btnContainer.appendChild(chatBtn);
-        }
-      }
-    }
-  }, 100);
-};
+// ========== VER PERFIL (COM BOTÃO DE CHAT) ==========
+let viewingUserId = null;
 
+async function verPerfil(uid) {
+  if (uid === STATE.user?.uid) {
+    showScreen('perfil');
+    return;
+  }
+  
+  viewingUserId = uid;
+  const snap = await db.ref('usuarios/' + uid).once('value');
+  const u = snap.val();
+  if (!u) return;
+  
+  const content = document.getElementById('user-profile-content');
+  if (!content) return;
+  
+  content.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:60px;">${u.avatar || '🎓'}</div>
+      <h3 style="color:var(--text); margin:10px 0;">${esc(u.username || '?')}</h3>
+      <p style="color:var(--text3); font-size:14px;">${esc(u.bio || 'Sem bio')}</p>
+      <div style="margin:10px 0;">
+        <span style="background:var(--hover); color:var(--text); padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px;">⭐ ${fmt(u.points || 0)} pts</span>
+        <span style="background:var(--hover); color:var(--text); padding:5px 12px; border-radius:15px; font-weight:600; font-size:13px; margin-left:5px;">👥 ${u.seguidores || 0} seguidores</span>
+      </div>
+      
+      <!-- Botão Seguir -->
+      <button id="btn-follow-modal" onclick="toggleFollowUser('${uid}', this)" 
+              style="width:100%; padding:12px; background:#6C5CE7; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:5px;">
+        Carregando...
+      </button>
+      
+      <!-- Botão Enviar Mensagem -->
+      <button onclick="closeModal('modal-user-profile'); openPrivateChat('${uid}')" 
+              style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:8px;">
+        💬 Enviar Mensagem
+      </button>
+      
+      <!-- Botão Ver Perfil Completo -->
+      <button onclick="closeModal('modal-user-profile'); viewFullProfile('${uid}')" 
+              style="width:100%; padding:12px; background:var(--border); color:var(--text); border:none; border-radius:25px; cursor:pointer; font-weight:600; font-size:14px; margin-top:5px;">
+        👤 Ver Perfil Completo
+      </button>
+    </div>
+  `;
+  
+  showModal('modal-user-profile');
+  
+  // Verificar se já segue
+  const fSnap = await db.ref('seguidores/' + STATE.user.uid + '/' + uid).once('value');
+  const btn = document.getElementById('btn-follow-modal');
+  if (btn) {
+    if (fSnap.val()) {
+      btn.textContent = '✅ Seguindo';
+      btn.style.background = '#10b981';
+    } else {
+      btn.textContent = '👥 Seguir';
+      btn.style.background = '#6C5CE7';
+    }
+  }
+}
+
+// ========== ABRIR CHAT PRIVADO ==========
+async function openPrivateChat(uid) {
+  if (uid === STATE.user?.uid) {
+    showToast('Não pode enviar mensagem para si mesmo', 'info');
+    return;
+  }
+
+  // Navegar para a tela de chat
+  showScreen('chat');
+  
+  // Pequeno delay para a tela carregar
+  setTimeout(() => {
+    openPVinChat(uid);
+  }, 500);
+}
+
+// ========== VER PERFIL COMPLETO ==========
+async function viewFullProfile(uid) {
+  // Por enquanto só mostra o mesmo modal com mais detalhes
+  const snap = await db.ref('usuarios/' + uid).once('value');
+  const u = snap.val();
+  if (!u) return;
+  
+  const level = getLevelName(u.points || 0);
+  
+  const content = document.getElementById('user-profile-content');
+  if (!content) return;
+  
+  content.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:70px;">${u.avatar || '🎓'}</div>
+      <h2 style="color:var(--text); margin:10px 0;">${esc(u.username || '?')}</h2>
+      <p style="color:var(--text3);">${esc(u.bio || 'Sem bio')}</p>
+      <p style="color:var(--text3); font-size:12px;">📧 ${esc(u.email || 'E-mail privado')}</p>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:15px 0;">
+        <div style="background:var(--hover); padding:10px; border-radius:10px;">
+          <div style="font-size:20px; font-weight:800; color:#6C5CE7;">${fmt(u.points || 0)}</div>
+          <div style="font-size:10px; color:var(--text3);">Pontos</div>
+        </div>
+        <div style="background:var(--hover); padding:10px; border-radius:10px;">
+          <div style="font-size:20px; font-weight:800; color:var(--text);">${u.quizzesPlayed || 0}</div>
+          <div style="font-size:10px; color:var(--text3);">Quizzes</div>
+        </div>
+        <div style="background:var(--hover); padding:10px; border-radius:10px;">
+          <div style="font-size:20px; font-weight:800; color:var(--text);">${u.seguidores || 0}</div>
+          <div style="font-size:10px; color:var(--text3);">Seguidores</div>
+        </div>
+      </div>
+      
+      <div style="margin:10px 0;">
+        <span style="background:var(--hover); color:var(--text); padding:5px 12px; border-radius:15px; font-weight:600; font-size:12px;">🏆 ${level}</span>
+        ${u.isAdmin ? '<span style="background:#fef3c7; color:#92400e; padding:5px 12px; border-radius:15px; font-weight:600; font-size:12px; margin-left:5px;">⚙️ Admin</span>' : ''}
+      </div>
+      
+      <button onclick="closeModal('modal-user-profile'); openPrivateChat('${uid}')" 
+              style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:25px; cursor:pointer; font-weight:700; font-size:14px; margin-top:10px;">
+        💬 Enviar Mensagem
+      </button>
+    </div>
+  `;
+  
+  showModal('modal-user-profile');
+}
 // ============================================================
 // NOTIFICAÇÃO DE CONVITE - ABRIR SALA AO CLICAR
 // ============================================================
