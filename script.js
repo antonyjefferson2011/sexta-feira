@@ -1,7 +1,7 @@
 'use strict';
 
 const GROQ_API_KEY = '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';
-.
+
 // ========== FIREBASE ==========
 const firebaseConfig = {
   apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
@@ -179,7 +179,7 @@ function updateUI() {
 }
 
 // ========== NAVEGAÇÃO ==========
-ffunction navigate(name) {
+function navigate(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const t = $('screen-' + name);
   if (t) t.classList.add('active');
@@ -188,10 +188,9 @@ ffunction navigate(name) {
   const overlay = $('sidebar-overlay');
   if (overlay) overlay.classList.remove('show');
   
-  // 👇 ADICIONE ESTA LINHA AQUI
   document.getElementById('main-content').scrollTop = 0;
   window.scrollTo(0, 0);
-  if (name === 'rita') {
+  
   if (name === 'home') loadHome();
   if (name === 'materias') loadMaterias();
   if (name === 'descobrir') loadFeed();
@@ -200,8 +199,8 @@ ffunction navigate(name) {
   if (name === 'perfil') loadPerfil();
   if (name === 'notificacoes') loadNotifs();
   if (name === 'adm') loadAdm();
+  // Rita não precisa de load
 }
-
 function toggleSidebar() {
   const s = $('sidebar');
   const o = $('sidebar-overlay');

@@ -288,16 +288,18 @@
       </div>
     </div>
 
-    <!-- PERFIL -->
-           <!-- Editar Perfil -->
+     <!-- PERFIL -->
+    <div id="screen-perfil" class="screen">
+      <div style="text-align:center;padding:25px;background:linear-gradient(135deg,var(--hover),#e0e7ff);border-radius:20px;margin-bottom:20px"><div id="perfil-avatar" style="width:80px;height:80px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-size:35px;margin:0 auto;border:4px solid var(--card);box-shadow:0 4px 15px rgba(0,0,0,0.1)">?</div><h2 id="perfil-name">--</h2><p id="perfil-email" style="color:var(--text3)">--</p><div id="perfil-badges"></div></div>
+      
+      <!-- Editar Perfil -->
       <div class="card" style="margin-bottom:15px;">
         <div class="section-title">✏️ Editar Perfil</div>
         <input type="text" id="edit-username" class="input-field" placeholder="Nome de usuário" />
         <textarea id="edit-bio" class="input-field" rows="3" placeholder="Sua bio..."></textarea>
         <button class="btn btn-primary btn-full" onclick="saveProfile()">💾 Salvar</button>
       </div>
-    <div id="screen-perfil" class="screen">
-      <div style="text-align:center;padding:25px;background:linear-gradient(135deg,var(--hover),#e0e7ff);border-radius:20px;margin-bottom:20px"><div id="perfil-avatar" style="width:80px;height:80px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-size:35px;margin:0 auto;border:4px solid var(--card);box-shadow:0 4px 15px rgba(0,0,0,0.1)">?</div><h2 id="perfil-name">--</h2><p id="perfil-email" style="color:var(--text3)">--</p><div id="perfil-badges"></div></div>
+      
       <div style="display:flex;gap:10px;justify-content:center;margin:15px 0"><button class="btn btn-sm" onclick="showFollowers()" style="background:var(--hover);color:var(--text);border:none;border-radius:20px;box-shadow:none">👥 <span id="count-seguidores">0</span> Seguidores</button><button class="btn btn-sm" onclick="showFollowing()" style="background:var(--hover);color:var(--text);border:none;border-radius:20px;box-shadow:none">✨ <span id="count-seguindo">0</span> Seguindo</button></div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px"><div class="card" style="text-align:center"><div id="pstat-pts" style="font-size:20px;font-weight:800;color:#6C5CE7">0</div><div style="font-size:10px;color:var(--text3)">Pts</div></div><div class="card" style="text-align:center"><div id="pstat-quizzes" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Quiz</div></div><div class="card" style="text-align:center"><div id="pstat-materias" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Mat</div></div><div class="card" style="text-align:center"><div id="pstat-seguidores" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Seg</div></div></div>
       <div class="section-title">📋 Histórico</div><div id="perfil-historico"></div>
