@@ -1869,49 +1869,68 @@ async function admToggleProf(uid) {
   toast(novoStatus ? '✅ Agora é Professor!' : '❌ Professor removido', novoStatus ? 'success' : 'info');
   admLoad('usuarios');
 }
-
-// ========== RITA IA ==========
+var ritaHistory = [];
 async function sendRitaMsg() {
-  const inputEl = $('rita-input');
-  const msg = inputEl ? inputEl.value.trim() : '';
+  const input = document.getElementById('rita-input');
+  const msg = input.value.trim();
   if (!msg) return;
-
-  const messagesDiv = $('rita-messages');
-  if (!messagesDiv) return;
-
-  // Mensagem do usuário
-  messagesDiv.innerHTML += `
-    <div style="text-align:right;margin-bottom:12px">
-      <div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px 18px 4px 18px;background:#6C5CE7;color:white;font-size:14px">${esc(msg)}</div>
-    </div>
-  `;
-  if (inputEl) inputEl.value = '';
+  
+  const messagesDiv = document.getElementById('rita-messages');
+  
+  // Mostrar mensagem do usuário
+  messagesDiv.innerHTML += '<div style="text-align:right;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#6C5CE7;color:white;font-size:14px;">' + esc(msg) + '</div></div>';
+  input.value = '';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-  // Typing indicator
-  const typingId = 'typing-' + Date.now();
-  messagesDiv.innerHTML += `
-    <div id="${typingId}" style="text-align:left;margin-bottom:12px">
-      <div style="display:inline-block;padding:10px 14px;border-radius:18px 18px 18px 4px;background:var(--input-bg);color:var(--text);font-size:14px">🤖 Pensando...</div>
-    </div>
-  `;
+  
+  // Mostrar "Pensando..."
+  var typingId = 'typing-' + Date.now();
+  messagesDiv.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;">🧠 Pensando...</div></div>';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-  await new Promise(r => setTimeout(r, 1200));
-
-  const typingEl = $(typingId);
-  if (typingEl) typingEl.remove();
-
-  const reply = '🚧 Estou em desenvolvimento! Em breve responderei suas perguntas com IA. Por enquanto, use os quizzes e o feed para estudar! 📚✨';
-
-  messagesDiv.innerHTML += `
-    <div style="text-align:left;margin-bottom:12px">
-      <div style="display:inline-flex;align-items:center;gap:8px">
-        <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6C5CE7,#a855f7);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
-        <div style="max-width:80%;padding:10px 14px;border-radius:18px 18px 18px 4px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5">${esc(reply)}</div>
-      </div>
-    </div>
-  `;
+  
+  // Histórico para API
+  ritaHistory.push({ role: 'user', content: msg });
+  if (ritaHistory.length > 20) ritaHistory.shift();
+  
+  try {
+    var response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + GROQ_API_KEY
+      },
+      body: JSON.stringify({
+        model: 'llama3-8b-8192',
+        messages: [
+          { role: 'system', content: 'Você é o Neurinho 🧠, um assistente de estudos amigável do Sexta-Feira Studies. Você é um cérebro falante que ajuda alunos com dúvidas, explica matérias, dá dicas de estudo e é muito paciente. Use português brasileiro, emojis e seja animado!' },
+          { role: 'user', content: msg }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      })
+    });
+    
+    var data = await response.json();
+    console.log('Neurinho respondeu:', data);
+    
+    var reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
+    
+    // Remover "Pensando..."
+    var typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+    
+    // Mostrar resposta
+    messagesDiv.innerHTML += '<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5;">🧠 ' + esc(reply) + '</div></div>';
+    ritaHistory.push({ role: 'assistant', content: reply });
+    
+  } catch (error) {
+    console.error('Erro Neurinho:', error);
+    var typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+    
+    // Mensagem de erro amigável
+    messagesDiv.innerHTML += '<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#fee2e2;color:#991b1b;font-size:14px;">🧠❌ Ops! Meu cérebro deu um nó! Tente de novo em instantes...</div></div>';
+  }
+  
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
