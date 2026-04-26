@@ -1,7 +1,7 @@
 'use strict';
 
 const GROQ_API_KEY = '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';
-
+.
 // ========== FIREBASE ==========
 const firebaseConfig = {
   apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
