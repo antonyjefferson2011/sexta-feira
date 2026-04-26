@@ -1169,9 +1169,7 @@ function closeProfileFullscreen() {
 }
 
 // ========== RITA IA ==========
-const ritaHistory = [];
-
-async function sendRitaMsg() {
+const ritasync function sendRitaMsg() {
   const input = document.getElementById('rita-input');
   const msg = input.value.trim();
   if (!msg) return;
@@ -1183,53 +1181,22 @@ async function sendRitaMsg() {
   input.value = '';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
   
-  // Mostrar "digitando..."
+  // Mostrar "em desenvolvimento..."
   const typingId = 'typing-' + Date.now();
-  messagesDiv.innerHTML += `<div id="${typingId}" style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;">🤖 Digitando...</div></div>`;
+  messagesDiv.innerHTML += `<div id="${typingId}" style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;">🤖 Pensando...</div></div>`;
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
   
-  // Histórico
-  ritaHistory.push({ role: 'user', content: msg });
-  if (ritaHistory.length > 20) ritaHistory.shift();
+  // Simular delay
+  await new Promise(r => setTimeout(r, 1000));
   
-  try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + GROQ_API_KEY
-      },
-      body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        messages: [
-          { role: 'system', content: 'Você é a Rita, uma assistente de estudos amigável. Responda em português com emojis.' },
-          ...ritaHistory
-        ],
-        max_tokens: 500,
-        temperature: 0.7
-      })
-    });
-    
-    const data = await response.json();
-    console.log('Resposta da Rita:', data); // 👈 DEBUG
-    
-    const reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
-    
-    // Remover "digitando..."
-    const typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    
-    // Mostrar resposta
-    messagesDiv.innerHTML += `<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;">🤖 ${esc(reply)}</div></div>`;
-    ritaHistory.push({ role: 'assistant', content: reply });
-    
-  } catch (error) {
-    console.error('Erro Rita:', error);
-    const typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    messagesDiv.innerHTML += `<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#fee2e2;color:#991b1b;font-size:14px;">❌ Erro: ${esc(error.message)}</div></div>`;
-  }
+  // Remover "pensando..."
+  const typingEl = document.getElementById(typingId);
+  if (typingEl) typingEl.remove();
   
+  // Mensagem de desenvolvimento
+  const reply = '🚧 *Rita está em desenvolvimento!* Em breve poderei responder suas perguntas com inteligência artificial de verdade. Por enquanto, continue estudando e usando os quizzes da plataforma! 📚✨';
+  
+  messagesDiv.innerHTML += `<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5;">🤖 ${esc(reply)}</div></div>`;
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 // ========== EDITAR PERFIL ==========
