@@ -328,8 +328,39 @@ async function loadHome() {
   updateUI();
 
   const pts = S.ud.points || 0;
-  const levels  = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
-  const names   = ['Iniciante','Aprendiz','Estudante','Dedicado','Scholar','Mestre','Especialista','Professor','Guru','Sábio','Lenda'];
+  const levels = [0, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1000000000, 10000000000, 100000000000, 1000000000000, 10000000000000, 100000000000000, 1000000000000000, 10000000000000000, 100000000000000000, 1000000000000000000, 10000000000000000000, 100000000000000000000, 1000000000000000000000, 10000000000000000000000, 100000000000000000000000];
+const names = [
+  '🌱 Brotinho',
+  '📖 Leitor',
+  '✍️ Anotador',
+  '🧠 Pensador',
+  '🎯 Focado',
+  '💡 Iluminado',
+  '🔥 Motivado',
+  '⚡ Rápido',
+  '🦉 Sábio',
+  '🏅 Dedicado',
+  '⭐ Estrela',
+  '🌟 Brilhante',
+  '💎 Raro',
+  '👑 Elite',
+  '🐉 Lendário',
+  '🌌 Cósmico',
+  '🔮 Místico',
+  '🎓 Mestre',
+  '🧙 Sábio Supremo',
+  '🚀 Transcendente',
+  '👻 Fantasma',
+  '🎪 Quântico',
+  '🌀 Dimensional',
+  '👁️ Onisciente',
+  '🌠 Astral',
+  '🎇 Universal',
+  '💫 Galáctico',
+  '🌟 Estelar',
+  '✨ Celestial',
+  '👼 Divino'
+];
   let lvl = 0;
   for (let i = 0; i < levels.length; i++) { if (pts >= levels[i]) lvl = i; }
   const nxt = levels[Math.min(lvl + 1, levels.length - 1)];
