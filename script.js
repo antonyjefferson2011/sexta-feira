@@ -1912,11 +1912,14 @@ async function sendRitaMsg() {
     // Mostrar resposta
     messagesDiv.innerHTML += '<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5;">🧠 ' + esc(reply) + '</div></div>';
     
-  } catch (error) {
+   } catch (error) {
     console.error('Erro Neurinho:', error);
     var typingEl = document.getElementById(typingId);
     if (typingEl) typingEl.remove();
     
+    // Mostrar o erro real para debug
+    messagesDiv.innerHTML += '<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#fee2e2;color:#991b1b;font-size:14px;">🧠❌ Erro: ' + esc(error.message) + '</div></div>';
+  }
     // Fallback offline
     var msgLower = msg.toLowerCase();
     var resposta = '';
