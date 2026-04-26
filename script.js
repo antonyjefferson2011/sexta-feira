@@ -1565,7 +1565,17 @@ async function loadPerfil() {
   const editBio = $('edit-bio');
   if (editUsername) editUsername.value = S.ud.username || '';
   if (editBio) editBio.value = S.ud.bio || '';
-
+  
+  // ========== BADGES ==========
+  const badges = [];
+  BADGES.forEach(b => {
+    if (b.cond(S.ud)) {
+      badges.push('<span class="badge" title="' + b.nome + '">' + b.nome + '</span>');
+    }
+  });
+  const badgeEl = $('perfil-badges');
+  if (badgeEl) badgeEl.innerHTML = badges.join('') || '<span class="badge">🌱 Novato</span>';
+  
   // Histórico
   const hs = await db.ref('historico/' + S.user.uid).once('value');
   const h = hs.val();
@@ -1657,12 +1667,12 @@ async function verPerfil(uid) {
 
   // Badges
   const badges = [];
-  if (u.isProf) badges.push('<span class="badge" style="background:#e0e7ff;color:#6C5CE7">✅ Professor</span>');
-  if (u.isAdmin) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e">⚙️ Admin</span>');
-  if ((u.points || 0) >= 1000) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e">⭐ 1K</span>');
-  if ((u.quizzesPlayed || 0) >= 10) badges.push('<span class="badge" style="background:#dbeafe;color:#1d4ed8">🎮 Gamer</span>');
-  if (!badges.length) badges.push('<span class="badge">🌱 Novato</span>');
-
+  BADGES.forEach(b => {
+    if (b.cond(u)) {
+      badges.push('<span class="badge" title="' + b.nome + '">' + b.nome + '</span>');
+    }
+  });
+  
   // Posts do usuário
   const postsSnap = await db.ref('posts').orderByChild('autorId').equalTo(uid).limitToLast(5).once('value');
   const posts = postsSnap.val();
