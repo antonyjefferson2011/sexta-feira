@@ -1,5 +1,59 @@
 'use strict';
-
+// ========== BADGES ==========
+const BADGES = [
+  { nome: '🌱 Novato', cond: (u) => true },
+  { nome: '📖 Primeira Aula', cond: (u) => (u.materiasCreated || 0) >= 1 },
+  { nome: '📚 Bibliotecário', cond: (u) => (u.materiasCreated || 0) >= 5 },
+  { nome: '🏛️ Arquiteto', cond: (u) => (u.materiasCreated || 0) >= 10 },
+  { nome: '🎓 Universitário', cond: (u) => (u.materiasCreated || 0) >= 25 },
+  { nome: '📝 Primeiro Tópico', cond: (u) => (u.topicosCreated || 0) >= 1 },
+  { nome: '✍️ Escritor', cond: (u) => (u.topicosCreated || 0) >= 10 },
+  { nome: '📜 Historiador', cond: (u) => (u.topicosCreated || 0) >= 25 },
+  { nome: '🖋️ Best-Seller', cond: (u) => (u.topicosCreated || 0) >= 50 },
+  { nome: '💬 Comentarista', cond: (u) => (u.comentarios || 0) >= 10 },
+  { nome: '🗣️ Palestrante', cond: (u) => (u.comentarios || 0) >= 50 },
+  { nome: '📢 Influenciador', cond: (u) => (u.comentarios || 0) >= 100 },
+  { nome: '🎮 Primeiro Quiz', cond: (u) => (u.quizzesPlayed || 0) >= 1 },
+  { nome: '🕹️ Gamer', cond: (u) => (u.quizzesPlayed || 0) >= 10 },
+  { nome: '🎯 Viciado', cond: (u) => (u.quizzesPlayed || 0) >= 50 },
+  { nome: '👑 Rei dos Quizzes', cond: (u) => (u.quizzesPlayed || 0) >= 100 },
+  { nome: '🏆 Campeão', cond: (u) => (u.quizzesPlayed || 0) >= 500 },
+  { nome: '🎯 Perfeito', cond: (u) => (u.quizPerfeito || 0) >= 1 },
+  { nome: '💯 Perfeccionista', cond: (u) => (u.quizPerfeito || 0) >= 5 },
+  { nome: '🌟 Impecável', cond: (u) => (u.quizPerfeito || 0) >= 10 },
+  { nome: '⚡ Relâmpago', cond: (u) => (u.quizRapido || 0) >= 1 },
+  { nome: '🚀 Turbo', cond: (u) => (u.quizRapido || 0) >= 5 },
+  { nome: '🧠 Gênio', cond: (u) => (u.quizAltaNota || 0) >= 10 },
+  { nome: '🎓 PhD', cond: (u) => (u.quizAltaNota || 0) >= 50 },
+  { nome: '📊 Estatístico', cond: (u) => (u.quizzesCreated || 0) >= 5 },
+  { nome: '🏗️ Construtor', cond: (u) => (u.quizzesCreated || 0) >= 25 },
+  { nome: '🎪 Showman', cond: (u) => (u.quizzesCreated || 0) >= 100 },
+  { nome: '⭐ 1K', cond: (u) => (u.points || 0) >= 1000 },
+  { nome: '💰 5K', cond: (u) => (u.points || 0) >= 5000 },
+  { nome: '💎 10K', cond: (u) => (u.points || 0) >= 10000 },
+  { nome: '🏅 50K', cond: (u) => (u.points || 0) >= 50000 },
+  { nome: '👑 100K', cond: (u) => (u.points || 0) >= 100000 },
+  { nome: '🐉 1M', cond: (u) => (u.points || 0) >= 1000000 },
+  { nome: '🌌 10M', cond: (u) => (u.points || 0) >= 10000000 },
+  { nome: '🚀 100M', cond: (u) => (u.points || 0) >= 100000000 },
+  { nome: '🌠 1B', cond: (u) => (u.points || 0) >= 1000000000 },
+  { nome: '👤 Social', cond: (u) => (u.seguidores || 0) >= 1 },
+  { nome: '👥 Popular', cond: (u) => (u.seguidores || 0) >= 10 },
+  { nome: '🎉 Celebridade', cond: (u) => (u.seguidores || 0) >= 50 },
+  { nome: '🌟 Estrela', cond: (u) => (u.seguidores || 0) >= 100 },
+  { nome: '👑 Ícone', cond: (u) => (u.seguidores || 0) >= 500 },
+  { nome: '💬 Tagarela', cond: (u) => (u.msgsChat || 0) >= 100 },
+  { nome: '🏠 Anfitrião', cond: (u) => (u.salasCriadas || 0) >= 1 },
+  { nome: '📸 Perfil', cond: (u) => u.avatar && u.avatar.startsWith('http') },
+  { nome: '✏️ Bio', cond: (u) => u.bio && u.bio.length > 0 },
+  { nome: '🥇 Top 1', cond: (u) => u.rankPosition === 1 },
+  { nome: '🥈 Top 3', cond: (u) => u.rankPosition && u.rankPosition <= 3 },
+  { nome: '✅ Professor', cond: (u) => u.isProf === true },
+  { nome: '⚙️ Admin', cond: (u) => u.isAdmin === true },
+  { nome: '🤖 IA Friend', cond: (u) => (u.neurinhoMsgs || 0) >= 10 },
+  { nome: '🧠 Neurinho', cond: (u) => (u.neurinhoMsgs || 0) >= 100 },
+  { nome: '🎉 Fundador', cond: (u) => u.createdAt && u.createdAt < 1750000000000 },
+];
 // ========== FIREBASE CONFIG ==========
 const firebaseConfig = {
   apiKey: "AIzaSyBAs3irtV6MuTPHmsxYwYSFMTkX6_6ntz8",
@@ -1506,15 +1560,6 @@ async function loadPerfil() {
   if (cSegEl) cSegEl.textContent = segSnap.val() ? Object.keys(segSnap.val()).length : 0;
   if (cSeguEl) cSeguEl.textContent = seguSnap.val() ? Object.keys(seguSnap.val()).length : 0;
 
-  // Badges
-  const badges = [];
-  if ((S.ud.points || 0) >= 1000) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e">⭐ 1K</span>');
-  if ((S.ud.quizzesPlayed || 0) >= 10) badges.push('<span class="badge" style="background:#dbeafe;color:#1d4ed8">🎮 Gamer</span>');
-  if (S.ud.isAdmin) badges.push('<span class="badge" style="background:#fef3c7;color:#92400e">⚙️ Admin</span>');
-  if (S.ud.isProf) badges.push('<span class="badge" style="background:#e0e7ff;color:#6C5CE7">✅ Professor</span>');
-  const badgesEl = $('perfil-badges');
-  if (badgesEl) badgesEl.innerHTML = badges.join('') || '<span class="badge">🌱 Novato</span>';
-
   // Preencher campos de edição — FIX #6
   const editUsername = $('edit-username');
   const editBio = $('edit-bio');
@@ -1900,7 +1945,7 @@ async function admToggleProf(uid) {
   toast(novoStatus ? '✅ Agora é Professor!' : '❌ Professor removido', novoStatus ? 'success' : 'info');
   admLoad('usuarios');
 }
-var ritaHistory = [];
+
 
 
 console.log('✅ Sexta-Feira Studies carregado com sucesso!');
