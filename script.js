@@ -1095,11 +1095,18 @@ let rankingModo = 'alunos';
 
 function switchRanking(modo, btn) {
   rankingModo = modo;
-  // Resetar botões
-  document.getElementById('rank-btn-alunos').style.cssText = 'background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none;';
-  document.getElementById('rank-btn-professores').style.cssText = 'background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none;';
+  
+  // Resetar botões (com verificação)
+  const btnAlunos = document.getElementById('rank-btn-alunos');
+  const btnProf = document.getElementById('rank-btn-professores');
+  
+  if (btnAlunos) btnAlunos.style.cssText = 'background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none;';
+  if (btnProf) btnProf.style.cssText = 'background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none;';
+  
   // Ativar botão clicado
   if (btn) btn.style.cssText = 'background:#6C5CE7;color:white;border:none;box-shadow:0 4px 0 #5541c8;';
+  
+  // Chamar loadRanking para atualizar a lista
   loadRanking();
 }
 
