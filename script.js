@@ -1672,7 +1672,7 @@ async function verPerfil(uid) {
       badges.push('<span class="badge" title="' + b.nome + '">' + b.nome + '</span>');
     }
   });
-  
+
   // Posts do usuário
   const postsSnap = await db.ref('posts').orderByChild('autorId').equalTo(uid).limitToLast(5).once('value');
   const posts = postsSnap.val();
@@ -1956,6 +1956,44 @@ async function admToggleProf(uid) {
   admLoad('usuarios');
 }
 
-
+// ========== ATIVAR TODAS AS BADGES (ADMIN SECRETO) ==========
+async function ativarTodasBadges() {
+  if (!S.user || !S.ud) return;
+  
+  const senha = prompt('Digite a senha secreta para ativar todas as badges:');
+  if (senha !== 'sextafeira') { toast('Senha incorreta! ❌', 'error'); return; }
+  
+  const dadosBadges = {
+    materiasCreated: 100,
+    topicosCreated: 100,
+    topicosLidos: 200,
+    comentarios: 200,
+    quizzesPlayed: 600,
+    quizzesCreated: 200,
+    quizPerfeito: 50,
+    quizRapido: 50,
+    quizAltaNota: 200,
+    postsDuvida: 50,
+    postsDica: 50,
+    totalPosts: 200,
+    maxLikes: 100,
+    seguidores: 600,
+    seguindo: 100,
+    msgsChat: 2000,
+    salasCriadas: 10,
+    convitesEnviados: 100,
+    pvCount: 100,
+    verificados: 20,
+    neurinhoMsgs: 200,
+    rankPosition: 1,
+    isProf: true,
+    points: 99999999999999999999999999
+  };
+  
+  await db.ref('usuarios/' + S.user.uid).update(dadosBadges);
+  S.ud = { ...S.ud, ...dadosBadges };
+  updateUI();
+  toast('🏅 TODAS AS BADGES ATIVADAS! Recarregue a página!', 'success');
+}
 
 console.log('✅ Sexta-Feira Studies carregado com sucesso!');
