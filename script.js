@@ -1871,13 +1871,13 @@ async function admToggleProf(uid) {
 }
 var ritaHistory = [];
 async function sendRitaMsg() {
-  const input = document.getElementById('rita-input');
-  const msg = input.value.trim();
+  var input = document.getElementById('rita-input');
+  var msg = input.value.trim();
   if (!msg) return;
   
-  const messagesDiv = document.getElementById('rita-messages');
+  var messagesDiv = document.getElementById('rita-messages');
   
-  // Mostrar mensagem do usuário
+  // Mostrar pergunta do usuário
   messagesDiv.innerHTML += '<div style="text-align:right;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#6C5CE7;color:white;font-size:14px;">' + esc(msg) + '</div></div>';
   input.value = '';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -1887,50 +1887,44 @@ async function sendRitaMsg() {
   messagesDiv.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;">🧠 Pensando...</div></div>';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
   
-  // Histórico para API
-  ritaHistory.push({ role: 'user', content: msg });
-  if (ritaHistory.length > 20) ritaHistory.shift();
+  // Esperar um pouco
+  await new Promise(function(r) { setTimeout(r, 1500); });
   
-  try {
-    var response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + GROQ_API_KEY
-      },
-      body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        messages: [
-          { role: 'system', content: 'Você é o Neurinho 🧠, um assistente de estudos amigável do Sexta-Feira Studies. Você é um cérebro falante que ajuda alunos com dúvidas, explica matérias, dá dicas de estudo e é muito paciente. Use português brasileiro, emojis e seja animado!' },
-          { role: 'user', content: msg }
-        ],
-        max_tokens: 500,
-        temperature: 0.7
-      })
-    });
-    
-    var data = await response.json();
-    console.log('Neurinho respondeu:', data);
-    
-    var reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
-    
-    // Remover "Pensando..."
-    var typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    
-    // Mostrar resposta
-    messagesDiv.innerHTML += '<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5;">🧠 ' + esc(reply) + '</div></div>';
-    ritaHistory.push({ role: 'assistant', content: reply });
-    
-  } catch (error) {
-    console.error('Erro Neurinho:', error);
-    var typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    
-    // Mensagem de erro amigável
-    messagesDiv.innerHTML += '<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#fee2e2;color:#991b1b;font-size:14px;">🧠❌ Ops! Meu cérebro deu um nó! Tente de novo em instantes...</div></div>';
+  // Remover "Pensando..."
+  var typingEl = document.getElementById(typingId);
+  if (typingEl) typingEl.remove();
+  
+  // Respostas inteligentes baseadas em palavras-chave
+  var resposta = '';
+  var msgLower = msg.toLowerCase();
+  
+  if (msgLower.includes('oi') || msgLower.includes('olá') || msgLower.includes('ola')) {
+    resposta = '🧠 Olá! Eu sou o Neurinho, o assistente de estudos do Sexta-Feira Studies! Como posso ajudar você hoje? 📚✨';
+  } else if (msgLower.includes('quem é você') || msgLower.includes('quem e voce')) {
+    resposta = '🧠 Eu sou o Neurinho, um cérebro super inteligente que adora ajudar estudantes! Fui criado para tirar dúvidas e dar dicas de estudo. 🎓';
+  } else if (msgLower.includes('obrigado') || msgLower.includes('valeu') || msgLower.includes('brigado')) {
+    resposta = '🧠 De nada! Estou sempre aqui para ajudar. Continue estudando e arrasando! 💪⭐';
+  } else if (msgLower.includes('dica') || msgLower.includes('estudar') || msgLower.includes('estudo')) {
+    resposta = '🧠📚 Dicas de estudo:\n\n1️⃣ Faça resumos com suas próprias palavras\n2️⃣ Use quizzes para testar seu conhecimento\n3️⃣ Estude em blocos de 25 minutos (Pomodoro)\n4️⃣ Explique a matéria para outra pessoa\n5️⃣ Revise o conteúdo no dia seguinte\n\nQual dessas você quer tentar? 🤔';
+  } else if (msgLower.includes('quiz') || msgLower.includes('prova')) {
+    resposta = '🧠 Os quizzes são ótimos para aprender! Vá em Matérias, escolha uma e clique em Quizzes para praticar. Cada acerto te dá pontos! ⭐🏆';
+  } else if (msgLower.includes('ponto') || msgLower.includes('nível') || msgLower.includes('nivel')) {
+    resposta = '🧠 Você ganha pontos:\n⭐ Criando matérias (+20)\n⭐ Criando tópicos (+15)\n⭐ Postando no feed (+5)\n⭐ Comentando (+3)\n⭐ Jogando quizzes (+10 por acerto)\n\nProfessores ganham 2x pontos! ✅';
+  } else if (msgLower.includes('tchau') || msgLower.includes('até') || msgLower.includes('adeus')) {
+    resposta = '🧠 Até logo! Volte sempre que precisar de ajuda. Bons estudos! 👋📚';
+  } else {
+    var respostasGerais = [
+      '🧠 Ótima pergunta! Continue explorando a plataforma para aprender mais! 📚',
+      '🧠 Hmm, interessante! Que tal criar um tópico sobre isso nas Matérias? ✍️',
+      '🧠 Adorei sua curiosidade! O conhecimento é infinito! 🌟',
+      '🧠 Você está no caminho certo! Estudar é o melhor investimento! 💪',
+      '🧠 Que tal jogar um quiz sobre esse assunto? Vá em Matérias e escolha um! 🎮'
+    ];
+    resposta = respostasGerais[Math.floor(Math.random() * respostasGerais.length)];
   }
   
+  // Mostrar resposta
+  messagesDiv.innerHTML += '<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5;white-space:pre-line;">' + resposta + '</div></div>';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
