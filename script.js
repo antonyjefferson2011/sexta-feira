@@ -1176,8 +1176,9 @@ async function sendRitaMsg() {
   const msg = input.value.trim();
   if (!msg) return;
   
-  // Mostrar mensagem do usuário
   const messagesDiv = document.getElementById('rita-messages');
+  
+  // Mostrar mensagem do usuário
   messagesDiv.innerHTML += `<div style="text-align:right;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#6C5CE7;color:white;font-size:14px;">${esc(msg)}</div></div>`;
   input.value = '';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -1201,7 +1202,7 @@ async function sendRitaMsg() {
       body: JSON.stringify({
         model: 'llama3-8b-8192',
         messages: [
-          { role: 'system', content: 'Você é a Rita, uma assistente de estudos amigável e divertida do Sexta-Feira Studies. Você ajuda alunos com dúvidas, explica matérias, dá dicas de estudo e é muito paciente. Use português brasileiro, emojis e seja animada!' },
+          { role: 'system', content: 'Você é a Rita, uma assistente de estudos amigável. Responda em português com emojis.' },
           ...ritaHistory
         ],
         max_tokens: 500,
@@ -1210,6 +1211,8 @@ async function sendRitaMsg() {
     });
     
     const data = await response.json();
+    console.log('Resposta da Rita:', data); // 👈 DEBUG
+    
     const reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
     
     // Remover "digitando..."
@@ -1221,6 +1224,7 @@ async function sendRitaMsg() {
     ritaHistory.push({ role: 'assistant', content: reply });
     
   } catch (error) {
+    console.error('Erro Rita:', error);
     const typingEl = document.getElementById(typingId);
     if (typingEl) typingEl.remove();
     messagesDiv.innerHTML += `<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#fee2e2;color:#991b1b;font-size:14px;">❌ Erro: ${esc(error.message)}</div></div>`;
@@ -1228,7 +1232,6 @@ async function sendRitaMsg() {
   
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
-
 // ========== EDITAR PERFIL ==========
 // ========== EDITAR PERFIL ==========
 
