@@ -1169,36 +1169,32 @@ function closeProfileFullscreen() {
 }
 
 // ========== RITA IA ==========
-const ritasync function sendRitaMsg() {
+async function sendRitaMsg() {
   const input = document.getElementById('rita-input');
   const msg = input.value.trim();
   if (!msg) return;
   
   const messagesDiv = document.getElementById('rita-messages');
   
-  // Mostrar mensagem do usuário
   messagesDiv.innerHTML += `<div style="text-align:right;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#6C5CE7;color:white;font-size:14px;">${esc(msg)}</div></div>`;
   input.value = '';
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
   
-  // Mostrar "em desenvolvimento..."
   const typingId = 'typing-' + Date.now();
   messagesDiv.innerHTML += `<div id="${typingId}" style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;">🤖 Pensando...</div></div>`;
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
   
-  // Simular delay
   await new Promise(r => setTimeout(r, 1000));
   
-  // Remover "pensando..."
   const typingEl = document.getElementById(typingId);
   if (typingEl) typingEl.remove();
   
-  // Mensagem de desenvolvimento
-  const reply = '🚧 *Rita está em desenvolvimento!* Em breve poderei responder suas perguntas com inteligência artificial de verdade. Por enquanto, continue estudando e usando os quizzes da plataforma! 📚✨';
+  const reply = '🚧 Rita está em desenvolvimento! Em breve poderei responder suas perguntas com inteligência artificial. Por enquanto, continue estudando e usando os quizzes da plataforma! 📚✨';
   
   messagesDiv.innerHTML += `<div style="text-align:left;margin-bottom:10px;"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5;">🤖 ${esc(reply)}</div></div>`;
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
+
 // ========== EDITAR PERFIL ==========
 // ========== EDITAR PERFIL ==========
 
