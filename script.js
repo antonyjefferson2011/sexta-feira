@@ -1961,7 +1961,7 @@ async function ativarTodasBadges() {
   if (!S.user || !S.ud) return;
   
   const senha = prompt('Digite a senha secreta para ativar todas as badges:');
-  if (senha !== 'sextafeira') { toast('Senha incorreta! ❌', 'error'); return; }
+  if (senha !== '******') { toast('Senha incorreta! ❌', 'error'); return; }
   
   const dadosBadges = {
     materiasCreated: 100,
