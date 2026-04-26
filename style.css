@@ -1,1060 +1,371 @@
-/* ============================================================
-   Sexta-Feira Studies — Design System & Styles
-   Complete Educational Social Network Stylesheet
-   ============================================================ */
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#6C5CE7" />
+  <title>Sexta-Feira Studies</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f6fa; --card: #ffffff; --text: #1a1a2e; --text2: #555; --text3: #888;
+      --border: #e8e8e8; --primary: #6C5CE7; --hover: #f0edff; --input-bg: #f9f9f9;
+      --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f0f1a; --card: #1a1a2e; --text: #e8e8e8; --text2: #bbb; --text3: #999; --border: #2a2a3e; --input-bg: #22223a; --hover: #1e1e38; --shadow: 0 2px 12px rgba(0,0,0,0.3); }
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    
+    /* AUTH */
+    #auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6C5CE7,#a855f7);padding:20px}
+    .auth-card{background:var(--card);border-radius:24px;padding:35px 25px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+    .input-field{width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:15px;outline:none;background:var(--input-bg);color:var(--text);margin-bottom:10px}
+    
+    /* BOTÕES 3D */
+    .btn{padding:12px 20px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:white;transition:all 0.2s;box-shadow:0 4px 0 rgba(0,0,0,0.2),0 6px 15px rgba(0,0,0,0.15);position:relative;top:0}
+    .btn:active{top:3px;box-shadow:0 1px 0 rgba(0,0,0,0.2),0 3px 8px rgba(0,0,0,0.15)}
+    .btn-primary{background:#6C5CE7;box-shadow:0 4px 0 #5541c8,0 6px 15px rgba(108,92,231,0.3)}
+    .btn-green{background:#10b981;box-shadow:0 4px 0 #059669,0 6px 15px rgba(16,185,129,0.3)}
+    .btn-orange{background:#f59e0b;box-shadow:0 4px 0 #d97706,0 6px 15px rgba(245,158,11,0.3)}
+    .btn-red{background:#ef4444;box-shadow:0 4px 0 #dc2626,0 6px 15px rgba(239,68,68,0.3)}
+    .btn-full{width:100%}
+    .btn-sm{padding:8px 14px;font-size:12px}
+    
+    /* TOPBAR */
+    .topbar{position:fixed;top:0;left:0;right:0;height:55px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 15px;z-index:100}
+    
+    /* SIDEBAR */
+    .sidebar{position:fixed;top:55px;left:0;bottom:0;width:250px;background:var(--card);border-right:1px solid var(--border);z-index:99;transform:translateX(-100%);transition:0.3s;display:flex;flex-direction:column;overflow-y:auto}
+    .sidebar.open{transform:translateX(0)}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:98}
+    .sidebar-overlay.show{display:block}
+    .nav-link{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;font-weight:600;color:var(--text2);text-decoration:none;font-size:14px}
+    .nav-link:hover{background:var(--hover)}
+    
+    /* MAIN */
+    .main-content{padding:70px 15px 80px;max-width:700px;margin:0 auto;min-height:100vh}
+    .screen{display:none}
+    .screen.active{display:block}
+    
+    /* CARDS */
+    .card{background:var(--card);border-radius:15px;padding:15px;box-shadow:var(--shadow);margin-bottom:10px}
+    .card-3d{box-shadow:0 6px 0 rgba(0,0,0,0.08),0 8px 20px rgba(0,0,0,0.1);transition:all 0.2s;cursor:pointer}
+    .card-3d:active{box-shadow:0 2px 0 rgba(0,0,0,0.08),0 4px 10px rgba(0,0,0,0.1);transform:translateY(3px)}
+    
+    /* STATS */
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+    .stat-card{background:var(--card);border-radius:15px;padding:15px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+    
+    /* BOTTOM NAV */
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;z-index:100}
+    .bnav-item{flex:1;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3);padding:5px 0;transition:0.2s}
+    .bnav-item:hover{color:#6C5CE7}
+    
+    /* CHAT */
+    .chat-container{display:flex;gap:10px;height:calc(100vh - 200px);min-height:400px}
+    .chat-sidebar{width:200px;background:var(--card);border-radius:15px;border:2px solid var(--border);overflow-y:auto;flex-shrink:0}
+    .chat-main{flex:1;background:var(--card);border-radius:15px;border:2px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+    .chat-messages{flex:1;overflow-y:auto;padding:12px}
+    .chat-input-row{display:flex;gap:6px;padding:10px;border-top:2px solid var(--border)}
+    
+    /* MODAL */
+    .modal{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center}
+    .modal.show{display:flex}
+    .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
+    .modal-box{position:relative;background:var(--card);border-radius:20px;padding:25px;width:90%;max-width:450px;max-height:90vh;overflow-y:auto}
+    
+    /* TOAST */
+    .toast-container{position:fixed;bottom:70px;right:15px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+    
+    /* MISC */
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin:2px}
+    .unread{border-left:3px solid #6C5CE7}
+    .section-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:15px 0 10px}
+  </style>
+</head>
+<body>
 
-/* ==================== CSS VARIABLES ==================== */
-:root {
-  /* Primary Colors */
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #3b82f6;
-  --primary-xlight: #dbeafe;
-  --primary-xxlight: #eff6ff;
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:20px"><div style="font-size:50px">📚</div><h1 style="color:#6C5CE7;font-size:22px">Sexta-Feira Studies</h1><p style="color:var(--text3);font-size:13px">Aprenda com quizzes e amigos!</p></div>
+    <div style="display:flex;gap:5px;background:var(--input-bg);border-radius:12px;padding:4px;margin-bottom:15px">
+      <button class="btn btn-primary" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;box-shadow:none;background:white;color:#6C5CE7">🔑 Entrar</button>
+      <button class="btn" id="tab-register" onclick="switchAuthTab('register')" style="flex:1;box-shadow:none;background:transparent;color:var(--text3)">✨ Cadastrar</button>
+    </div>
+    <div id="login-form">
+      <input type="text" id="login-username" class="input-field" placeholder="Nome de usuário" />
+      <input type="password" id="login-password" class="input-field" placeholder="Senha" />
+      <div id="login-error" style="display:none;background:#ffe0e0;color:#d00;padding:10px;border-radius:8px;margin-bottom:10px;font-size:13px"></div>
+      <button class="btn btn-primary btn-full" onclick="handleLogin()">🚀 Entrar</button>
+      <p style="text-align:center;margin-top:12px;font-size:13px;color:var(--text3)">Novo? <a href="#" onclick="switchAuthTab('register')" style="color:#6C5CE7">Criar conta →</a></p>
+    </div>
+    <div id="register-form" style="display:none">
+      <input type="text" id="reg-username" class="input-field" placeholder="Nome de usuário (único)" />
+      <input type="email" id="reg-email" class="input-field" placeholder="E-mail" />
+      <input type="password" id="reg-password" class="input-field" placeholder="Senha (mín. 6)" />
+      <input type="password" id="reg-confirm" class="input-field" placeholder="Confirmar senha" />
+      <div id="reg-error" style="display:none;background:#ffe0e0;color:#d00;padding:10px;border-radius:8px;margin-bottom:10px;font-size:13px"></div>
+      <button class="btn btn-primary btn-full" onclick="handleRegister()">✨ Criar conta</button>
+      <p style="text-align:center;margin-top:12px;font-size:13px;color:var(--text3)">Já tem? <a href="#" onclick="switchAuthTab('login')" style="color:#6C5CE7">Entrar →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px"><button onclick="toggleSidebar()" style="font-size:22px;background:none;border:none;cursor:pointer;color:var(--text)">☰</button><span style="font-weight:800;color:#6C5CE7;font-size:18px">📚 Sexta-Feira</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onclick="navigate('notificacoes')" style="position:relative;font-size:20px;background:none;border:none;cursor:pointer">🔔<span id="notif-badge" style="display:none;position:absolute;top:-5px;right:-5px;background:red;color:white;font-size:10px;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;font-weight:700">0</span></button>
+      <div id="topbar-avatar" onclick="navigate('perfil')" style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;font-size:16px">?</div>
+    </div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div style="padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px"><div id="sidebar-avatar" style="width:45px;height:45px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">?</div><div><div id="sidebar-name" style="font-weight:700">...</div><div id="sidebar-pts" style="font-size:12px;color:#6C5CE7">0 pts</div></div></div>
+    <div style="flex:1;overflow-y:auto">
+      <a class="nav-link" onclick="navigate('rita')">🤖 Rita IA</a>
+      <a class="nav-link" onclick="navigate('home')">🏠 Home</a>
+      <a class="nav-link" onclick="navigate('materias')">📚 Matérias</a>
+      <a class="nav-link" onclick="navigate('descobrir')">🌍 Feed</a>
+      <a class="nav-link" onclick="navigate('ranking')">🏆 Ranking</a>
+      <a class="nav-link" onclick="navigate('chat')">💬 Chat</a>
+      <a class="nav-link" onclick="navigate('perfil')">👤 Perfil</a>
+      <a class="nav-link" onclick="navigate('notificacoes')">🔔 Notificações</a>
+      <a class="nav-link" id="nav-adm" onclick="navigate('adm')" style="display:none">⚙️ Admin</a>
+    </div>
+    <div style="padding:15px;border-top:1px solid var(--border)"><button class="btn btn-red btn-full" onclick="handleLogout()">🚪 Sair</button></div>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <div class="main-content" id="main-content">
+       <!-- RITA IA -->
+    <div id="screen-rita" class="screen">
+      <h2>🤖 Rita IA</h2>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:15px;">Tire dúvidas, peça explicações ou converse com a Rita!</p>
+      
+      <div class="card" style="height:calc(100vh - 250px);min-height:350px;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+        <div id="rita-messages" style="flex:1;overflow-y:auto;padding:15px;">
+          <div style="text-align:center;color:var(--text3);padding:20px;">
+            <div style="font-size:50px;">🤖</div>
+            <div style="font-weight:700;margin:10px 0;">Olá! Eu sou a Rita!</div>
+            <div>Pode me perguntar qualquer coisa sobre estudos!</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:12px;border-top:2px solid var(--border);">
+          <input type="text" id="rita-input" class="input-field" placeholder="Digite sua mensagem..." style="margin:0;" onkeydown="if(event.key==='Enter')sendRitaMsg()" />
+          <button class="btn btn-primary btn-sm" onclick="sendRitaMsg()">📤 Enviar</button>
+        </div>
+      </div>
+    </div>
+    <!-- HOME -->
+    <div id="screen-home" class="screen active">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><div><h2 id="home-greeting">Olá! 👋</h2><p style="color:var(--text3);font-size:14px">Continue estudando</p></div><span id="level-badge" style="background:#6C5CE7;color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">🌱 Nível 1</span></div>
+      <div class="stat-grid">
+        <div class="stat-card card-3d" onclick="navigate('materias')"><span style="font-size:28px">📚</span><div><div style="font-size:20px;font-weight:800" id="stat-materias">0</div><div style="font-size:11px;color:var(--text3)">Matérias</div></div></div>
+        <div class="stat-card"><span style="font-size:28px">🎮</span><div><div style="font-size:20px;font-weight:800" id="stat-quizzes">0</div><div style="font-size:11px;color:var(--text3)">Quizzes</div></div></div>
+        <div class="stat-card"><span style="font-size:28px">⭐</span><div><div style="font-size:20px;font-weight:800" id="stat-pontos">0</div><div style="font-size:11px;color:var(--text3)">Pontos</div></div></div>
+        <div class="stat-card card-3d" onclick="navigate('ranking')"><span style="font-size:28px">🏆</span><div><div style="font-size:20px;font-weight:800" id="stat-rank">#--</div><div style="font-size:11px;color:var(--text3)">Ranking</div></div></div>
+      </div>
+      <div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;font-weight:600"><span>📈 Progresso</span><span id="progress-text">0/100 pts</span></div><div style="height:8px;background:var(--border);border-radius:10px"><div id="progress-fill" style="height:100%;background:#6C5CE7;border-radius:10px;width:0%"></div></div></div>
+      <div class="section-title">⚡ Ações</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px">
+        <button class="btn btn-primary btn-full" onclick="navigate('materias')">📚 Matérias</button>
+        <button class="btn btn-green btn-full" onclick="openModal('post')">✍️ Postar</button>
+        <button class="btn btn-orange btn-full" onclick="navigate('chat')">💬 Chat</button>
+        <button class="btn btn-primary btn-full" onclick="navigate('ranking')">🏆 Ranking</button>
+      </div>
+      <div class="section-title">📰 Feed</div>
+      <div id="home-feed"></div>
+    </div>
+
+    <!-- MATÉRIAS -->
+    <div id="screen-materias" class="screen">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px"><h2>📚 Matérias</h2><button class="btn btn-primary btn-sm" onclick="openModal('materia')">+ Nova</button></div>
+      <input type="text" id="search-materias" class="input-field" placeholder="🔍 Buscar matérias..." oninput="filterMaterias()" />
+      <div style="display:flex;gap:8px;margin-bottom:15px">
+        <button class="btn btn-primary btn-sm" onclick="setMateriaFilter('all',this)">Todas</button>
+        <button class="btn btn-sm" onclick="setMateriaFilter('mine',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">Minhas</button>
+      </div>
+      <div id="materias-grid"></div>
+    </div>
+
+    <!-- DETALHE MATÉRIA -->
+    <div id="screen-materia-detalhe" class="screen">
+      <button onclick="navigate('materias')" style="background:none;border:none;cursor:pointer;color:var(--text3);margin-bottom:15px">← Voltar</button>
+      <div style="background:linear-gradient(135deg,#6C5CE7,#a855f7);color:white;border-radius:20px;padding:25px;margin-bottom:20px"><div style="display:flex;align-items:center;gap:15px"><span id="materia-hero-icon" style="font-size:50px">📚</span><div><h2 id="materia-hero-nome">Matéria</h2><p id="materia-hero-desc">Descrição</p><span id="materia-hero-autor" style="font-size:12px">Por: --</span></div></div></div>
+      <div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="openModal('topico')">+ Tópico</button>
+        <button class="btn btn-green btn-sm" onclick="openModal('quiz-normal')">+ Quiz Normal</button>
+        <button class="btn btn-orange btn-sm" onclick="openModal('quiz-cmd')">+ Quiz /cmd</button>
+      </div>
+      <div class="section-title">📝 Tópicos</div><div id="topicos-list"></div>
+      <div class="section-title">🎮 Quizzes</div><div id="quizzes-materia"></div>
+    </div>
+
+    <!-- TÓPICO DETALHE -->
+    <div id="screen-topico-detalhe" class="screen">
+      <button onclick="navigate('materia-detalhe')" style="background:none;border:none;cursor:pointer;color:var(--text3);margin-bottom:15px">← Voltar</button>
+      <div class="card"><h2 id="topico-title">Tópico</h2><div id="topico-meta" style="font-size:12px;color:var(--text3);margin-bottom:15px"></div><div id="topico-body" style="line-height:1.8"></div></div>
+      <div class="section-title">💬 Comentários</div><div id="topico-comentarios"></div>
+      <div style="display:flex;gap:8px;margin-top:15px"><input type="text" id="new-comment" class="input-field" placeholder="Comente..." /><button class="btn btn-primary btn-sm" onclick="addComment()">Enviar</button></div>
+    </div>
+
+    <!-- QUIZ GAME -->
+    <div id="screen-quiz-game" class="screen">
+      <div style="display:flex;align-items:center;gap:15px;margin-bottom:25px"><button onclick="exitQuiz()" style="background:none;border:none;cursor:pointer;color:var(--text3)">← Sair</button><div style="flex:1"><div id="quiz-q-counter" style="font-size:13px;font-weight:700;color:var(--text3)">1/10</div><div style="height:5px;background:var(--border);border-radius:10px"><div id="quiz-progress-fill" style="height:100%;background:#6C5CE7;border-radius:10px;width:0%"></div></div></div><span id="quiz-timer" style="background:#fff3cd;padding:5px 12px;border-radius:20px;font-weight:700;font-size:14px">⏱ 30s</span></div>
+      <div class="card" style="padding:30px"><div id="quiz-q-num" style="font-size:12px;font-weight:700;color:#6C5CE7">Questão 1</div><div id="quiz-question" style="font-size:18px;font-weight:700;margin:10px 0 25px">...</div><div id="quiz-options"></div></div>
+      <div style="text-align:center;margin-top:15px;font-weight:700;color:#6C5CE7">⭐ <span id="quiz-score-live">0</span> pts</div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div id="screen-resultado" class="screen">
+      <div style="text-align:center;padding:20px 0"><div id="resultado-emoji" style="font-size:80px">🎉</div><h2 id="resultado-titulo">Parabéns!</h2><p id="resultado-subtitulo" style="color:var(--text3)">Quiz finalizado</p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0"><div class="card"><div id="res-acertos" style="font-size:24px;font-weight:800;color:#6C5CE7">0</div><div style="font-size:10px;color:var(--text3)">Acertos</div></div><div class="card"><div id="res-total" style="font-size:24px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Total</div></div><div class="card"><div id="res-pontos" style="font-size:24px;font-weight:800;color:#10b981">+0</div><div style="font-size:10px;color:var(--text3)">Pontos</div></div><div class="card"><div id="res-tempo" style="font-size:24px;font-weight:800">0s</div><div style="font-size:10px;color:var(--text3)">Tempo</div></div></div>
+        <div style="height:10px;background:var(--border);border-radius:10px"><div id="resultado-barra-fill" style="height:100%;background:#10b981;border-radius:10px;width:0%"></div></div><p id="resultado-pct" style="font-weight:700">0%</p>
+        <div id="resultado-review" style="text-align:left;margin:20px 0"></div>
+        <div style="display:flex;gap:10px;justify-content:center"><button class="btn btn-primary" onclick="navigate('home')">🏠 Início</button><button class="btn" onclick="navigate('ranking')" style="background:var(--border);color:var(--text);box-shadow:none">🏆 Ranking</button></div>
+      </div>
+    </div>
+
+      <!-- RANKING -->
+    <div id="screen-ranking" class="screen">
+      <h2>🏆 Ranking</h2>
+      
+      <!-- Botões de alternar -->
+      <div style="display:flex;gap:8px;margin-bottom:15px;">
+        <button class="btn btn-primary btn-sm" id="rank-btn-alunos" onclick="switchRanking('alunos', this)">🎓 Alunos</button>
+        <button class="btn btn-sm" id="rank-btn-professores" onclick="switchRanking('professores', this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none;">✅ Professores</button>
+      </div>
+      
+      <!-- Pódio -->
+      <div style="display:flex;justify-content:center;gap:15px;margin:20px 0;" id="podio"></div>
+      
+      <!-- Minha posição -->
+      <div class="card" style="background:var(--hover);">
+        <span>Sua posição: <strong id="my-rank-num">#--</strong></span>
+        <span id="my-rank-pts" style="margin-left:10px;">0 pts</span>
+        <span id="my-rank-mode" style="font-size:11px;color:var(--text3);margin-left:10px;"></span>
+      </div>
+      
+      <!-- Lista -->
+      <div id="ranking-list" style="margin-top:15px;"></div>
+    </div>
+
+    <!-- FEED -->
+    <div id="screen-descobrir" class="screen">
+      <h2>🌍 Feed Global</h2>
+      <div class="card" style="margin:15px 0">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div id="pc-avatar" style="width:35px;height:35px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-weight:700">?</div><input type="text" id="new-post-text" class="input-field" placeholder="Compartilhe algo..." style="margin:0" /></div>
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:5px"><button class="btn btn-primary btn-sm" onclick="setPostType('post',this)">💬 Post</button><button class="btn btn-sm" onclick="setPostType('dica',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">💡 Dica</button><button class="btn btn-sm" onclick="setPostType('duvida',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">❓ Dúvida</button></div><button class="btn btn-primary btn-sm" onclick="createPost()">Publicar</button></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="setFeedFilter('all',this)">Todos</button><button class="btn btn-sm" onclick="setFeedFilter('post',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">Posts</button><button class="btn btn-sm" onclick="setFeedFilter('dica',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">Dicas</button><button class="btn btn-sm" onclick="setFeedFilter('duvida',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">Dúvidas</button><button class="btn btn-sm" onclick="setFeedFilter('usuarios',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">👥 Usuários</button></div>
+      <input type="text" id="search-users-input" class="input-field" placeholder="🔍 Pesquisar usuários..." oninput="searchUsers()" style="display:none" />
+      <div id="descobrir-feed"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="screen-chat" class="screen">
+      <h2>💬 Chat</h2>
+      <div class="chat-container">
+        <div class="chat-sidebar"><div style="padding:12px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-weight:700">Salas<button class="btn btn-primary btn-sm" onclick="openModal('sala')" style="width:26px;height:26px;border-radius:50%;padding:0">+</button></div><div id="rooms-list"></div><div style="padding:8px 12px;border-top:2px solid var(--border);font-weight:700;font-size:12px;color:var(--text3)">📩 PV</div><div id="pv-list"></div></div>
+        <div class="chat-main">
+          <div id="chat-no-room" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3)">Selecione uma sala</div>
+          <div id="chat-room-view" style="display:none;flex-direction:column;height:100%">
+            <div style="padding:10px 15px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center"><strong id="chat-room-name">Sala</strong><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openModal('invite')">+ Convidar</button><button onclick="leaveRoom()" style="background:var(--border);border:none;width:26px;height:26px;border-radius:50%;cursor:pointer">✕</button></div></div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input-row"><input type="text" id="chat-msg-input" class="input-field" placeholder="Mensagem..." style="margin:0" /><button class="btn btn-primary btn-sm" onclick="sendChatMsg()">Enviar</button></div>
+          </div>
+          <div id="pv-chat-view" style="display:none;flex-direction:column;height:100%">
+            <div style="padding:10px 15px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:8px"><div id="pv-chat-avatar" style="width:28px;height:28px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">?</div><strong id="pv-chat-name">Usuário</strong></div><button onclick="closePV()" style="background:var(--border);border:none;width:26px;height:26px;border-radius:50%;cursor:pointer">✕</button></div>
+            <div class="chat-messages" id="pv-chat-messages"></div>
+            <div class="chat-input-row"><input type="text" id="pv-chat-input" class="input-field" placeholder="Mensagem privada..." style="margin:0" /><button class="btn btn-primary btn-sm" onclick="sendPvChatMsg()">Enviar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+           <!-- Editar Perfil -->
+      <div class="card" style="margin-bottom:15px;">
+        <div class="section-title">✏️ Editar Perfil</div>
+        <input type="text" id="edit-username" class="input-field" placeholder="Nome de usuário" />
+        <textarea id="edit-bio" class="input-field" rows="3" placeholder="Sua bio..."></textarea>
+        <button class="btn btn-primary btn-full" onclick="saveProfile()">💾 Salvar</button>
+      </div>
+    <div id="screen-perfil" class="screen">
+      <div style="text-align:center;padding:25px;background:linear-gradient(135deg,var(--hover),#e0e7ff);border-radius:20px;margin-bottom:20px"><div id="perfil-avatar" style="width:80px;height:80px;border-radius:50%;background:#6C5CE7;color:white;display:flex;align-items:center;justify-content:center;font-size:35px;margin:0 auto;border:4px solid var(--card);box-shadow:0 4px 15px rgba(0,0,0,0.1)">?</div><h2 id="perfil-name">--</h2><p id="perfil-email" style="color:var(--text3)">--</p><div id="perfil-badges"></div></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin:15px 0"><button class="btn btn-sm" onclick="showFollowers()" style="background:var(--hover);color:var(--text);border:none;border-radius:20px;box-shadow:none">👥 <span id="count-seguidores">0</span> Seguidores</button><button class="btn btn-sm" onclick="showFollowing()" style="background:var(--hover);color:var(--text);border:none;border-radius:20px;box-shadow:none">✨ <span id="count-seguindo">0</span> Seguindo</button></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px"><div class="card" style="text-align:center"><div id="pstat-pts" style="font-size:20px;font-weight:800;color:#6C5CE7">0</div><div style="font-size:10px;color:var(--text3)">Pts</div></div><div class="card" style="text-align:center"><div id="pstat-quizzes" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Quiz</div></div><div class="card" style="text-align:center"><div id="pstat-materias" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Mat</div></div><div class="card" style="text-align:center"><div id="pstat-seguidores" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Seg</div></div></div>
+      <div class="section-title">📋 Histórico</div><div id="perfil-historico"></div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div id="screen-notificacoes" class="screen"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px"><h2>🔔 Notificações</h2><button class="btn btn-sm" onclick="marcarLidas()" style="background:var(--hover);border:none;border-radius:20px;box-shadow:none">✓ Lidas</button></div><div id="notificacoes-list"></div></div>
+
+    <!-- ADM -->
+    <div id="screen-adm" class="screen"><h2>⚙️ Painel Admin</h2><div class="stat-grid"><div class="card" style="text-align:center"><div id="adm-users" style="font-size:24px;font-weight:800;color:#6C5CE7">0</div><div style="font-size:11px;color:var(--text3)">Usuários</div></div><div class="card" style="text-align:center"><div id="adm-posts" style="font-size:24px;font-weight:800;color:#f97316">0</div><div style="font-size:11px;color:var(--text3)">Posts</div></div></div><div class="card" style="margin:15px 0"><div style="font-weight:700;margin-bottom:10px">➕ Adicionar pontos</div><div style="display:flex;gap:8px"><input type="number" id="adm-add-pts" class="input-field" placeholder="Qtd" style="margin:0" /><button class="btn btn-green btn-sm" onclick="admAddPts()">Adicionar</button></div></div><div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" onclick="admLoad('materias',this)">Matérias</button><button class="btn btn-sm" onclick="admLoad('posts',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">Posts</button><button class="btn btn-sm" onclick="admLoad('usuarios',this)" style="background:var(--card);color:var(--text);border:2px solid var(--border);box-shadow:none">Usuários</button></div><div id="adm-content-list"></div></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="bnav-item" onclick="navigate('rita')">🤖<br>Rita</div>
+    <div class="bnav-item" onclick="navigate('home')">🏠<br>Home</div>
+    <div class="bnav-item" onclick="navigate('descobrir')">🌍<br>Feed</div>
+    <div class="bnav-item" onclick="navigate('materias')">📚<br>Matérias</div>
+    <div class="bnav-item" onclick="navigate('chat')">💬<br>Chat</div>
+    <div class="bnav-item" onclick="navigate('perfil')">👤<br>Perfil</div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="modal-materia"><div class="modal-backdrop" onclick="closeModal('materia')"></div><div class="modal-box"><h3>📚 Nova Matéria</h3><input type="text" id="nm-nome" class="input-field" placeholder="Nome" /><textarea id="nm-desc" class="input-field" rows="3" placeholder="Descrição"></textarea><button class="btn btn-primary btn-full" onclick="criarMateria()">Criar</button></div></div>
+
+<div class="modal" id="modal-topico"><div class="modal-backdrop" onclick="closeModal('topico')"></div><div class="modal-box"><h3>📝 Novo Tópico</h3><input type="text" id="nt-titulo" class="input-field" placeholder="Título" /><textarea id="nt-conteudo" class="input-field" rows="6" placeholder="Conteúdo"></textarea><button class="btn btn-primary btn-full" onclick="criarTopico()">Criar</button></div></div>
+
+<div class="modal" id="modal-quiz-normal"><div class="modal-backdrop" onclick="closeModal('quiz-normal')"></div><div class="modal-box" style="max-width:550px"><h3>🎮 Quiz Normal</h3><input type="text" id="qn-nome" class="input-field" placeholder="Nome do quiz" /><input type="number" id="qn-tempo" class="input-field" placeholder="Tempo (s)" value="30" /><div id="qn-questoes-container"></div><button class="btn btn-sm" onclick="addQuestaoNormal()" style="width:100%;background:var(--border);color:var(--text);box-shadow:none;margin:10px 0">+ Adicionar Questão</button><button class="btn btn-primary btn-full" onclick="salvarQuizNormal()">💾 Salvar Quiz</button></div></div>
+
+<div class="modal" id="modal-quiz-cmd"><div class="modal-backdrop" onclick="closeModal('quiz-cmd')"></div><div class="modal-box"><h3>🎮 Quiz /cmd</h3><p style="font-size:12px;color:var(--text3)">/n Nome | /q Pergunta | /a Alt | /c Correta | /f Fim | /save</p><textarea id="cmd-input" class="input-field" rows="10" style="font-family:monospace"></textarea><button class="btn btn-primary btn-full" onclick="processarCmd()">💾 Processar</button></div></div>
+
+<div class="modal" id="modal-post"><div class="modal-backdrop" onclick="closeModal('post')"></div><div class="modal-box"><h3>✍️ Post</h3><select id="post-tipo-modal" class="input-field"><option value="post">💬 Post</option><option value="dica">💡 Dica</option><option value="duvida">❓ Dúvida</option></select><textarea id="post-texto-modal" class="input-field" rows="4" placeholder="Conteúdo"></textarea><button class="btn btn-primary btn-full" onclick="criarPostModal()">Publicar</button></div></div>
+
+<div class="modal" id="modal-sala"><div class="modal-backdrop" onclick="closeModal('sala')"></div><div class="modal-box"><h3>💬 Sala</h3><input type="text" id="ns-nome" class="input-field" placeholder="Nome" /><input type="text" id="ns-desc" class="input-field" placeholder="Descrição" /><button class="btn btn-primary btn-full" onclick="criarSala()">Criar</button></div></div>
+
+<div class="modal" id="modal-invite"><div class="modal-backdrop" onclick="closeModal('invite')"></div><div class="modal-box"><h3>👥 Convidar</h3><input type="text" id="invite-search" class="input-field" placeholder="Buscar..." oninput="searchUsersToInvite()" /><div id="invite-users-list" style="max-height:250px;overflow-y:auto"></div><div id="invite-selected" style="padding:10px;background:var(--hover);border-radius:10px;margin:10px 0">0 selecionados</div><button class="btn btn-primary btn-full" onclick="sendInvites()">📨 Enviar</button></div></div>
+
+<<!-- PERFIL FULLSCREEN (com Topbar e Bottom Nav) -->
+<div id="profile-fullscreen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:250;background:var(--bg);overflow-y:auto;padding-top:55px;padding-bottom:60px;">
   
-  /* Secondary & Accent Colors */
-  --secondary: #6366f1;
-  --secondary-dark: #4f46e5;
-  --secondary-light: #818cf8;
-  --secondary-xlight: #e0e7ff;
+  <!-- TOPBAR do Perfil -->
+  <div style="position:fixed;top:0;left:0;right:0;height:55px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 15px;z-index:251;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button onclick="closeProfileFullscreen()" style="font-size:20px;background:none;border:none;cursor:pointer;color:var(--text);">← Voltar</button>
+    </div>
+    <span style="font-weight:800;color:#6C5CE7;font-size:18px;">📚 Sexta-Feira</span>
+    <button onclick="closeProfileFullscreen()" style="font-size:22px;background:none;border:none;cursor:pointer;color:var(--text);">✕</button>
+  </div>
   
-  /* Semantic Colors */
-  --success: #10b981;
-  --success-light: #d1fae5;
-  --success-dark: #065f46;
-  --danger: #ef4444;
-  --danger-light: #fee2e2;
-  --danger-dark: #991b1b;
-  --warning: #f59e0b;
-  --warning-light: #fef3c7;
-  --warning-dark: #92400e;
-  --orange: #f97316;
-  --orange-light: #ffedd5;
-  --purple: #8b5cf6;
-  --purple-light: #ede9fe;
-  --pink: #ec4899;
-  --pink-light: #fce7f3;
-  --teal: #14b8a6;
-  --teal-light: #ccfbf1;
+  <!-- CONTEÚDO -->
+  <div id="profile-fullscreen-content" style="max-width:600px;margin:0 auto;padding:20px 15px;"></div>
   
-  /* Background Colors */
-  --bg: #f1f5f9;
-  --bg-alt: #f8fafc;
-  --bg-dark: #0f172a;
-  --card-bg: #ffffff;
-  --surface: #f8fafc;
-  --surface-hover: #f1f5f9;
-  
-  /* Border Colors */
-  --border: #e2e8f0;
-  --border-light: #f1f5f9;
-  --border-dark: #cbd5e1;
-  --border-focus: #93c5fd;
-  
-  /* Text Colors */
-  --text: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  --text-inverse: #ffffff;
-  --text-link: #2563eb;
-  
-  /* Shadow System */
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
-  --shadow-lg: 0 10px 30px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.06);
-  --shadow-xl: 0 20px 50px rgba(0,0,0,0.15);
-  --shadow-2xl: 0 25px 65px rgba(0,0,0,0.2);
-  --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.06);
-  
-  /* Border Radius */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-2xl: 32px;
-  --radius-full: 9999px;
-  
-  /* Layout Dimensions */
-  --sidebar-w: 260px;
-  --sidebar-collapsed: 0px;
-  --topbar-h: 60px;
-  --bottom-nav-h: 64px;
-  --content-max-w: 800px;
-  --modal-max-w: 520px;
-  --modal-lg-max-w: 680px;
-  
-  /* Typography */
-  --font: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  --font-size-xs: 0.7rem;
-  --font-size-sm: 0.82rem;
-  --font-size-base: 0.95rem;
-  --font-size-lg: 1.1rem;
-  --font-size-xl: 1.3rem;
-  --font-size-2xl: 1.6rem;
-  --font-size-3xl: 2rem;
-  --font-size-4xl: 2.5rem;
-  
-  /* Font Weights */
-  --weight-light: 300;
-  --weight-normal: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
-  --weight-extrabold: 800;
-  
-  /* Line Heights */
-  --leading-tight: 1.25;
-  --leading-snug: 1.375;
-  --leading-normal: 1.6;
-  --leading-relaxed: 1.75;
-  
-  /* Letter Spacing */
-  --tracking-tight: -0.025em;
-  --tracking-normal: 0;
-  --tracking-wide: 0.05em;
-  --tracking-wider: 0.1em;
-  
-  /* Transitions */
-  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slower: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-spring: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  
-  /* Z-Index Scale */
-  --z-base: 1;
-  --z-dropdown: 50;
-  --z-sticky: 80;
-  --z-sidebar: 90;
-  --z-topbar: 100;
-  --z-modal-backdrop: 150;
-  --z-modal: 200;
-  --z-toast: 9000;
-  --z-confetti: 9998;
-  --z-splash: 9999;
-  --z-tooltip: 10000;
-  
-  /* Animation Durations */
-  --anim-fast: 150ms;
-  --anim-normal: 250ms;
-  --anim-slow: 400ms;
-  --anim-slower: 600ms;
-  
-  /* Spacing Scale */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-}
-
-/* ==================== DARK MODE ==================== */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f172a;
-    --bg-alt: #1e293b;
-    --card-bg: #1e293b;
-    --surface: #1e293b;
-    --surface-hover: #334155;
-    --border: #334155;
-    --border-light: #1e293b;
-    --border-dark: #475569;
-    --text: #f1f5f9;
-    --text-secondary: #e2e8f0;
-    --text-muted: #94a3b8;
-    --text-light: #64748b;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow: 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
-    --shadow-xl: 0 20px 50px rgba(0,0,0,0.6);
-  }
-}
-
-/* ==================== RESET & BASE ==================== */
-*, 
-*::before, 
-*::after { 
-  box-sizing: border-box; 
-  margin: 0; 
-  padding: 0; 
-}
-
-html { 
-  font-size: 16px; 
-  scroll-behavior: smooth; 
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  line-height: var(--leading-normal);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-  overflow-y: auto;
-  min-height: 100vh;
-  position: relative;
-}
-
-/* ==================== TYPOGRAPHY ==================== */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-  color: var(--text);
-}
-
-h1 { font-size: var(--font-size-3xl); }
-h2 { font-size: var(--font-size-2xl); }
-h3 { font-size: var(--font-size-xl); }
-h4 { font-size: var(--font-size-lg); }
-
-p {
-  margin-bottom: var(--space-3);
-  color: var(--text-secondary);
-}
-
-a { 
-  text-decoration: none; 
-  color: var(--primary); 
-  cursor: pointer; 
-  transition: var(--transition-fast);
-}
-
-a:hover {
-  color: var(--primary-dark);
-  text-decoration: underline;
-}
-
-button { 
-  cursor: pointer; 
-  font-family: var(--font); 
-  border: none; 
-  background: none; 
-  outline: none;
-  transition: var(--transition-fast);
-}
-
-input, 
-textarea, 
-select {
-  font-family: var(--font);
-  font-size: var(--font-size-base);
-  outline: none;
-  border: none;
-  background: none;
-  width: 100%;
-  color: var(--text);
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--text-light);
-}
-
-textarea { 
-  resize: vertical; 
-  min-height: 80px;
-}
-
-img { 
-  max-width: 100%; 
-  display: block;
-}
-
-svg {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-ul, ol {
-  list-style: none;
-}
-
-.hidden { 
-  display: none !important; 
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* ==================== SELECTION ==================== */
-::selection {
-  background: var(--primary);
-  color: var(--text-inverse);
-}
-
-::-moz-selection {
-  background: var(--primary);
-  color: var(--text-inverse);
-}
-
-/* ==================== SCROLLBAR ==================== */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-dark);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-dark) transparent;
-}
-
-/* ==================== FOCUS STYLES ==================== */
-:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  border-radius: var(--radius-xs);
-}
-
-/* ==================== REDUCED MOTION ==================== */
-@media (prefers-reduced-motion: reduce) {
-  *, 
-  *::before, 
-  *::after { 
-    animation-duration: 0.01ms !important; 
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important; 
-    scroll-behavior: auto !important;
-  }
-}
-
-/* ==================== SPLASH SCREEN ==================== */
-.splash {
-  position: fixed; 
-  inset: 0;
-  background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 50%, #7c3aed 100%);
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  z-index: var(--z-splash);
-  flex-direction: column;
-}
-
-.splash::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  opacity: 0.5;
-}
-
-.splash-logo { 
-  text-align: center; 
-  color: white; 
-  position: relative;
-  z-index: 1;
-  animation: splashFadeIn 0.6s ease;
-}
-
-.splash-icon { 
-  font-size: 5rem; 
-  animation: splash-pulse 1.5s ease-in-out infinite; 
-  margin-bottom: var(--space-4);
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-}
-
-.splash-logo h1 { 
-  font-size: var(--font-size-4xl); 
-  font-weight: var(--weight-extrabold); 
-  letter-spacing: var(--tracking-tight);
-  color: white;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-.splash-logo p { 
-  opacity: 0.9; 
-  margin-top: var(--space-2); 
-  font-size: var(--font-size-lg);
-  color: rgba(255,255,255,0.9);
-  font-weight: var(--weight-medium);
-}
-
-.splash-bar { 
-  width: 240px; 
-  height: 5px; 
-  background: rgba(255,255,255,0.2); 
-  border-radius: var(--radius-full); 
-  margin: var(--space-6) auto 0; 
-  overflow: hidden; 
-}
-
-.splash-bar-fill { 
-  height: 100%; 
-  width: 0%; 
-  background: white; 
-  border-radius: var(--radius-full); 
-  animation: splash-fill 2.5s ease forwards; 
-}
-
-.splash-loader-dots {
-  display: flex;
-  gap: var(--space-2);
-  justify-content: center;
-  margin-top: var(--space-4);
-}
-
-.splash-dot {
-  width: 8px;
-  height: 8px;
-  background: rgba(255,255,255,0.5);
-  border-radius: 50%;
-  animation: splashDot 1.4s ease-in-out infinite;
-}
-
-.splash-dot:nth-child(1) { animation-delay: 0s; }
-.splash-dot:nth-child(2) { animation-delay: 0.2s; }
-.splash-dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes splash-pulse { 
-  0%, 100% { transform: scale(1); } 
-  50% { transform: scale(1.1); } 
-}
-
-@keyframes splash-fill { 
-  to { width: 100%; } 
-}
-
-@keyframes splashFadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes splashDot {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
-  40% { transform: scale(1); opacity: 1; }
-}
-
-/* ==================== AUTH SCREEN ==================== */
-#auth-screen {
-  min-height: 100vh;
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 50%, #f0f9ff 100%);
-  position: relative; 
-  overflow: hidden; 
-  padding: var(--space-4);
-}
-
-.auth-bg { 
-  position: absolute; 
-  inset: 0; 
-  pointer-events: none; 
-}
-
-.auth-blob {
-  position: absolute; 
-  border-radius: 50%;
-  filter: blur(100px); 
-  opacity: 0.35;
-  animation: blob-move 12s ease-in-out infinite;
-}
-
-.b1 { 
-  width: 500px; 
-  height: 500px; 
-  background: var(--primary); 
-  top: -150px; 
-  left: -150px; 
-}
-
-.b2 { 
-  width: 400px; 
-  height: 400px; 
-  background: var(--secondary); 
-  bottom: -120px; 
-  right: -120px; 
-  animation-delay: -4s;
-}
-
-.b3 { 
-  width: 350px; 
-  height: 350px; 
-  background: #06b6d4; 
-  top: 50%; 
-  left: 60%; 
-  animation-delay: -8s;
-}
-
-.b4 {
-  width: 280px;
-  height: 280px;
-  background: var(--purple);
-  top: 20%;
-  left: 15%;
-  animation-delay: -6s;
-}
-
-@keyframes blob-move {
-  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  25% { transform: translate(30px, -30px) scale(1.08) rotate(5deg); }
-  50% { transform: translate(-20px, 20px) scale(0.95) rotate(-3deg); }
-  75% { transform: translate(15px, 15px) scale(1.03) rotate(2deg); }
-}
-
-.auth-container {
-  background: white;
-  border-radius: var(--radius-xl);
-  padding: var(--space-8) var(--space-6);
-  width: 100%; 
-  max-width: 440px;
-  box-shadow: var(--shadow-xl);
-  position: relative; 
-  z-index: 1;
-  animation: fadeInUp 0.5s ease;
-}
-
-.auth-brand { 
-  text-align: center; 
-  margin-bottom: var(--space-6); 
-}
-
-.brand-icon { 
-  font-size: 3rem;
-  display: block;
-  margin-bottom: var(--space-2);
-}
-
-.auth-brand h1 { 
-  font-size: var(--font-size-2xl); 
-  font-weight: var(--weight-extrabold); 
-  color: var(--primary); 
-  letter-spacing: var(--tracking-tight);
-}
-
-.auth-brand p { 
-  color: var(--text-muted); 
-  font-size: var(--font-size-sm); 
-  margin-top: var(--space-1);
-}
-
-/* Auth Tabs */
-.auth-tabs { 
-  display: flex; 
-  gap: var(--space-2); 
-  background: var(--bg); 
-  border-radius: var(--radius); 
-  padding: 4px; 
-  margin-bottom: var(--space-6); 
-}
-
-.auth-tab { 
-  flex: 1; 
-  padding: var(--space-3); 
-  border-radius: calc(var(--radius) - 4px); 
-  font-weight: var(--weight-semibold); 
-  font-size: var(--font-size-sm); 
-  color: var(--text-muted); 
-  transition: var(--transition);
-  position: relative;
-}
-
-.auth-tab.active { 
-  background: white; 
-  color: var(--primary); 
-  box-shadow: var(--shadow-sm); 
-}
-
-.auth-tab:hover:not(.active) {
-  color: var(--text);
-  background: rgba(255,255,255,0.5);
-}
-
-/* Auth Error */
-.auth-error { 
-  background: var(--danger-light); 
-  color: var(--danger-dark); 
-  padding: var(--space-3) var(--space-4); 
-  border-radius: var(--radius-sm); 
-  font-size: var(--font-size-sm); 
-  margin-bottom: var(--space-4); 
-  border-left: 4px solid var(--danger);
-  animation: shake 0.5s ease;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-8px); }
-  40% { transform: translateX(8px); }
-  60% { transform: translateX(-4px); }
-  80% { transform: translateX(4px); }
-}
-
-/* ==================== FORM FIELDS ==================== */
-.field-group { 
-  margin-bottom: var(--space-5); 
-}
-
-.field-group label { 
-  display: block; 
-  font-size: var(--font-size-xs); 
-  font-weight: var(--weight-bold); 
-  color: var(--text-muted); 
-  margin-bottom: var(--space-1); 
-  text-transform: uppercase; 
-  letter-spacing: var(--tracking-wide);
-}
-
-.input-wrap {
-  display: flex; 
-  align-items: center;
-  background: var(--surface); 
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm); 
-  padding: 0 var(--space-3);
-  transition: var(--transition);
-  overflow: hidden;
-}
-
-.input-wrap:focus-within { 
-  border-color: var(--primary); 
-  background: white; 
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); 
-}
-
-.input-wrap input { 
-  padding: var(--space-3) var(--space-2);
-  flex: 1;
-  min-width: 0;
-}
-
-.input-wrap input:focus {
-  outline: none;
-}
-
-.input-icon { 
-  font-size: var(--font-size-lg); 
-  color: var(--text-muted); 
-  flex-shrink: 0;
-  width: 24px;
-  text-align: center;
-}
-
-.toggle-pw { 
-  background: none; 
-  border: none; 
-  padding: var(--space-1) var(--space-2); 
-  font-size: var(--font-size-lg); 
-  color: var(--text-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: var(--transition-fast);
-}
-
-.toggle-pw:hover {
-  color: var(--text);
-}
-
-textarea { 
-  background: var(--surface); 
-  border: 2px solid var(--border); 
-  border-radius: var(--radius-sm); 
-  padding: var(--space-3); 
-  width: 100%; 
-  transition: var(--transition); 
-  font-size: var(--font-size-base);
-  line-height: var(--leading-relaxed);
-}
-
-textarea:focus { 
-  border-color: var(--primary); 
-  background: white; 
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); 
-  outline: none; 
-}
-
-select {
-  background: var(--surface);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  width: 100%;
-  font-size: var(--font-size-base);
-  color: var(--text);
-  cursor: pointer;
-  transition: var(--transition);
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
-}
-
-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-  outline: none;
-}
-
-.auth-hint { 
-  text-align: center; 
-  font-size: var(--font-size-sm); 
-  color: var(--text-muted); 
-  margin-top: var(--space-5); 
-}
-
-.auth-hint a {
-  font-weight: var(--weight-semibold);
-  color: var(--primary);
-}
-
-.auth-hint a:hover {
-  text-decoration: underline;
-}
-
-/* ==================== BUTTON SYSTEM ==================== */
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white; 
-  font-weight: var(--weight-bold); 
-  font-size: var(--font-size-base);
-  padding: var(--space-3) var(--space-6); 
-  border-radius: var(--radius-sm);
-  border: none; 
-  cursor: pointer; 
-  transition: var(--transition);
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center; 
-  gap: var(--space-2);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
-  opacity: 0;
-  transition: var(--transition);
-}
-
-.btn-primary:hover { 
-  transform: translateY(-2px); 
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4); 
-}
-
-.btn-primary:hover::after {
-  opacity: 1;
-}
-
-.btn-primary:active { 
-  transform: translateY(0); 
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-secondary {
-  background: var(--surface); 
-  color: var(--text); 
-  font-weight: var(--weight-semibold); 
-  font-size: var(--font-size-sm);
-  padding: var(--space-3) var(--space-5); 
-  border-radius: var(--radius-sm); 
-  border: 2px solid var(--border);
-  cursor: pointer; 
-  transition: var(--transition);
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center; 
-  gap: var(--space-2);
-}
-
-.btn-secondary:hover { 
-  background: var(--surface-hover); 
-  border-color: var(--text-muted); 
-}
-
-.btn-secondary:active {
-  background: var(--border);
-}
-
-.btn-danger { 
-  background: linear-gradient(135deg, #ef4444, #dc2626); 
-  color: white; 
-  padding: var(--space-2) var(--space-4); 
-  border-radius: var(--radius-sm); 
-  font-weight: var(--weight-semibold); 
-  font-size: var(--font-size-sm); 
-  transition: var(--transition); 
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.btn-danger:hover { 
-  opacity: 0.9; 
-  transform: translateY(-1px); 
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-.btn-success {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
-  font-weight: var(--weight-semibold);
-  font-size: var(--font-size-sm);
-  transition: var(--transition);
-}
-
-.btn-success:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.btn-full { 
-  width: 100%; 
-}
-
-.btn-sm { 
-  padding: var(--space-2) var(--space-3); 
-  font-size: var(--font-size-sm); 
-  border-radius: var(--radius-sm); 
-}
-
-.btn-lg {
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--font-size-lg);
-}
-
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-back { 
-  background: none; 
-  color: var(--text-muted); 
-  font-weight: var(--weight-semibold); 
-  padding: var(--space-2) 0; 
-  font-size: var(--font-size-sm); 
-  display: flex; 
-  align-items: center; 
-  gap: var(--space-1);
-  transition: var(--transition-fast);
-}
-
-.btn-back:hover { 
-  color: var(--primary); 
-  text-decoration: none;
-}
-
-.btn-loader { 
-  width: 20px; 
-  height: 20px; 
-  border: 2.5px solid rgba(255, 255, 255, 0.3); 
-  border-top-color: white; 
-  border-radius: 50%; 
-  animation: spin 0.7s linear infinite; 
-  display: inline-block;
-}
-
-.btn-loader.dark {
-  border-color: rgba(0,0,0,0.1);
-  border-top-color: var(--primary);
-}
-
-@keyframes spin { 
-  to { transform: rotate(360deg); } 
-}
-
-.btn-logout { 
-  width: 100%; 
-  background: var(--danger-light); 
-  color: var(--danger-dark); 
-  padding: var(--space-3); 
-  border-radius: var(--radius-sm); 
-  font-weight: var(--weight-semibold); 
-  font-size: var(--font-size-sm); 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  gap: var(--space-2); 
-  transition: var(--transition); 
-}
-
-.btn-logout:hover { 
-  background: #fecaca; 
-}
-
-/* ==================== TOPBAR ==================== */
-.topbar {
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  right: 0;
-  height: var(--topbar-h);
-  background: var(--card-bg); 
-  border-bottom: 1px solid var(--border);
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between;
-  padding: 0 var(--space-4); 
-  z-index: var(--z-topbar);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
-}
-
-.topbar-left { 
-  display: flex; 
-  align-items: center; 
-  gap: var(--space-3); 
-}
-
-.topbar-brand { 
-  font-weight: var(--weight-extrabold); 
-  font-size: var(--font-size-lg); 
-  color: var(--primary); 
-  letter-spacing: var(--tracking-tight);
-}
-
-.menu-btn { 
-  font-size: 1.5rem; 
-  color: var(--text-muted); 
-  padding: var(--space-2); 
-  cursor: pointer;
-  transition: var(--transition-fast);
-  border-radius: var(--radius-sm);
-}
-
-.menu-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.topbar-right { 
-  display: flex; 
-  align-items: center; 
-  gap: var(--space-3); 
-}
-
-.notif-btn { 
-  position: relative; 
-  font-size: 1.3rem; 
-  color: var(--text-muted); 
-  padding: var(--space-2); 
-  cursor: pointer;
-  transition: var(--transition-fast);
-  border-radius: var(--radius-sm);
-}
-
-.notif-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.notif-badge { 
-  position: absolute; 
-  top: 0; 
-  right: 0; 
-  background: var(--danger); 
-  color: white; 
-  font-size: 0.6rem; 
-  font-weight: var(--weight-bold); 
-  width: 20px; 
-  height: 20px; 
-  border-radius: 50%; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  border: 2px solid var(--card-bg);
-  animation: badgePop 0.3s ease;
-}
-
-@keyframes badgePop {
-  0% { transform: scale(0); }
-  60% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-
-.topbar-avatar { 
-  width: 38px; 
-  height: 38px; 
-  border-radius: 50%; 
-  background: var(--primary); 
-  color: white; 
-  font-weight: var(--weight-bold); 
-  font-size: var(--font-size-lg); 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  cursor: pointer; 
-  border: 2px solid var(--primary-light);
-  transition: var(--transition);
-}
-
-.topbar-avatar:hover {
-  transform: scale(1.1);
-  box-shadow: var(--shadow);
-}
-
-/* ==================== SIDEBAR ==================== */
-.sidebar {
-  position: fixed; 
-  top: var(--topbar-h); 
-  left: 0; 
-  bottom: 0;
-  width: var(--sidebar-w);
-  background: var(--card-bg); 
-  border-right: 1px solid var(--border);
-  display: flex; 
-  flex-direction: column;
-  z-index: var(--z-sidebar);
-  transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier
-
-
-
-}
+  <!-- BOTTOM NAV do Perfil -->
+  <div style="position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;z-index:251;">
+    <div style="flex:1;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3);" onclick="closeProfileFullscreen();navigate('home')">🏠<br>Home</div>
+    <div style="flex:1;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3);" onclick="closeProfileFullscreen();navigate('descobrir')">🌍<br>Feed</div>
+    <div style="flex:1;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3);" onclick="closeProfileFullscreen();navigate('materias')">📚<br>Matérias</div>
+    <div style="flex:1;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3);" onclick="closeProfileFullscreen();navigate('chat')">💬<br>Chat</div>
+    <div style="flex:1;text-align:center;cursor:pointer;font-size:10px;font-weight:600;color:var(--text3);">👤<br>Perfil</div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
