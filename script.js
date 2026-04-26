@@ -1109,24 +1109,25 @@ function loadRanking() {
     if (!users) return;
     
     let arr = Object.values(users);
-    
-    // Esconder admins
     arr = arr.filter(u => !u.isAdmin);
     
-    // Filtrar por modo
     if (rankingModo === 'professores') {
       arr = arr.filter(u => u.isProf);
-      document.getElementById('my-rank-mode').textContent = '(Ranking de Professores)';
+      const rankMode = document.getElementById('my-rank-mode');
+      if (rankMode) rankMode.textContent = '(Ranking de Professores)';
     } else {
       arr = arr.filter(u => !u.isProf);
-      document.getElementById('my-rank-mode').textContent = '(Ranking de Alunos)';
+      const rankMode = document.getElementById('my-rank-mode');
+      if (rankMode) rankMode.textContent = '(Ranking de Alunos)';
     }
     
     arr.sort((a, b) => (b.points || 0) - (a.points || 0));
     
     // Pódio
     const podio = document.getElementById('podio');
+    if (!podio) return;
     podio.innerHTML = '';
+    
     const setP = (n, u) => {
       if (!u) return;
       podio.innerHTML += `
@@ -1146,11 +1147,14 @@ function loadRanking() {
     // Minha posição
     const isInThisRanking = (S.ud?.isProf && rankingModo === 'professores') || (!S.ud?.isProf && rankingModo === 'alunos');
     const pos = arr.findIndex(u => u.uid === S.user?.uid);
-    document.getElementById('my-rank-num').textContent = (pos >= 0 && isInThisRanking) ? '#' + (pos + 1) : '--';
-    document.getElementById('my-rank-pts').textContent = isInThisRanking ? fmt(arr[pos]?.points || 0) + ' pts' : '0 pts';
+    const rankNum = document.getElementById('my-rank-num');
+    const rankPts = document.getElementById('my-rank-pts');
+    if (rankNum) rankNum.textContent = (pos >= 0 && isInThisRanking) ? '#' + (pos + 1) : '--';
+    if (rankPts) rankPts.textContent = isInThisRanking ? fmt(arr[pos]?.points || 0) + ' pts' : '0 pts';
     
     // Lista
     const lista = document.getElementById('ranking-list');
+    if (!lista) return;
     lista.innerHTML = arr.slice(0, 50).map((u, i) => `
       <div class="card" onclick="verPerfil('${u.uid}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;${u.uid===S.user?.uid?'background:var(--hover);':''}">
         <span style="font-weight:800;width:24px;color:${i<3?'#6C5CE7':'var(--text3)'};">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>
