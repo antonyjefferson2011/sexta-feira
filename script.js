@@ -1230,31 +1230,62 @@ async function sendRitaMsg() {
 }
 
 // ========== EDITAR PERFIL ==========
+// ========== EDITAR PERFIL ==========
+
 async function saveProfile() {
   const username = document.getElementById('edit-username').value.trim();
   const bio = document.getElementById('edit-bio').value.trim();
   
-  if (!username || username.length < 3) {
-    toast('Nome deve ter pelo menos 3 caracteres', 'error');
+  // Se não mudou nada
+  if (!username && !bio) {
+    toast('Nada para salvar', 'info');
     return;
   }
   
-  // Verificar se nome já existe
-  const snap = await db.ref('usuarios').orderByChild('username').equalTo(username).once('value');
-  const users = snap.val();
-  if (users) {
-    const otherUid = Object.keys(users)[0];
-    if (otherUid !== S.user.uid) {
-      toast('Nome já está em uso!', 'error');
+  const updates = {};
+  
+  // Só atualiza o nome se foi preenchido e é diferente
+  if (username && username !== S.ud.username) {
+    if (username.length < 3) {
+      toast('Nome deve ter pelo menos 3 caracteres', 'error');
       return;
     }
+    
+    // Verificar se nome já existe
+    const snap = await db.ref('usuarios').orderByChild('username').equalTo(username).once('value');
+    const users = snap.val();
+    if (users) {
+      const otherUid = Object.keys(users)[0];
+      if (otherUid !== S.user.uid) {
+        toast('Nome já está em uso!', 'error');
+        return;
+      }
+    }
+    
+    updates.username = username;
+    S.ud.username = username;
   }
   
-  await db.ref('usuarios/' + S.user.uid).update({ username, bio });
-  S.ud.username = username;
-  S.ud.bio = bio;
+  // Sempre salva a bio (mesmo vazia)
+  if (bio !== S.ud.bio) {
+    updates.bio = bio;
+    S.ud.bio = bio;
+  }
+  
+  // Se não tem nada pra atualizar
+  if (Object.keys(updates).length === 0) {
+    toast('Nada para salvar', 'info');
+    return;
+  }
+  
+  await db.ref('usuarios/' + S.user.uid).update(updates);
   updateUI();
+  
+  // Atualizar campos
+  document.getElementById('edit-username').value = S.ud.username || '';
+  document.getElementById('edit-bio').value = S.ud.bio || '';
+  
   toast('Perfil salvo! ✅', 'success');
 }
 
-console.log('✅ Sexta-Feira Studies PRONTO!');
+  console.log('✅ Sexta-Feira Studies PRONTO!');
