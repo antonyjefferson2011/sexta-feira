@@ -1258,7 +1258,7 @@ async function sendNeurinhoMsg() {
   div.scrollTop = div.scrollHeight;
   
   const typingId = 'ntyping-' + Date.now();
-  div.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px"><img src="https://ibb.co/CspWK9QQ" style="width:24px;height:24px;border-radius:50%" /> 🧠 Pensando...</div></div>';
+  div.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:24px;height:24px;border-radius:50%" /> 🧠 Pensando...</div></div>';
   div.scrollTop = div.scrollHeight;
   
   neurinhoHistory.push({ role: 'user', content: msg });
@@ -1278,11 +1278,11 @@ async function sendNeurinhoMsg() {
     const reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
     
     const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="https://ibb.co/CspWK9QQ" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
+    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
     neurinhoHistory.push({ role: 'assistant', content: reply });
   } catch(e) {
     const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:#FEE2E2;color:#991B1B;font-size:14px"><img src="https://ibb.co/CspWK9QQ" style="width:24px;height:24px;border-radius:50%" /> 🧠❌ Ops! Meu cérebro deu um nó! Tente de novo em instantes...</div></div>';
+    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:#FEE2E2;color:#991B1B;font-size:14px"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:24px;height:24px;border-radius:50%" /> 🧠❌ Ops! Meu cérebro deu um nó! Tente de novo em instantes...</div></div>';
   }
   div.scrollTop = div.scrollHeight;
 }
