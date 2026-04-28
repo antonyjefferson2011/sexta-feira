@@ -1293,20 +1293,45 @@ async function sendNeurinhoMsg() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        messages: [{ role: 'system', content: 'Você é o Neurinho 🧠, assistente de estudos amigável do Sexta-Feira Studies. Você é um cérebro falante que ajuda alunos. Use português brasileiro, emojis e seja animado! Responda sempre em português.' }, ...neurinhoHistory],
-        max_tokens: 500, temperature: 0.7
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: 'Você é o Neurinho, um assistente de estudos brasileiro. Responda sempre em português com emojis. Seja amigável e paciente.' },
+          { role: 'user', content: msg }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
       })
     });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Groq error:', response.status, errText);
+      throw new Error('Status ' + response.status);
+    }
+    
     const data = await response.json();
+    console.log('Groq response:', data);
+    
     const reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
     
     const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
     div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
     neurinhoHistory.push({ role: 'assistant', content: reply });
   } catch(e) {
+    console.error('Neurinho error:', e);
     const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:#FEE2E2;color:#991B1B;font-size:14px"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:24px;height:24px;border-radius:50%" /> 🧠❌ Ops! Meu cérebro deu um nó! Tente de novo em instantes...</div></div>';
+    
+    // Resposta offline amigável
+    const respostas = [
+      '🧠 Hmm, interessante! Me conte mais sobre isso! 🤔',
+      '🧠 Ótima pergunta! Continue explorando a plataforma! 📚',
+      '🧠 Você está no caminho certo! Bons estudos! 💪⭐',
+      '🧠 Que tal jogar um quiz sobre esse assunto? 🎮',
+      '🧠 Adorei sua curiosidade! O conhecimento é infinito! 🌟'
+    ];
+    const resposta = respostas[Math.floor(Math.random() * respostas.length)];
+    
+    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + resposta + '</span></div></div>';
   }
   div.scrollTop = div.scrollHeight;
 }
