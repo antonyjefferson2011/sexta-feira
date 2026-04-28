@@ -186,12 +186,26 @@ async function salvarUsernameGoogle() {
     neurinhoMsgs: 0, rankPosition: 0, createdAt: Date.now()
   });
   
+  // Fechar modal
   $('modal-username').classList.remove('show');
-  googleUserTemp = null;
   $('new-username-input').value = '';
+  googleUserTemp = null;
+  
+  // Forçar atualização do estado
+  S.user = auth.currentUser;
+  const snap2 = await db.ref('usuarios/' + S.user.uid).once('value');
+  S.ud = snap2.val();
+  
+  // Mostrar app
+  $('auth-screen').style.display = 'none';
+  $('app').style.display = '';
+  updateUI();
+  navigate('home');
+  if (S.ud.adminLevel >= 1) { const nav = $('nav-adm'); if (nav) nav.style.display = ''; }
+  listenNotifs();
+  
   toast('Conta criada! Bem-vindo, @' + username + '! 🎉', 'success');
 }
-
 async function handleLogout() {
   if (!confirm('Deseja sair?')) return;
   if (S.roomListener) { db.ref('chat_messages/' + S.room).off(); S.roomListener = null; }
@@ -205,7 +219,17 @@ auth.onAuthStateChanged(async function(user) {
     S.user = user;
     const snap = await db.ref('usuarios/' + user.uid).once('value');
     S.ud = snap.val() || {};
-    if (!S.ud.username) { $('auth-screen').style.display = ''; return; }
+    
+    // Se não tem username, é primeiro acesso com Google
+    if (!S.ud.username) {
+      googleUserTemp = user;
+      $('auth-screen').style.display = 'none';
+      $('app').style.display = 'none';
+      $('modal-username').classList.add('show');
+      return;
+    }
+    
+    // Tem username, pode entrar
     $('auth-screen').style.display = 'none';
     $('app').style.display = '';
     updateUI();
