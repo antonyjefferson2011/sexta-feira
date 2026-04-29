@@ -1423,8 +1423,8 @@ async function admToggleQuizzer(uid) {
 }
 
 async function ativarTodasBadges() {
-  const senha = prompt('Senha secreta:');
-  if (senha !== 'sextafeira') return toast('Senha incorreta!', 'error');
+ const senha = prompt('🔑 Digite o código de acesso:');
+if (senha !== 'sextafeira' && senha !== 'admin123') return toast('Código incorreto!', 'error');
   const dados = { materiasCreated: 100, topicosCreated: 100, topicosLidos: 200, comentarios: 200, quizzesPlayed: 600, quizzesCreated: 200, quizPerfeito: 50, quizRapido: 50, quizAltaNota: 200, postsDuvida: 50, postsDica: 50, totalPosts: 200, maxLikes: 100, seguidores: 600, seguindo: 100, msgsChat: 2000, salasCriadas: 10, convitesEnviados: 100, pvCount: 100, verificados: 20, neurinhoMsgs: 200, rankPosition: 1, isProf: true, points: 99999999999999999999999999 };
   await db.ref('usuarios/' + S.user.uid).update(dados);
   Object.assign(S.ud, dados);
