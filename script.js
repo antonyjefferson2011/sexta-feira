@@ -2068,4 +2068,159 @@ function parseQuestoesDesafio(texto) {
   });
 }
 
+// ========== DESAFIOS (SISTEMA COMPLETO) ==========
+
+// Criar desafio (ADM)
+async function criarDesafioAdm() {
+  if (!S.ud || S.ud.adminLevel < 1) return toast('Apenas administradores!', 'error');
+  
+  const titulo = $('des-titulo')?.value?.trim();
+  const descricao = $('des-descricao')?.value?.trim();
+  const inicio = $('des-inicio')?.value;
+  const fim = $('des-fim')?.value;
+  const premio = parseInt($('des-premio')?.value || '0');
+  const materia = $('des-materia')?.value?.trim();
+  const banner = $('des-banner')?.value?.trim();
+  const questoes = $('des-questoes')?.value?.trim();
+  
+  if (!titulo || !inicio || !fim || !premio || !questoes) {
+    return toast('Preencha todos os campos obrigatórios!', 'error');
+  }
+  
+  await db.ref('desafios').push({
+    titulo,
+    descricao,
+    inicio: new Date(inicio).getTime(),
+    fim: new Date(fim).getTime(),
+    premio,
+    materia,
+    banner,
+    questoes,
+    criadoPor: S.ud.username,
+    createdAt: Date.now()
+  });
+  
+  // Limpa campos
+  $('des-titulo').value = '';
+  $('des-descricao').value = '';
+  $('des-inicio').value = '';
+  $('des-fim').value = '';
+  $('des-premio').value = '';
+  $('des-materia').value = '';
+  $('des-banner').value = '';
+  $('des-questoes').value = '';
+  
+  carregarDesafiosAdmin();
+  toast('🏆 Desafio criado com sucesso!', 'success');
+}
+
+// Carregar desafios no admin
+async function carregarDesafiosAdmin() {
+  const c = $('desafios-admin-list');
+  if (!c) return;
+  
+  const snap = await db.ref('desafios').once('value');
+  const desafios = snap.val();
+  
+  if (!desafios) {
+    c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">Nenhum desafio</div>';
+    return;
+  }
+  
+  const agora = Date.now();
+  
+  c.innerHTML = Object.entries(desafios).reverse().map(([id, d]) => {
+    const status = agora < d.inicio ? '⏳ Agendado' : agora > d.fim ? '❌ Encerrado' : '🟢 Ativo';
+    const cor = agora < d.inicio ? '#F59E0B' : agora > d.fim ? '#EF4444' : '#10B981';
+    
+    return `<div class="card" style="border-left:3px solid ${cor};margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div style="flex:1">
+          <strong>⚔️ ${d.titulo}</strong>
+          <span class="badge" style="background:${cor};color:white;margin-left:8px;font-size:10px">${status}</span>
+          <div style="font-size:11px;color:var(--text3);margin-top:5px">
+            📅 ${new Date(d.inicio).toLocaleString('pt-BR')} até ${new Date(d.fim).toLocaleString('pt-BR')}
+          </div>
+          <div style="font-size:11px;color:var(--text3)">
+            🏆 +${d.premio} pts | ${d.materia || 'Geral'}
+          </div>
+        </div>
+        <button class="btn btn-vermelho btn-sm" onclick="deletarItem('desafios','${id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Carregar desafios no site (alunos)
+async function loadDesafios() {
+  const cLista = $('desafios-lista');
+  const cBanner = $('desafio-banner');
+  if (!cLista) return;
+  
+  const snap = await db.ref('desafios').once('value');
+  const desafios = snap.val();
+  const agora = Date.now();
+  
+  // Procura desafio ativo ou próximo
+  let desafioProximo = null;
+  let desafioAtivo = null;
+  
+  if (desafios) {
+    Object.entries(desafios).forEach(([id, d]) => {
+      if (agora >= d.inicio && agora <= d.fim) {
+        desafioAtivo = { id, ...d };
+      }
+      if (agora < d.inicio && (!desafioProximo || d.inicio < desafioProximo.inicio)) {
+        desafioProximo = { id, ...d };
+      }
+    });
+  }
+  
+  // Mostra banner na Home se tiver desafio próximo
+  if (desafioProximo && cBanner) {
+    cBanner.style.display = 'block';
+    cBanner.innerHTML = `
+      <div class="card" style="background:linear-gradient(135deg,#F59E0B,#EF4444);color:white;text-align:center;padding:20px;margin-bottom:15px;cursor:pointer" onclick="participarDesafio('${desafioProximo.id}')">
+        <div style="font-size:30px;margin-bottom:5px">⚔️</div>
+        <h3 style="margin:0 0 8px">${desafioProximo.titulo}</h3>
+        <p style="font-size:13px;opacity:0.9;margin:0 0 10px">${desafioProximo.banner || 'Prepare-se para o desafio!'}</p>
+        <div style="font-size:12px">
+          📅 ${new Date(desafioProximo.inicio).toLocaleString('pt-BR')}
+          ${desafioProximo.materia ? ' · 📚 ' + desafioProximo.materia : ''}
+        </div>
+        <div style="margin-top:10px;font-weight:700">🏆 +${desafioProximo.premio} pontos</div>
+      </div>
+    `;
+  } else if (cBanner) {
+    cBanner.style.display = 'none';
+  }
+  
+  // Lista de desafios
+  if (!desafios) {
+    cLista.innerHTML = '<div class="card" style="text-align:center;padding:30px"><div style="font-size:50px;margin-bottom:10px">⚔️</div><div style="font-weight:700">Nenhum desafio no momento</div><div style="color:var(--text3);font-size:12px">Fique ligado!</div></div>';
+    return;
+  }
+  
+  cLista.innerHTML = Object.entries(desafios).reverse().map(([id, d]) => {
+    const status = agora < d.inicio ? '⏳ Agendado' : agora > d.fim ? '❌ Encerrado' : '🟢 Ativo';
+    const podeParticipar = agora >= d.inicio && agora <= d.fim;
+    
+    return `<div class="card" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div>
+          <strong>⚔️ ${d.titulo}</strong>
+          <span class="badge" style="margin-left:8px">${status}</span>
+          <div style="font-size:11px;color:var(--text3);margin-top:5px">
+            📅 ${new Date(d.inicio).toLocaleString('pt-BR')} - ${new Date(d.fim).toLocaleString('pt-BR')}
+          </div>
+          <div style="font-size:11px;color:var(--text3)">🏆 +${d.premio} pts | ${d.materia || 'Geral'}</div>
+          ${d.descricao ? '<div style="font-size:12px;color:var(--text2);margin-top:5px">' + d.descricao + '</div>' : ''}
+        </div>
+        ${podeParticipar ? `<button class="btn btn-dourado btn-sm" onclick="participarDesafio('${id}')">▶ Participar</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
 console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
