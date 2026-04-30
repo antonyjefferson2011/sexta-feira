@@ -1,6 +1,6 @@
 'use strict';
 
-// ========== FIREBASE ==========
+// ========== CONFIG ==========
 const firebaseConfig = {
   apiKey: "AIzaSyC9Lcx3mYGYXavUi_b9c_tRbS3Otm9JQNk",
   authDomain: "sexta-feira-studies.firebaseapp.com",
@@ -15,15 +15,40 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
+// ========== IMG LINKS ==========
+const IMG = {
+  logo: 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png',
+  favicon: 'https://i.ibb.co/4nVtZpr2/Gemini-Generated-Image-vrc8thvrc8thvrc8.png',
+  jarvis: 'https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png',
+  seloVerificado: 'https://i.ibb.co/nXKFP0C/Gemini-Generated-Image-175dza175dza175d.png',
+  seloAdmin: 'https://i.ibb.co/v42HP4Q4/Gemini-Generated-Image-w47123w47123w471.png',
+  seloPremium: 'https://i.ibb.co/21pxMCWt/Gemini-Generated-Image-ipjg3xipjg3xipjg.png',
+  seloProfessor: 'https://i.ibb.co/7xBb9jQg/Gemini-Generated-Image-m0np5jm0np5jm0np.png',
+  seloQuizzer: 'https://i.ibb.co/zHNssTm0/Gemini-Generated-Image-3mtg9a3mtg9a3mtg.png',
+  seloProfAula: 'https://i.ibb.co/tpCKGKxs/Gemini-Generated-Image-id0q3hid0q3hid0q.png',
+  seloProfQuiz: 'https://i.ibb.co/tpCKGKxs/Gemini-Generated-Image-id0q3hid0q3hid0q.png',
+  seloDica: 'https://i.ibb.co/tpCKGKxs/Gemini-Generated-Image-id0q3hid0q3hid0q.png',
+  bannerSobre: 'https://i.ibb.co/fGqcL491/Gemini-Generated-Image-p9v6akp9v6akp9v6.png',
+  iconeUpdate: 'https://i.ibb.co/PGzmcBmJ/Gemini-Generated-Image-u7ba35u7ba35u7ba.png',
+  iconeDesafios: 'https://i.ibb.co/bjfhVJdq/Gemini-Generated-Image-4iw50v4iw50v4iw5.png',
+  thumbPdf: 'https://i.ibb.co/5hSygf1c/a-clean-modern-icon-design-featuring-a-w-q0jdpg8-YTt2f-Hx-AB9n-HYJQ-k-D1y-Nb-J9-S1mi-Wiuy-PB-N9w-sd.jpg',
+  iconeUpload: 'https://i.ibb.co/WNVyZhqc/Gemini-Generated-Image-c2mj8rc2mj8rc2mj.png',
+  placeholderVideo: 'https://i.ibb.co/R4S25MLb/a-minimalist-video-placeholder-graphic-f-po-VW-34-So-GZi-R1-Jv-BJtq-Q-we-OQ6-QOs-Sw-WKo-FSe-T81-HHA-sd.jpg',
+  iconeRanking: 'https://i.ibb.co/7Jwtbscy/a-modern-minimalist-icon-design-featurin-r-Yn-Y3-TVGSBKfajl-Sk-MYp-Sg-im17-Qrt-XQbmk-LFWWnc-QHLQ-sd.jpg',
+  iconeTarefas: 'https://i.ibb.co/pB3yvfp3/image.png',
+  iconeViews: 'https://i.ibb.co/gM7qmW8N/a-small-40x40-pixel-icon-featuring-a-sty-a-RQDe-K8u-Qou-OYMXLa-TFmhw-VS-z-FS4-SRn-W1-Ru2-H6-Vm-FKw-sd.jpg'
+};
+
 // ========== API KEYS ==========
 const IMGBB_API_KEY = '86427cccd2a94fb42a0754ffd7f19e79';
 const GROQ_API_KEY = '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';
 
 // ========== STATE ==========
 const S = {
-  user: null, ud: null, mid: null, tid: null,
+  user: null, ud: null, mid: null, aid: null,
   room: null, roomListener: null, pvUser: null, pvListener: null,
   mFilter: 'all', fFilter: 'all', pType: 'post',
+  perfilTab: 'aulas',
   quiz: { q: [], i: 0, score: 0, corr: 0, timer: null, left: 30, start: 0, ans: [] }
 };
 
@@ -50,42 +75,6 @@ function toast(msg, type) {
   c.appendChild(d);
   setTimeout(function() { d.style.opacity = '0'; d.style.transition = '0.3s'; setTimeout(function() { d.remove(); }, 300); }, 3000);
 }
-
-// ========== BADGES ==========
-const BADGES = [
-  { nome: '🌱 Novato', cond: function(u) { return true; } },
-  { nome: '📖 Primeira Aula', cond: function(u) { return (u.materiasCreated||0) >= 1; } },
-  { nome: '📚 Bibliotecário', cond: function(u) { return (u.materiasCreated||0) >= 5; } },
-  { nome: '🎓 Universitário', cond: function(u) { return (u.materiasCreated||0) >= 25; } },
-  { nome: '📝 Primeiro Tópico', cond: function(u) { return (u.topicosCreated||0) >= 1; } },
-  { nome: '✍️ Escritor', cond: function(u) { return (u.topicosCreated||0) >= 10; } },
-  { nome: '💬 Comentarista', cond: function(u) { return (u.comentarios||0) >= 10; } },
-  { nome: '🗣️ Palestrante', cond: function(u) { return (u.comentarios||0) >= 50; } },
-  { nome: '🎮 Primeiro Quiz', cond: function(u) { return (u.quizzesPlayed||0) >= 1; } },
-  { nome: '🕹️ Gamer', cond: function(u) { return (u.quizzesPlayed||0) >= 10; } },
-  { nome: '🎯 Viciado', cond: function(u) { return (u.quizzesPlayed||0) >= 50; } },
-  { nome: '👑 Rei dos Quizzes', cond: function(u) { return (u.quizzesPlayed||0) >= 100; } },
-  { nome: '🎯 Perfeito', cond: function(u) { return (u.quizPerfeito||0) >= 1; } },
-  { nome: '💯 Perfeccionista', cond: function(u) { return (u.quizPerfeito||0) >= 5; } },
-  { nome: '⭐ 1K', cond: function(u) { return (u.points||0) >= 1000; } },
-  { nome: '💰 5K', cond: function(u) { return (u.points||0) >= 5000; } },
-  { nome: '💎 10K', cond: function(u) { return (u.points||0) >= 10000; } },
-  { nome: '🐉 1M', cond: function(u) { return (u.points||0) >= 1000000; } },
-  { nome: '👤 Social', cond: function(u) { return (u.seguidores||0) >= 1; } },
-  { nome: '👥 Popular', cond: function(u) { return (u.seguidores||0) >= 10; } },
-  { nome: '🎉 Celebridade', cond: function(u) { return (u.seguidores||0) >= 50; } },
-  { nome: '🌟 Estrela', cond: function(u) { return (u.seguidores||0) >= 100; } },
-  { nome: '💬 Tagarela', cond: function(u) { return (u.msgsChat||0) >= 100; } },
-  { nome: '🏠 Anfitrião', cond: function(u) { return (u.salasCriadas||0) >= 1; } },
-  { nome: '📸 Perfil', cond: function(u) { return u.avatar && u.avatar.startsWith('http'); } },
-  { nome: '✏️ Bio', cond: function(u) { return u.bio && u.bio.length > 0; } },
-  { nome: '🥇 Top 1', cond: function(u) { return u.rankPosition === 1; } },
-  { nome: '🥈 Top 3', cond: function(u) { return u.rankPosition && u.rankPosition <= 3; } },
-  { nome: '✅ Professor', cond: function(u) { return u.isProf === true; } },
-  { nome: '⚙️ Admin', cond: function(u) { return u.isAdmin === true; } },
-  { nome: '🧠 Neurinho Friend', cond: function(u) { return (u.neurinhoMsgs||0) >= 10; } },
-  { nome: '🎉 Fundador', cond: function(u) { return u.createdAt && u.createdAt < 1750000000000; } }
-];
 
 // ========== AUTH ==========
 function switchAuthTab(t) {
@@ -141,11 +130,11 @@ async function handleRegister() {
       uid: cred.user.uid, fullname: fullname, username: username, email: email, password: pw,
       avatar: '🎓', bio: '', points: 0, creditos: 0, plano: 'gratis',
       adminLevel: 0, isProf: false, isQuizzer: false,
-      uploadsHoje: 0, uploadsData: '', neurinhoMsgsHoje: 0, neurinhoData: '',
-      quizzesPlayed: 0, materiasCreated: 0, topicosCreated: 0, comentarios: 0,
+      uploadsHoje: 0, uploadsData: '', jarvisMsgsHoje: 0, jarvisData: '',
+      quizzesPlayed: 0, materiasCreated: 0, aulasCreated: 0, comentarios: 0,
       seguidores: 0, seguindo: 0, msgsChat: 0, salasCriadas: 0,
       convitesEnviados: 0, pvCount: 0, quizPerfeito: 0, quizAltaNota: 0,
-      neurinhoMsgs: 0, rankPosition: 0, createdAt: Date.now()
+      jarvisMsgs: 0, rankPosition: 0, createdAt: Date.now()
     });
     toast('Conta criada! Bem-vindo, @' + username + '! 🎉', 'success');
   } catch(ex) { if (err) { err.textContent = ex.message; err.style.display = ''; } }
@@ -179,26 +168,24 @@ async function salvarUsernameGoogle() {
     username: username, email: googleUserTemp.email, password: '',
     avatar: googleUserTemp.photoURL || '🎓', bio: '', points: 0, creditos: 0, plano: 'gratis',
     adminLevel: 0, isProf: false, isQuizzer: false,
-    uploadsHoje: 0, uploadsData: '', neurinhoMsgsHoje: 0, neurinhoData: '',
-    quizzesPlayed: 0, materiasCreated: 0, topicosCreated: 0, comentarios: 0,
+    uploadsHoje: 0, uploadsData: '', jarvisMsgsHoje: 0, jarvisData: '',
+    quizzesPlayed: 0, materiasCreated: 0, aulasCreated: 0, comentarios: 0,
     seguidores: 0, seguindo: 0, msgsChat: 0, salasCriadas: 0,
     convitesEnviados: 0, pvCount: 0, quizPerfeito: 0, quizAltaNota: 0,
-    neurinhoMsgs: 0, rankPosition: 0, createdAt: Date.now()
+    jarvisMsgs: 0, rankPosition: 0, createdAt: Date.now()
   });
   
-  // Fechar modal
   $('modal-username').classList.remove('show');
   $('new-username-input').value = '';
   googleUserTemp = null;
   
-  // Forçar atualização do estado
   S.user = auth.currentUser;
   const snap2 = await db.ref('usuarios/' + S.user.uid).once('value');
   S.ud = snap2.val();
   
-  // Mostrar app
   $('auth-screen').style.display = 'none';
   $('app').style.display = '';
+  $('site-footer').style.display = '';
   updateUI();
   navigate('home');
   if (S.ud.adminLevel >= 1) { const nav = $('nav-adm'); if (nav) nav.style.display = ''; }
@@ -206,6 +193,7 @@ async function salvarUsernameGoogle() {
   
   toast('Conta criada! Bem-vindo, @' + username + '! 🎉', 'success');
 }
+
 async function handleLogout() {
   if (!confirm('Deseja sair?')) return;
   if (S.roomListener) { db.ref('chat_messages/' + S.room).off(); S.roomListener = null; }
@@ -220,7 +208,6 @@ auth.onAuthStateChanged(async function(user) {
     const snap = await db.ref('usuarios/' + user.uid).once('value');
     S.ud = snap.val() || {};
     
-    // Se não tem username, é primeiro acesso com Google
     if (!S.ud.username) {
       googleUserTemp = user;
       $('auth-screen').style.display = 'none';
@@ -229,9 +216,9 @@ auth.onAuthStateChanged(async function(user) {
       return;
     }
     
-    // Tem username, pode entrar
     $('auth-screen').style.display = 'none';
     $('app').style.display = '';
+    $('site-footer').style.display = '';
     updateUI();
     navigate('home');
     if (S.ud.adminLevel >= 1) { const nav = $('nav-adm'); if (nav) nav.style.display = ''; }
@@ -239,6 +226,7 @@ auth.onAuthStateChanged(async function(user) {
   } else {
     S.user = null; S.ud = null;
     $('app').style.display = 'none';
+    $('site-footer').style.display = 'none';
     $('auth-screen').style.display = '';
     switchAuthTab('login');
   }
@@ -258,12 +246,11 @@ function updateUI() {
   };
   for (const id in els) { const el = $(id); if (el) el.textContent = els[id]; }
   
-  // Avatar com imagem
   const avatarEls = ['sidebar-avatar', 'topbar-avatar', 'pc-avatar', 'perfil-avatar'];
   avatarEls.forEach(function(id) {
     const el = $(id); if (!el) return;
     if (av.startsWith('http')) { el.innerHTML = '<img src="' + av + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />'; }
-    else { el.textContent = av; el.innerHTML = ''; }
+    else { el.innerHTML = av; }
   });
 }
 
@@ -280,10 +267,13 @@ function navigate(name) {
   else if (name === 'materias') loadMaterias();
   else if (name === 'descobrir') loadFeed();
   else if (name === 'ranking') loadRanking();
+  else if (name === 'desafios') loadDesafios();
   else if (name === 'chat') loadChat();
   else if (name === 'perfil') loadPerfil();
   else if (name === 'notificacoes') loadNotifs();
   else if (name === 'adm') loadAdm();
+  else if (name === 'sobre') loadSobre();
+  else if (name === 'updates') loadUpdates();
 }
 
 function toggleSidebar() {
@@ -302,6 +292,24 @@ function closeModal(id) {
   const m = $('modal-' + id); if (m) m.classList.remove('show');
 }
 
+// ========== SISTEMA DE VIEWS ==========
+async function addView(path) {
+  if (!S.user) return;
+  const ref = db.ref(path + '/views');
+  const snap = await ref.once('value');
+  const views = snap.val() || {};
+  if (!views[S.user.uid]) {
+    views[S.user.uid] = Date.now();
+    await ref.set(views);
+  }
+}
+
+async function getViewCount(path) {
+  const snap = await db.ref(path + '/views').once('value');
+  const views = snap.val() || {};
+  return Object.keys(views).length;
+}
+
 // ========== HOME ==========
 async function loadHome() {
   if (!S.ud || !S.user) return;
@@ -310,8 +318,8 @@ async function loadHome() {
   updateUI();
 
   const pts = S.ud.points || 0;
-  const levels = [0, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1000000000, 10000000000, 100000000000, 1000000000000, 10000000000000, 100000000000000, 1000000000000000, 10000000000000000, 100000000000000000, 1000000000000000000, 10000000000000000000, 100000000000000000000, 1000000000000000000000, 10000000000000000000000, 100000000000000000000000];
-  const names = ['🌱 Brotinho','📖 Leitor','✍️ Anotador','🧠 Pensador','🎯 Focado','💡 Iluminado','🔥 Motivado','⚡ Rápido','🦉 Sábio','🏅 Dedicado','⭐ Estrela','🌟 Brilhante','💎 Raro','👑 Elite','🐉 Lendário','🌌 Cósmico','🔮 Místico','🎓 Mestre','🧙 Sábio Supremo','🚀 Transcendente','👻 Fantasma','🎪 Quântico','🌀 Dimensional','👁️ Onisciente','🌠 Astral','🎇 Universal','💫 Galáctico','🌟 Estelar','✨ Celestial','👼 Divino'];
+  const levels = [0, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1000000000, 10000000000, 100000000000, 1000000000000, 10000000000000, 100000000000000, 1000000000000000, 10000000000000000, 100000000000000000, 1000000000000000000, 10000000000000000000, 100000000000000000000];
+  const names = ['🌱 Brotinho','📖 Leitor','✍️ Anotador','🧠 Pensador','🎯 Focado','💡 Iluminado','🔥 Motivado','⚡ Rápido','🦉 Sábio','🏅 Dedicado','⭐ Estrela','🌟 Brilhante','💎 Raro','👑 Elite','🐉 Lendário','🌌 Cósmico','🔮 Místico','🎓 Mestre','🧙 Sábio Supremo','🚀 Transcendente','👻 Fantasma','🎪 Quântico','🌀 Dimensional','👁️ Onisciente','🌠 Astral','🎇 Universal','💫 Galáctico'];
   
   let lvl = 0;
   for (let i = 0; i < levels.length; i++) { if (pts >= levels[i]) lvl = i; }
@@ -335,29 +343,40 @@ async function loadHome() {
     const sr = $('stat-rank'); if (sr) sr.textContent = pos >= 0 ? '#' + (pos + 1) : '#--';
   }
 
-  db.ref('posts').orderByChild('createdAt').limitToLast(5).on('value', function(snap) {
+  db.ref('posts').orderByChild('createdAt').limitToLast(5).on('value', async function(snap) {
     const posts = snap.val();
     const c = $('home-feed'); if (!c) return;
     if (!posts) { c.innerHTML = '<div style="color:var(--text3);padding:15px;text-align:center">📭 Nenhum post</div>'; return; }
     const arr = Object.entries(posts).map(function(e) { return { id: e[0], ...e[1] }; }).reverse();
-    c.innerHTML = arr.map(function(p) { return feedCardHTML(p, true); }).join('');
+    let html = '';
+    for (const p of arr) {
+      const views = await getViewCount('posts/' + p.id);
+      html += feedCardHTML(p, true, views);
+    }
+    c.innerHTML = html;
   });
 }
 
-function feedCardHTML(p, compact) {
+function feedCardHTML(p, compact, views) {
   compact = compact || false;
+  views = views || 0;
   const imgHTML = p.imagem ? '<img src="' + esc(p.imagem) + '" style="width:100%;max-height:250px;object-fit:cover;border-radius:10px;margin-top:8px" loading="lazy" />' : '';
   const likes = p.likes ? Object.keys(p.likes).length : 0;
   const liked = p.likes && p.likes[S.user?.uid];
   const isOwner = p.autorId === S.user?.uid;
   const canDelete = isOwner || (S.ud?.adminLevel >= 1) || (S.ud?.isProf);
 
+  // Selos
+  let selosHTML = '';
+  if (p.isProf) selosHTML += '<img src="' + IMG.seloProfAula + '" class="selo-img" title="Professor" />';
+  if (p.tipo === 'dica') selosHTML += '<img src="' + IMG.seloDica + '" class="selo-img" title="Dica Oficial" />';
+
   return '<div class="card" style="margin-bottom:10px">' +
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' +
       '<div onclick="verPerfil(\'' + esc(p.autorId) + '\')" style="width:36px;height:36px;border-radius:50%;background:#10B981;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;cursor:pointer;flex-shrink:0;overflow:hidden">' + (p.avatar && p.avatar.startsWith('http') ? '<img src="' + esc(p.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(p.avatar || '?')) + '</div>' +
       '<div style="flex:1;min-width:0">' +
-        '<div style="font-weight:700;font-size:14px">' + esc(p.autorNome || '?') + '</div>' +
-        '<div style="color:var(--text3);font-size:11px">' + ago(p.createdAt) + '</div>' +
+        '<div style="font-weight:700;font-size:14px">' + esc(p.autorNome || '?') + selosHTML + '</div>' +
+        '<div style="color:var(--text3);font-size:11px">' + ago(p.createdAt) + ' · <span class="view-count"><img src="' + IMG.iconeViews + '" style="width:12px;height:12px" /> ' + views + '</span></div>' +
       '</div>' +
       (canDelete ? '<button onclick="deletePost(\'' + p.id + '\')" style="border:none;background:none;cursor:pointer;color:#EF4444;font-size:16px;padding:4px">🗑</button>' : '') +
     '</div>' +
@@ -369,7 +388,7 @@ function feedCardHTML(p, compact) {
   '</div>';
 }
 
-// ========== MATÉRIAS ==========
+// ========== DISCIPLINAS ==========
 let materiasListener = null;
 
 function loadMaterias() {
@@ -377,7 +396,7 @@ function loadMaterias() {
   materiasListener = db.ref('materias').on('value', function(snap) {
     const mat = snap.val();
     const c = $('materias-grid'); if (!c) return;
-    if (!mat) { c.innerHTML = '<div style="color:var(--text3);padding:15px;text-align:center">📚 Nenhuma aula ainda</div>'; return; }
+    if (!mat) { c.innerHTML = '<div style="color:var(--text3);padding:15px;text-align:center">📚 Nenhuma disciplina ainda</div>'; return; }
     let arr = Object.entries(mat).map(function(e) { return { id: e[0], ...e[1] }; });
     if (S.mFilter === 'mine') arr = arr.filter(function(m) { return m.autorId === S.user?.uid; });
     const s = ($('search-materias')?.value || '').toLowerCase();
@@ -385,9 +404,10 @@ function loadMaterias() {
     arr.sort(function(a,b) { return (b.createdAt||0)-(a.createdAt||0); });
     if (!arr.length) { c.innerHTML = '<div style="color:var(--text3);padding:15px;text-align:center">🔍 Nenhuma encontrada</div>'; return; }
     c.innerHTML = arr.map(function(m) {
+      const seloProf = m.isProf ? '<img src="' + IMG.seloProfessor + '" class="selo-img" style="width:20px;height:20px" />' : '';
       return '<div class="card card-clickable" onclick="openMateria(\'' + m.id + '\')" style="display:flex;gap:12px;align-items:center">' +
         '<span style="font-size:35px;flex-shrink:0">' + (m.icone || '📚') + '</span>' +
-        '<div style="min-width:0"><div style="font-weight:700;font-size:15px">' + esc(m.nome) + '</div>' +
+        '<div style="min-width:0"><div style="font-weight:700;font-size:15px">' + esc(m.nome) + seloProf + '</div>' +
         '<div style="font-size:12px;color:var(--text3);margin-top:2px">' + esc(m.descricao || 'Sem descrição') + '</div>' +
         '<div style="font-size:11px;color:var(--text3);margin-top:4px">Por: ' + esc(m.autorNome || '?') + '</div></div>' +
       '</div>';
@@ -402,93 +422,116 @@ async function criarMateria() {
   const n = ($('nm-nome')?.value || '').trim();
   const d = ($('nm-desc')?.value || '').trim();
   if (!n) { toast('Nome obrigatório', 'error'); return; }
-  await db.ref('materias').push({ nome: n, descricao: d, icone: '📚', autorId: S.user.uid, autorNome: S.ud.username, isProf: S.ud.isProf || false, topicosCount: 0, createdAt: Date.now() });
+  await db.ref('materias').push({ nome: n, descricao: d, icone: '📚', autorId: S.user.uid, autorNome: S.ud.username, isProf: S.ud.isProf || false, aulasCount: 0, createdAt: Date.now() });
   closeModal('materia');
   if ($('nm-nome')) $('nm-nome').value = '';
   if ($('nm-desc')) $('nm-desc').value = '';
   await addPts(20);
-  toast('Aula criada! 📚', 'success');
+  toast('Disciplina criada! 📚', 'success');
 }
 
 async function openMateria(id) {
   S.mid = id;
   const snap = await db.ref('materias/' + id).once('value');
-  const m = snap.val(); if (!m) { toast('Aula não encontrada', 'error'); return; }
+  const m = snap.val(); if (!m) { toast('Disciplina não encontrada', 'error'); return; }
   const icon = $('materia-hero-icon'); if (icon) icon.textContent = m.icone || '📚';
   const nome = $('materia-hero-nome'); if (nome) nome.textContent = m.nome;
   const desc = $('materia-hero-desc'); if (desc) desc.textContent = m.descricao || '';
-  const autor = $('materia-hero-autor'); if (autor) autor.textContent = 'Por: @' + (m.autorNome || '?');
+  const autor = $('materia-hero-autor'); if (autor) autor.innerHTML = 'Por: @' + esc(m.autorNome || '?') + (m.isProf ? ' <img src="' + IMG.seloProfessor + '" style="width:16px;height:16px;vertical-align:middle" />' : '');
   navigate('materia-detalhe');
+  addView('materias/' + id);
 
-  db.ref('topicos/' + id).on('value', function(snap) {
+  // Aulas
+  db.ref('aulas/' + id).on('value', async function(snap) {
     const t = snap.val();
-    const c = $('topicos-list'); if (!c) return;
-    if (!t) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">📝 Nenhum tópico</div>'; return; }
-    c.innerHTML = Object.entries(t).map(function(e) {
-      return '<div class="card card-clickable" onclick="openTopico(\'' + e[0] + '\')" style="display:flex;align-items:center;gap:10px">' +
-        '<span style="font-size:20px">' + (e[1].verificado ? '✅' : '📄') + '</span>' +
-        '<div><div style="font-weight:600">' + esc(e[1].titulo) + '</div>' +
-        '<div style="font-size:11px;color:var(--text3)">Por @' + esc(e[1].autorNome || '?') + ' · ' + ago(e[1].createdAt) + '</div></div>' +
+    const c = $('aulas-list'); if (!c) return;
+    if (!t) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">📝 Nenhuma aula</div>'; return; }
+    let html = '';
+    for (const [aid, a] of Object.entries(t)) {
+      const views = await getViewCount('aulas/' + id + '/' + aid);
+      html += '<div class="card card-clickable" onclick="openAula(\'' + id + '\',\'' + aid + '\')" style="display:flex;align-items:center;gap:10px">' +
+        (a.verificado ? '<img src="' + IMG.seloVerificado + '" style="width:20px;height:20px;flex-shrink:0" />' : '<span style="font-size:20px">📄</span>') +
+        '<div style="flex:1"><div style="font-weight:600">' + esc(a.titulo) + '</div>' +
+        '<div style="font-size:11px;color:var(--text3)">Por @' + esc(a.autorNome || '?') + (a.isProf ? ' <img src="' + IMG.seloProfAula + '" style="width:12px;height:12px;vertical-align:middle" />' : '') + ' · ' + ago(a.createdAt) + ' · <span class="view-count"><img src="' + IMG.iconeViews + '" style="width:10px;height:10px" /> ' + views + '</span></div></div>' +
       '</div>';
+    }
+    c.innerHTML = html;
+  });
+
+  // Vídeos
+  db.ref('videos/' + id).on('value', function(snap) {
+    const v = snap.val();
+    const c = $('videos-materia'); if (!c) return;
+    if (!v) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">🎬 Nenhum vídeo</div>'; return; }
+    c.innerHTML = Object.entries(v).map(function(e) {
+      return '<div class="card" style="margin-bottom:10px"><div style="font-weight:700;margin-bottom:8px">🎬 ' + esc(e[1].titulo || 'Vídeo') + '</div>' +
+        (e[1].url ? '<iframe width="100%" height="200" src="' + esc(e[1].url) + '" frameborder="0" allowfullscreen style="border-radius:10px"></iframe>' :
+        '<div class="video-container"><video controls src="' + esc(e[1].videoUrl) + '" style="width:100%;border-radius:10px"></video></div>') +
+        '<div style="font-size:11px;color:var(--text3);margin-top:4px">Por @' + esc(e[1].autorNome || '?') + '</div></div>';
     }).join('');
   });
 
-  db.ref('quizzes/' + id).on('value', function(snap) {
+  // Quizzes
+  db.ref('quizzes/' + id).on('value', async function(snap) {
     const q = snap.val();
     const c = $('quizzes-materia'); if (!c) return;
     if (!q) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">🎮 Nenhum quiz</div>'; return; }
-    c.innerHTML = Object.entries(q).map(function(e) {
-      return '<div class="card" style="display:flex;justify-content:space-between;align-items:center">' +
-        '<div><strong>🎮 ' + esc(e[1].nome) + '</strong>' + (e[1].oficial ? ' <span style="color:#10B981;font-size:11px">✅ Oficial</span>' : '') +
-        (e[1].nivel ? ' <span style="color:#3B82F6;font-size:11px">Nv.' + e[1].nivel + '</span>' : '') +
-        '<br><span style="font-size:12px;color:var(--text3)">' + (e[1].questoes?.length || 0) + ' questões</span></div>' +
-        '<button class="btn btn-primary btn-sm" onclick="startQuiz(\'' + id + '\',\'' + e[0] + '\')">▶ Jogar</button>' +
+    let html = '';
+    for (const [qid, quiz] of Object.entries(q)) {
+      const views = await getViewCount('quizzes/' + id + '/' + qid);
+      html += '<div class="card" style="display:flex;justify-content:space-between;align-items:center">' +
+        '<div><strong>🎮 ' + esc(quiz.nome) + '</strong>' + (quiz.oficial ? ' <img src="' + IMG.seloVerificado + '" style="width:14px;height:14px;vertical-align:middle" />' : '') +
+        (quiz.isProf ? ' <img src="' + IMG.seloProfQuiz + '" style="width:14px;height:14px;vertical-align:middle" />' : '') +
+        '<br><span style="font-size:12px;color:var(--text3)">' + (quiz.questoes?.length || 0) + ' questões · <span class="view-count"><img src="' + IMG.iconeViews + '" style="width:10px;height:10px" /> ' + views + '</span></span></div>' +
+        '<button class="btn btn-primary btn-sm" onclick="startQuiz(\'' + id + '\',\'' + qid + '\')">▶ Jogar</button>' +
       '</div>';
-    }).join('');
+    }
+    c.innerHTML = html;
   });
 }
 
-// ========== TÓPICOS ==========
-async function criarTopico() {
+// ========== AULAS ==========
+async function criarAula() {
   const t = ($('nt-titulo')?.value || '').trim();
   const c = ($('nt-conteudo')?.value || '').trim();
   if (!t || !c) { toast('Preencha tudo', 'error'); return; }
-  if (!S.mid) { toast('Selecione uma aula', 'error'); return; }
-  await db.ref('topicos/' + S.mid).push({ titulo: t, conteudo: c, autorId: S.user.uid, autorNome: S.ud.username, verificado: false, createdAt: Date.now() });
-  closeModal('topico');
+  if (!S.mid) { toast('Selecione uma disciplina', 'error'); return; }
+  await db.ref('aulas/' + S.mid).push({ titulo: t, conteudo: c, autorId: S.user.uid, autorNome: S.ud.username, isProf: S.ud.isProf || false, verificado: false, createdAt: Date.now(), views: {} });
+  closeModal('aula');
   if ($('nt-titulo')) $('nt-titulo').value = '';
   if ($('nt-conteudo')) $('nt-conteudo').value = '';
   await addPts(15);
-  toast('Tópico criado! 📝', 'success');
+  toast('Aula criada! 📝', 'success');
 }
 
-async function openTopico(id) {
-  S.tid = id;
-  const snap = await db.ref('topicos/' + S.mid + '/' + id).once('value');
-  const t = snap.val(); if (!t) { toast('Tópico não encontrado', 'error'); return; }
-  const title = $('topico-title'); if (title) title.innerHTML = esc(t.titulo) + (t.verificado ? ' <span style="color:#10B981;font-size:14px">✅ Verificado</span>' : '');
-  const meta = $('topico-meta');
+async function openAula(mid, aid) {
+  S.mid = mid;
+  S.aid = aid;
+  const snap = await db.ref('aulas/' + mid + '/' + aid).once('value');
+  const t = snap.val(); if (!t) { toast('Aula não encontrada', 'error'); return; }
+  addView('aulas/' + mid + '/' + aid);
+  const title = $('aula-title'); if (title) title.innerHTML = esc(t.titulo) + (t.verificado ? ' <img src="' + IMG.seloVerificado + '" style="width:18px;height:18px;vertical-align:middle" />' : '');
+  const meta = $('aula-meta');
   if (meta) {
-    meta.innerHTML = 'Por <strong>@' + esc(t.autorNome || '?') + '</strong> · ' + ago(t.createdAt);
+    meta.innerHTML = 'Por <strong>@' + esc(t.autorNome || '?') + '</strong>' + (t.isProf ? ' <img src="' + IMG.seloProfAula + '" style="width:14px;height:14px;vertical-align:middle" />' : '') + ' · ' + ago(t.createdAt);
     if (S.ud?.isProf && !t.verificado) {
-      meta.innerHTML += ' <button class="btn btn-primary btn-sm" onclick="verificarTopico(\'' + id + '\')" style="font-size:10px;padding:3px 8px;margin-left:8px">✅ Verificar</button>';
+      meta.innerHTML += ' <button class="btn btn-primary btn-sm" onclick="verificarAula(\'' + aid + '\')" style="font-size:10px;padding:3px 8px;margin-left:8px">✅ Verificar</button>';
     }
   }
-  const body = $('topico-body'); if (body) body.textContent = t.conteudo;
-  navigate('topico-detalhe');
+  const body = $('aula-body'); if (body) body.textContent = t.conteudo;
+  navigate('aula-detalhe');
 
-  db.ref('comentarios/' + S.mid + '/' + id).on('value', function(snap) {
+  db.ref('comentarios/' + mid + '/' + aid).on('value', function(snap) {
     const coms = snap.val();
-    const c = $('topico-comentarios'); if (!c) return;
+    const c = $('aula-comentarios'); if (!c) return;
     if (!coms) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">💬 Seja o primeiro!</div>'; return; }
     const arr = Object.entries(coms).map(function(e) { return { id: e[0], ...e[1] }; }).sort(function(a,b) { return (a.createdAt||0)-(b.createdAt||0); });
-    // Professores primeiro
     arr.sort(function(a,b) { if (a.isProf && !b.isProf) return -1; if (!a.isProf && b.isProf) return 1; return (a.createdAt||0)-(b.createdAt||0); });
     c.innerHTML = arr.map(function(com) {
       return '<div class="card" style="margin-bottom:8px;' + (com.isProf ? 'border-left:3px solid #10B981;background:var(--hover)' : '') + '">' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
           '<div style="width:28px;height:28px;border-radius:50%;background:' + (com.isProf ? 'linear-gradient(135deg,#10B981,#3B82F6)' : '#10B981') + ';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;cursor:pointer" onclick="verPerfil(\'' + esc(com.autorId) + '\')">' + esc((com.autorNome || '?')[0].toUpperCase()) + '</div>' +
-          '<div><span style="font-weight:700;font-size:13px">@' + esc(com.autorNome || '?') + '</span>' + (com.isProf ? ' <span style="color:#10B981;font-size:11px">✅ Prof</span>' : '') + ' <span style="color:var(--text3);font-size:11px">' + ago(com.createdAt) + '</span></div>' +
+          '<div><span style="font-weight:700;font-size:13px">@' + esc(com.autorNome || '?') + '</span>' + (com.isProf ? ' <img src="' + IMG.seloProfAula + '" style="width:12px;height:12px;vertical-align:middle" />' : '') + ' <span style="color:var(--text3);font-size:11px">' + ago(com.createdAt) + '</span></div>' +
         '</div>' +
         '<div style="font-size:14px;line-height:1.5;padding-left:36px">' + esc(com.texto) + '</div>' +
       '</div>';
@@ -496,19 +539,47 @@ async function openTopico(id) {
   });
 }
 
-async function verificarTopico(tid) {
+async function verificarAula(aid) {
   if (!S.ud?.isProf) return toast('Só professores', 'error');
-  await db.ref('topicos/' + S.mid + '/' + tid).update({ verificado: true, verificadoPor: S.ud.username, verificadoEm: Date.now() });
-  toast('✅ Tópico verificado!', 'success');
-  openTopico(tid);
+  await db.ref('aulas/' + S.mid + '/' + aid).update({ verificado: true, verificadoPor: S.ud.username, verificadoEm: Date.now() });
+  toast('✅ Aula verificada!', 'success');
+  openAula(S.mid, aid);
 }
 
 async function addComment() {
   const input = $('new-comment'); const t = input ? input.value.trim() : '';
   if (!t) return;
-  await db.ref('comentarios/' + S.mid + '/' + S.tid).push({ texto: t, autorId: S.user.uid, autorNome: S.ud.username, isProf: S.ud?.isProf || false, createdAt: Date.now() });
+  await db.ref('comentarios/' + S.mid + '/' + S.aid).push({ texto: t, autorId: S.user.uid, autorNome: S.ud.username, isProf: S.ud?.isProf || false, createdAt: Date.now() });
   if (input) input.value = '';
   await addPts(S.ud?.isProf ? 6 : 3);
+}
+
+// ========== VÍDEOS ==========
+async function adicionarVideo() {
+  const titulo = ($('nv-titulo')?.value || '').trim();
+  const url = ($('nv-url')?.value || '').trim();
+  if (!titulo) return toast('Título obrigatório', 'error');
+  if (!url) return toast('Link obrigatório', 'error');
+  
+  let videoUrl = url;
+  // Converte link do YouTube para embed
+  if (url.includes('youtube.com/watch?v=')) {
+    const videoId = url.split('v=')[1]?.split('&')[0];
+    videoUrl = 'https://www.youtube.com/embed/' + videoId;
+  } else if (url.includes('youtu.be/')) {
+    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+    videoUrl = 'https://www.youtube.com/embed/' + videoId;
+  }
+  
+  await db.ref('videos/' + S.mid).push({
+    titulo: titulo, url: videoUrl, autorId: S.user.uid, autorNome: S.ud.username,
+    isProf: S.ud.isProf || false, createdAt: Date.now()
+  });
+  closeModal('video');
+  if ($('nv-titulo')) $('nv-titulo').value = '';
+  if ($('nv-url')) $('nv-url').value = '';
+  await addPts(10);
+  toast('Vídeo adicionado! 🎬', 'success');
 }
 
 // ========== QUIZ ==========
@@ -517,10 +588,10 @@ function addQuestaoNormal() {
   questoesNormais.push({ pergunta: '', alternativas: ['', '', '', ''], correta: 0 });
   const div = document.createElement('div');
   div.style.cssText = 'background:var(--input-bg);border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid var(--border)';
-  div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:14px">Questão ' + (idx + 1) + '</strong>' + (idx > 0 ? '<button onclick="removerQuestao(' + idx + ')" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:16px">🗑</button>' : '') + '</div>' +
+  div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>Questão ' + (idx + 1) + '</strong>' + (idx > 0 ? '<button onclick="removerQuestao(' + idx + ')" style="background:none;border:none;cursor:pointer;color:#EF4444;font-size:16px">🗑</button>' : '') + '</div>' +
     '<input class="input-field" placeholder="Pergunta..." oninput="questoesNormais[' + idx + '].pergunta=this.value" style="margin-bottom:8px" />' +
     ['A','B','C','D'].map(function(l, i) {
-      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="radio" name="qc' + idx + '" value="' + i + '" ' + (i === 0 ? 'checked' : '') + ' onchange="questoesNormais[' + idx + '].correta=' + i + '" /><span style="font-weight:700;width:20px">' + l + '</span><input class="input-field" placeholder="Alternativa ' + l + '..." style="margin:0;flex:1" oninput="questoesNormais[' + idx + '].alternativas[' + i + ']=this.value" /></div>';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><input type="radio" name="qc' + idx + '" value="' + i + '" ' + (i === 0 ? 'checked' : '') + ' onchange="questoesNormais[' + idx + '].correta=' + i + '" /><span>' + l + '</span><input class="input-field" placeholder="Alternativa ' + l + '..." style="margin:0;flex:1" oninput="questoesNormais[' + idx + '].alternativas[' + i + ']=this.value" /></div>';
     }).join('');
   const container = $('qn-questoes-container'); if (container) container.appendChild(div);
 }
@@ -529,19 +600,17 @@ function removerQuestao(idx) {
   questoesNormais.splice(idx, 1);
   const container = $('qn-questoes-container'); if (!container) return;
   container.innerHTML = '';
-  const backup = questoesNormais.slice();
-  questoesNormais = [];
-  backup.forEach(function() { addQuestaoNormal(); });
+  questoesNormais.forEach(function() { addQuestaoNormal(); });
 }
 
 async function salvarQuizNormal() {
   const nome = ($('qn-nome')?.value || '').trim();
   const tempo = parseInt($('qn-tempo')?.value || '30') || 30;
   if (!nome) { toast('Nome obrigatório', 'error'); return; }
-  if (!S.mid) { toast('Acesse uma aula primeiro', 'error'); return; }
+  if (!S.mid) { toast('Acesse uma disciplina primeiro', 'error'); return; }
   const validas = questoesNormais.filter(function(q) { return q.pergunta.trim() && q.alternativas.filter(function(a) { return a.trim(); }).length >= 2; });
   if (!validas.length) { toast('Adicione questões', 'error'); return; }
-  await db.ref('quizzes/' + S.mid).push({ nome: nome, tempo: tempo, questoes: validas, autorId: S.user.uid, autorNome: S.ud.username, oficial: (S.ud?.isQuizzer || S.ud?.adminLevel >= 3) ? true : false, nivel: 1, totalPlays: 0, createdAt: Date.now() });
+  await db.ref('quizzes/' + S.mid).push({ nome: nome, tempo: tempo, questoes: validas, autorId: S.user.uid, autorNome: S.ud.username, isProf: S.ud.isProf || false, oficial: (S.ud?.isQuizzer || S.ud?.adminLevel >= 3) ? true : false, nivel: 1, totalPlays: 0, createdAt: Date.now(), views: {} });
   closeModal('quiz-normal');
   await addPts(30);
   toast('Quiz criado! 🎮', 'success');
@@ -550,7 +619,7 @@ async function salvarQuizNormal() {
 async function processarCmd() {
   const input = ($('cmd-input')?.value || '');
   if (!input.trim()) return toast('Digite os comandos', 'error');
-  if (!S.mid) return toast('Acesse uma aula primeiro', 'error');
+  if (!S.mid) return toast('Acesse uma disciplina primeiro', 'error');
   const lines = input.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
   let nome = '', questoes = [], curQ = null, alts = [], corr = -1, tempo = 30;
   
@@ -570,7 +639,7 @@ async function processarCmd() {
   if (!nome) return toast('Use /n Nome', 'error');
   if (!questoes.length) return toast('Adicione questões', 'error');
   
-  await db.ref('quizzes/' + S.mid).push({ nome: nome, tempo: tempo, questoes: questoes, autorId: S.user.uid, autorNome: S.ud.username, oficial: false, totalPlays: 0, createdAt: Date.now() });
+  await db.ref('quizzes/' + S.mid).push({ nome: nome, tempo: tempo, questoes: questoes, autorId: S.user.uid, autorNome: S.ud.username, isProf: S.ud.isProf || false, oficial: false, totalPlays: 0, createdAt: Date.now(), views: {} });
   closeModal('quiz-cmd');
   if ($('cmd-input')) $('cmd-input').value = '';
   await addPts(30);
@@ -581,6 +650,7 @@ async function startQuiz(mId, qId) {
   const snap = await db.ref('quizzes/' + mId + '/' + qId).once('value');
   const q = snap.val();
   if (!q || !q.questoes || !q.questoes.length) { toast('Quiz sem questões', 'error'); return; }
+  addView('quizzes/' + mId + '/' + qId);
   S.quiz = { q: shuffle(q.questoes.slice()), i: 0, score: 0, corr: 0, timer: null, left: q.tempo || 30, tempoTotal: q.tempo || 30, start: Date.now(), ans: [], nome: q.nome, mId: mId, qId: qId };
   navigate('quiz-game');
   renderQ();
@@ -662,15 +732,19 @@ function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.fl
 // ========== FEED ==========
 function loadFeed() {
   if (S.fFilter === 'usuarios') { loadAllUsers(); return; }
-  db.ref('posts').orderByChild('createdAt').limitToLast(50).on('value', function(snap) {
+  db.ref('posts').orderByChild('createdAt').limitToLast(50).on('value', async function(snap) {
     const posts = snap.val();
     const c = $('descobrir-feed'); if (!c) return;
     if (!posts) { c.innerHTML = '<div style="color:var(--text3);padding:15px;text-align:center">📭 Nenhum post</div>'; return; }
     let arr = Object.entries(posts).map(function(e) { return { id: e[0], ...e[1] }; }).reverse();
     if (S.fFilter !== 'all') arr = arr.filter(function(p) { return p.tipo === S.fFilter; });
-    // Professores primeiro
     arr.sort(function(a,b) { if (a.isProf && !b.isProf) return -1; if (!a.isProf && b.isProf) return 1; return (b.createdAt||0)-(a.createdAt||0); });
-    c.innerHTML = arr.length ? arr.map(function(p) { return feedCardHTML(p); }).join('') : '<div style="color:var(--text3);padding:15px;text-align:center">📭 Nenhum post</div>';
+    let html = '';
+    for (const p of arr) {
+      const views = await getViewCount('posts/' + p.id);
+      html += feedCardHTML(p, false, views);
+    }
+    c.innerHTML = html || '<div style="color:var(--text3);padding:15px;text-align:center">📭 Nenhum post</div>';
   });
 }
 
@@ -695,12 +769,11 @@ async function createPost() {
   const imgInput = $('post-image-input');
   if (!t && (!imgInput || !imgInput.files[0])) return toast('Escreva algo ou adicione imagem', 'error');
   
-  // Verificar limite diário
   const hoje = new Date().toDateString();
   if (S.ud.uploadsData !== hoje) { S.ud.uploadsHoje = 0; S.ud.uploadsData = hoje; }
   const limite = S.ud.plano === 'pro' ? 20 : S.ud.plano === 'premium' ? 10 : 5;
   if (imgInput && imgInput.files[0] && S.ud.uploadsHoje >= limite && S.ud.creditos < 1) {
-    return toast('Limite de ' + limite + ' imagens/dia atingido! Compre créditos ou faça upgrade.', 'error');
+    return toast('Limite de ' + limite + ' imagens/dia atingido!', 'error');
   }
   
   let imagemUrl = null;
@@ -713,7 +786,10 @@ async function createPost() {
     await db.ref('usuarios/' + S.user.uid).update({ uploadsHoje: S.ud.uploadsHoje, uploadsData: hoje, creditos: S.ud.creditos || 0 });
   }
   
-  await db.ref('posts').push({ texto: t, tipo: S.pType, imagem: imagemUrl, autorId: S.user.uid, autorNome: S.ud.username, avatar: S.ud.avatar, isProf: S.ud.isProf || false, likes: {}, createdAt: Date.now() });
+  const ref = await db.ref('posts').push({ texto: t, tipo: S.pType, imagem: imagemUrl, autorId: S.user.uid, autorNome: S.ud.username, avatar: S.ud.avatar, isProf: S.ud.isProf || false, likes: {}, views: {}, createdAt: Date.now() });
+  // Adiciona view do próprio autor
+  await db.ref('posts/' + ref.key + '/views/' + S.user.uid).set(Date.now());
+  
   if ($('new-post-text')) $('new-post-text').value = '';
   if (imgInput) imgInput.value = '';
   const preview = $('post-image-preview'); if (preview) preview.innerHTML = '';
@@ -742,7 +818,9 @@ async function criarPostModal() {
     await db.ref('usuarios/' + S.user.uid).update({ uploadsHoje: S.ud.uploadsHoje, uploadsData: hoje, creditos: S.ud.creditos || 0 });
   }
   
-  await db.ref('posts').push({ texto: t, tipo: tp, imagem: imagemUrl, autorId: S.user.uid, autorNome: S.ud.username, avatar: S.ud.avatar, isProf: S.ud.isProf || false, likes: {}, createdAt: Date.now() });
+  const ref = await db.ref('posts').push({ texto: t, tipo: tp, imagem: imagemUrl, autorId: S.user.uid, autorNome: S.ud.username, avatar: S.ud.avatar, isProf: S.ud.isProf || false, likes: {}, views: {}, createdAt: Date.now() });
+  await db.ref('posts/' + ref.key + '/views/' + S.user.uid).set(Date.now());
+  
   closeModal('post');
   if ($('post-texto-modal')) $('post-texto-modal').value = '';
   if (imgInput) imgInput.value = '';
@@ -785,6 +863,7 @@ async function deletePost(id) {
   toast('Post excluído', 'info');
 }
 
+// ========== BUSCAR USUÁRIOS ==========
 async function loadAllUsers() {
   const c = $('descobrir-feed'); if (!c) return;
   c.innerHTML = '<div style="color:var(--text3);padding:15px;text-align:center">⏳ Carregando...</div>';
@@ -819,16 +898,17 @@ async function renderUserList(users) {
   c.innerHTML = arr.map(function(u) {
     const isMe = u.id === S.user?.uid;
     const isFollowing = myFollowing[u.id];
-    let badges = '';
-    if (u.isProf) badges += '<span style="color:#10B981;font-size:12px">✅</span>';
-    if (u.isAdmin) badges += '<span style="color:#F59E0B;font-size:12px">⚙️</span>';
+    let selos = '';
+    if (u.isAdmin) selos += '<img src="' + IMG.seloAdmin + '" class="selo-img" title="Admin" style="width:16px;height:16px" />';
+    if (u.isProf) selos += '<img src="' + IMG.seloProfessor + '" class="selo-img" title="Professor" style="width:16px;height:16px" />';
+    if (u.isQuizzer) selos += '<img src="' + IMG.seloQuizzer + '" class="selo-img" title="Quizzer" style="width:16px;height:16px" />';
+    if (u.plano === 'premium' || u.plano === 'pro') selos += '<img src="' + IMG.seloPremium + '" class="selo-img" title="Premium" style="width:16px;height:16px" />';
     
     return '<div class="card card-clickable" onclick="' + (isMe ? "navigate('perfil')" : "verPerfil('" + u.id + "')") + '" style="display:flex;align-items:center;gap:12px">' +
-      '<div style="width:44px;height:44px;border-radius:50%;background:' + (u.isProf ? 'linear-gradient(135deg,#10B981,#3B82F6)' : '#10B981') + ';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;flex-shrink:0;overflow:hidden">' + (u.avatar && u.avatar.startsWith('http') ? '<img src="' + esc(u.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(u.avatar || '?')[0]) + '</div>' +
-      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">@' + esc(u.username || '?') + ' ' + badges + '</div>' +
-      (isMe ? '<span style="background:#10B981;color:white;padding:2px 8px;border-radius:10px;font-size:10px">Você</span>' : '') +
+      '<div style="width:44px;height:44px;border-radius:50%;background:#10B981;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;flex-shrink:0;overflow:hidden">' + (u.avatar && u.avatar.startsWith('http') ? '<img src="' + esc(u.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(u.avatar || '?')) + '</div>' +
+      '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">@' + esc(u.username || '?') + ' ' + selos + '</div>' +
       '<div style="font-size:12px;color:var(--text3);margin-top:2px">⭐ ' + fmt(u.points) + ' pts · 👥 ' + (u.seguidores || 0) + ' seguidores</div></div>' +
-      (!isMe ? '<button class="btn btn-sm ' + (isFollowing ? 'btn-primary' : 'btn-outline') + '" onclick="event.stopPropagation();toggleFollowUser(\'' + u.id + '\',this)" style="flex-shrink:0;' + (isFollowing ? 'background:#10B981;' : '') + '">' + (isFollowing ? '✅ Seguindo' : '👥 Seguir') + '</button>' : '') +
+      (!isMe ? '<button class="btn btn-sm ' + (isFollowing ? 'btn-primary' : 'btn-outline') + '" onclick="event.stopPropagation();toggleFollowUser(\'' + u.id + '\',this)" style="flex-shrink:0">' + (isFollowing ? '✅ Seguindo' : '👥 Seguir') + '</button>' : '') +
     '</div>';
   }).join('');
 }
@@ -840,14 +920,14 @@ async function toggleFollowUser(uid, btn) {
   if (snap.val()) {
     await ref.remove();
     await db.ref('seguindo/' + uid + '/' + S.user.uid).remove();
-    if (btn) { btn.textContent = '👥 Seguir'; btn.className = 'btn btn-sm btn-outline'; btn.style.background = ''; }
+    if (btn) { btn.textContent = '👥 Seguir'; btn.className = 'btn btn-sm btn-outline'; }
   } else {
     await ref.set(true);
     await db.ref('seguindo/' + uid + '/' + S.user.uid).set(true);
     const cSnap = await db.ref('usuarios/' + uid + '/seguidores').once('value');
     await db.ref('usuarios/' + uid).update({ seguidores: (cSnap.val() || 0) + 1 });
     await db.ref('notificacoes/' + uid).push({ mensagem: '👥 @' + S.ud.username + ' começou a te seguir!', tipo: 'follow', lida: false, createdAt: Date.now() });
-    if (btn) { btn.textContent = '✅ Seguindo'; btn.className = 'btn btn-sm btn-primary'; btn.style.background = '#10B981'; }
+    if (btn) { btn.textContent = '✅ Seguindo'; btn.className = 'btn btn-sm btn-primary'; }
   }
 }
 
@@ -975,8 +1055,7 @@ async function searchUsersToInvite() {
   const list = $('invite-users-list'); if (!list) return;
   list.innerHTML = arr.map(function(u) {
     return '<div onclick="toggleInviteUser(\'' + u.id + '\',this)" style="display:flex;align-items:center;gap:10px;padding:10px;cursor:pointer;border-radius:8px;background:' + (selectedInviteUsers.includes(u.id) ? 'var(--hover)' : 'transparent') + '">' +
-      '<div style="width:32px;height:32px;border-radius:50%;background:#10B981;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">' + esc(u.username[0] || '?') + '</div>' +
-      '<span style="flex:1;font-weight:600;font-size:13px">@' + esc(u.username) + '</span>' +
+      '<span style="font-weight:600;font-size:13px">@' + esc(u.username) + '</span>' +
       '<span style="font-size:16px">' + (selectedInviteUsers.includes(u.id) ? '✅' : '○') + '</span></div>';
   }).join('');
 }
@@ -1018,9 +1097,6 @@ function loadRanking() {
     else { arr = arr.filter(function(u) { return !u.isProf; }); }
     arr.sort(function(a,b) { return (b.points||0)-(a.points||0); });
     
-    const rm = $('my-rank-mode'); if (rm) rm.textContent = rankingModo === 'professores' ? '(Professores)' : '(Alunos)';
-    
-    // Pódio
     const podio = $('podio'); if (podio) {
       podio.innerHTML = [
         renderPodiumPlace(2, arr[1]),
@@ -1029,20 +1105,18 @@ function loadRanking() {
       ].join('');
     }
     
-    // Minha posição
-    const isIn = (S.ud?.isProf && rankingModo === 'professores') || (!S.ud?.isProf && rankingModo === 'alunos');
-    const pos = arr.findIndex(function(u) { return u.uid === S.user?.uid; });
-    const mn = $('my-rank-num'); if (mn) mn.textContent = (pos >= 0 && isIn) ? '#' + (pos + 1) : '--';
-    const mp = $('my-rank-pts'); if (mp) mp.textContent = isIn && pos >= 0 ? fmt(arr[pos]?.points || 0) + ' pts' : '-- pts';
-    
-    // Lista
     const lista = $('ranking-list');
     if (lista) {
       lista.innerHTML = arr.slice(0, 50).map(function(u, i) {
+        let selos = '';
+        if (u.isAdmin) selos += '<img src="' + IMG.seloAdmin + '" class="selo-img" />';
+        if (u.isProf) selos += '<img src="' + IMG.seloProfessor + '" class="selo-img" />';
+        if (u.plano === 'premium' || u.plano === 'pro') selos += '<img src="' + IMG.seloPremium + '" class="selo-img" />';
+        
         return '<div class="card card-clickable" onclick="verPerfil(\'' + u.uid + '\')" style="display:flex;align-items:center;gap:10px;' + (u.uid === S.user?.uid ? 'background:var(--hover);border:2px solid #10B981' : '') + '">' +
-          '<span style="font-weight:800;width:28px;text-align:center;font-size:' + (i < 3 ? '18' : '14') + 'px;color:' + (i < 3 ? '#10B981' : 'var(--text3)') + '">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)) + '</span>' +
-          '<div style="width:34px;height:34px;border-radius:50%;background:' + (u.isProf ? 'linear-gradient(135deg,#10B981,#3B82F6)' : '#10B981') + ';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;overflow:hidden">' + (u.avatar && u.avatar.startsWith('http') ? '<img src="' + esc(u.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(u.avatar || '?')[0]) + '</div>' +
-          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">@' + esc(u.username || '?') + (u.isProf ? ' <span style="color:#10B981">✅</span>' : '') + '</div>' + (u.uid === S.user?.uid ? '<span style="background:#10B981;color:white;padding:1px 7px;border-radius:10px;font-size:10px">Você</span>' : '') + '</div>' +
+          '<span style="font-weight:800;width:28px;text-align:center;font-size:14px;color:' + (i < 3 ? '#10B981' : 'var(--text3)') + '">' + (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)) + '</span>' +
+          '<div style="width:34px;height:34px;border-radius:50%;background:#10B981;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;overflow:hidden">' + (u.avatar && u.avatar.startsWith('http') ? '<img src="' + esc(u.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(u.avatar || '?')) + '</div>' +
+          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">@' + esc(u.username || '?') + selos + '</div></div>' +
           '<span style="font-weight:700;color:#10B981;font-size:14px">' + fmt(u.points || 0) + ' pts</span></div>';
       }).join('');
     }
@@ -1056,13 +1130,151 @@ function renderPodiumPlace(pos, u) {
   const sz = sizes[pos];
   return '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;' + (pos === 2 ? 'order:-1' : '') + '">' +
     (pos === 1 ? '<div style="font-size:22px;margin-bottom:4px">👑</div>' : '') +
-    '<div style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:' + colors[pos] + ';display:flex;align-items:center;justify-content:center;font-size:' + (pos === 1 ? 30 : 24) + 'px;box-shadow:0 4px 12px rgba(0,0,0,0.2);cursor:pointer;overflow:hidden" onclick="verPerfil(\'' + u.uid + '\')">' + (u.avatar && u.avatar.startsWith('http') ? '<img src="' + esc(u.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(u.avatar || '?')) + '</div>' +
-    '<div style="font-weight:700;font-size:12px;margin-top:6px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@' + esc((u.username || '').split(' ')[0]) + '</div>' +
+    '<div style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:' + colors[pos] + ';display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,0.2);cursor:pointer;overflow:hidden" onclick="verPerfil(\'' + u.uid + '\')">' + (u.avatar && u.avatar.startsWith('http') ? '<img src="' + esc(u.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(u.avatar || '?')) + '</div>' +
+    '<div style="font-weight:700;font-size:12px;margin-top:6px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@' + esc((u.username || '')) + '</div>' +
     '<div style="color:#10B981;font-weight:700;font-size:13px">' + fmt(u.points || 0) + '</div>' +
-    '<div style="font-size:' + (pos === 1 ? 20 : 16) + 'px;font-weight:800;color:var(--text3)">' + pos + '°</div></div>';
+    '<div style="font-size:16px;font-weight:800;color:var(--text3)">' + pos + '°</div></div>';
+}
+
+// ========== DESAFIOS ==========
+async function loadDesafios() {
+  const c = $('desafios-list'); if (!c) return;
+  const snap = await db.ref('desafios').once('value');
+  const desafios = snap.val();
+  if (!desafios) { c.innerHTML = '<div class="card" style="text-align:center;padding:30px"><img src="' + IMG.iconeDesafios + '" style="width:60px;height:60px;margin-bottom:10px" /><div style="font-weight:700">Nenhum desafio ativo</div><div style="color:var(--text3);font-size:12px">Fique ligado!</div></div>'; return; }
+  
+  c.innerHTML = Object.entries(desafios).reverse().map(function(e) {
+    const d = e[1];
+    const expirado = Date.now() > d.dataLimite;
+    return '<div class="card" style="border-left:3px solid ' + (expirado ? '#EF4444' : '#10B981') + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:start">' +
+        '<div><h3 style="margin:0 0 5px">⚔️ ' + esc(d.titulo) + '</h3><p style="font-size:13px;color:var(--text2)">' + esc(d.descricao) + '</p>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:8px">🏆 Prêmio: <strong style="color:#10B981">+' + fmt(d.premio) + ' pontos</strong></div>' +
+        '<div style="font-size:11px;color:var(--text3)">📅 Até: ' + new Date(d.dataLimite).toLocaleDateString('pt-BR') + '</div></div>' +
+        '<span class="badge ' + (expirado ? 'badge-nao' : 'badge-sim') + '">' + (expirado ? 'Encerrado' : 'Ativo') + '</span>' +
+      '</div></div>';
+  }).join('');
+}
+
+// ========== JARVIS IA ==========
+const jarvisHistory = [];
+
+async function sendJarvisMsg() {
+  const input = $('jarvis-input'); const msg = input ? input.value.trim() : '';
+  if (!msg) return;
+  
+  const div = $('jarvis-messages'); if (!div) return;
+  div.innerHTML += '<div style="text-align:right;margin-bottom:10px"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">' + esc(msg) + '</div></div>';
+  if (input) input.value = '';
+  div.scrollTop = div.scrollHeight;
+  
+  const typingId = 'jtyping-' + Date.now();
+  div.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px"><img src="' + IMG.jarvis + '" style="width:24px;height:24px;border-radius:50%" /> 🧠 Pensando...</div></div>';
+  div.scrollTop = div.scrollHeight;
+  
+  jarvisHistory.push({ role: 'user', content: msg });
+  if (jarvisHistory.length > 20) jarvisHistory.shift();
+  
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: 'Você é o Jarvis, um assistente de estudos brasileiro. Responda sempre em português com emojis. Seja amigável e paciente.' },
+          { role: 'user', content: msg }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      })
+    });
+    
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
+    
+    const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
+    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
+    jarvisHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    console.error('Jarvis error:', e);
+    const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
+    const respostas = ['🧠 Hmm, interessante! Me conte mais sobre isso! 🤔','🧠 Ótima pergunta! Continue explorando a plataforma! 📚','🧠 Você está no caminho certo! Bons estudos! 💪⭐','🧠 Que tal jogar um quiz sobre esse assunto? 🎮','🧠 Adorei sua curiosidade! O conhecimento é infinito! 🌟'];
+    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + respostas[Math.floor(Math.random()*respostas.length)] + '</span></div></div>';
+  }
+  div.scrollTop = div.scrollHeight;
+}
+
+async function sendJarvisImage() {
+  const input = $('jarvis-image-input');
+  if (!input || !input.files || !input.files[0]) return;
+  
+  const div = $('jarvis-messages'); if (!div) return;
+  const file = input.files[0];
+  
+  // Mostra a imagem
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    div.innerHTML += '<div style="text-align:right;margin-bottom:10px"><img src="' + e.target.result + '" style="max-width:200px;border-radius:12px;margin-bottom:5px" /><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">📷 Analise esta imagem</div></div>';
+    div.scrollTop = div.scrollHeight;
+    
+    const typingId = 'jtyping-' + Date.now();
+    div.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px"><img src="' + IMG.jarvis + '" style="width:24px;height:24px;border-radius:50%" /> 🔍 Analisando imagem...</div></div>';
+    div.scrollTop = div.scrollHeight;
+    
+    try {
+      const base64 = await fileToBase64(file);
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+        body: JSON.stringify({
+          model: 'llama-3.2-11b-vision-preview',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Descreva esta imagem em português. Se for uma questão de estudo, explique a resposta.' },
+              { type: 'image_url', image_url: { url: base64 } }
+            ]
+          }],
+          max_tokens: 500
+        })
+      });
+      
+      const data = await response.json();
+      const reply = data.choices?.[0]?.message?.content || 'Não consegui analisar a imagem 😅';
+      
+      const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
+      div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
+    } catch(e) {
+      console.error('Jarvis image error:', e);
+      const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
+      div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>📷 Boa imagem! Mas não consegui processar agora. Tente perguntar em texto! 😊</span></div></div>';
+    }
+    div.scrollTop = div.scrollHeight;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
 }
 
 // ========== PERFIL ==========
+function switchPerfilTab(tab, btn) {
+  S.perfilTab = tab;
+  document.querySelectorAll('#screen-perfil .btn-sm').forEach(function(b) {
+    if (b.textContent.includes('Aulas') || b.textContent.includes('Posts') || b.textContent.includes('Disciplinas')) {
+      b.className = 'btn btn-outline btn-sm';
+    }
+  });
+  if (btn) btn.className = 'btn btn-primary btn-sm';
+  
+  $('perfil-aulas').style.display = tab === 'aulas' ? '' : 'none';
+  $('perfil-posts').style.display = tab === 'posts' ? '' : 'none';
+  $('perfil-disciplinas').style.display = tab === 'disciplinas' ? '' : 'none';
+  
+  if (tab === 'aulas') loadPerfilAulas();
+  else if (tab === 'posts') loadPerfilPosts();
+  else if (tab === 'disciplinas') loadPerfilDisciplinas();
+}
+
 async function loadPerfil() {
   if (!S.ud || !S.user) return;
   viewingUserId = null;
@@ -1082,14 +1294,18 @@ async function loadPerfil() {
   
   // Badges
   const badges = [];
-  BADGES.forEach(function(b) { if (b.cond(S.ud)) badges.push('<span class="badge green">' + b.nome + '</span>'); });
-  const be = $('perfil-badges'); if (be) be.innerHTML = badges.join('') || '<span class="badge">🌱 Novato</span>';
+  if (S.ud.isAdmin) badges.push('<img src="' + IMG.seloAdmin + '" style="width:20px;height:20px" title="Admin" />');
+  if (S.ud.isProf) badges.push('<img src="' + IMG.seloProfessor + '" style="width:20px;height:20px" title="Professor" />');
+  if (S.ud.isQuizzer) badges.push('<img src="' + IMG.seloQuizzer + '" style="width:20px;height:20px" title="Quizzer" />');
+  if (S.ud.plano === 'premium' || S.ud.plano === 'pro') badges.push('<img src="' + IMG.seloPremium + '" style="width:20px;height:20px" title="Premium" />');
+  const be = $('perfil-badges'); if (be) be.innerHTML = badges.join(' ') || '<span class="badge">🌱 Estudante</span>';
   
-  // Campos edição
   const eu = $('edit-username'); if (eu) eu.value = S.ud.username || '';
   const eb = $('edit-bio'); if (eb) eb.value = S.ud.bio || '';
   
-  // Histórico
+  switchPerfilTab('aulas', document.querySelector('#screen-perfil .btn-sm'));
+  
+  // Histórico de quizzes
   const hs = await db.ref('historico/' + S.user.uid).once('value');
   const h = hs.val();
   const he = $('perfil-historico');
@@ -1100,21 +1316,74 @@ async function loadPerfil() {
   }
 }
 
+async function loadPerfilAulas() {
+  const uid = viewingUserId || S.user?.uid;
+  const c = $('perfil-aulas'); if (!c) return;
+  c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">⏳ Carregando...</div>';
+  
+  // Busca todas as aulas do usuário
+  const materiasSnap = await db.ref('materias').once('value');
+  const materias = materiasSnap.val() || {};
+  let html = '';
+  
+  for (const [mid, m] of Object.entries(materias)) {
+    const aulasSnap = await db.ref('aulas/' + mid).once('value');
+    const aulas = aulasSnap.val() || {};
+    for (const [aid, a] of Object.entries(aulas)) {
+      if (a.autorId === uid) {
+        html += '<div class="card card-clickable" onclick="navigate(\'materias\');setTimeout(function(){openMateria(\'' + mid + '\');setTimeout(function(){openAula(\'' + mid + '\',\'' + aid + '\')},500)},100)" style="font-size:13px">📝 ' + esc(a.titulo) + ' <span style="color:var(--text3);font-size:11px">em ' + esc(m.nome || '?') + '</span></div>';
+      }
+    }
+  }
+  c.innerHTML = html || '<div style="color:var(--text3);padding:10px;text-align:center">Nenhuma aula criada</div>';
+}
+
+async function loadPerfilPosts() {
+  const uid = viewingUserId || S.user?.uid;
+  const c = $('perfil-posts'); if (!c) return;
+  c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">⏳ Carregando...</div>';
+  
+  const snap = await db.ref('posts').orderByChild('autorId').equalTo(uid).once('value');
+  const posts = snap.val();
+  if (!posts) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">Nenhum post</div>'; return; }
+  
+  let html = '';
+  const arr = Object.entries(posts).reverse();
+  for (const [pid, p] of arr) {
+    const views = await getViewCount('posts/' + pid);
+    html += '<div class="card" style="font-size:13px">' + esc((p.texto || '').substring(0, 100)) + ' <span style="color:var(--text3);font-size:11px">· ' + ago(p.createdAt) + ' · <span class="view-count"><img src="' + IMG.iconeViews + '" style="width:10px;height:10px" /> ' + views + '</span></span></div>';
+  }
+  c.innerHTML = html;
+}
+
+async function loadPerfilDisciplinas() {
+  const uid = viewingUserId || S.user?.uid;
+  const c = $('perfil-disciplinas'); if (!c) return;
+  c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">⏳ Carregando...</div>';
+  
+  const snap = await db.ref('materias').orderByChild('autorId').equalTo(uid).once('value');
+  const mats = snap.val();
+  if (!mats) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">Nenhuma disciplina</div>'; return; }
+  
+  c.innerHTML = Object.entries(mats).map(function(e) {
+    return '<div class="card card-clickable" onclick="navigate(\'materias\');setTimeout(function(){openMateria(\'' + e[0] + '\')},100)" style="font-size:13px">📚 ' + esc(e[1].nome) + ' <span style="color:var(--text3);font-size:11px">· ' + (e[1].aulasCount || 0) + ' aulas</span></div>';
+  }).join('');
+}
+
 async function saveProfile() {
   const username = ($('edit-username')?.value || '').trim().toLowerCase().replace('@','');
   const bio = ($('edit-bio')?.value || '').trim();
   const updates = {};
-  let changed = false;
   
   if (username && username !== S.ud.username) {
     if (username.length < 3) return toast('Mín. 3 caracteres', 'error');
     if (!/^[a-z0-9._]+$/.test(username)) return toast('Apenas minúsculas, números, . e _', 'error');
     const snap = await db.ref('usuarios').orderByChild('username').equalTo(username).once('value');
     if (snap.val()) { const other = Object.keys(snap.val())[0]; if (other !== S.user.uid) return toast('@' + username + ' já está em uso!', 'error'); }
-    updates.username = username; changed = true;
+    updates.username = username;
   }
-  if (bio !== (S.ud.bio || '')) { updates.bio = bio; changed = true; }
-  if (!changed) return toast('Nada para salvar', 'info');
+  if (bio !== (S.ud.bio || '')) updates.bio = bio;
+  if (!Object.keys(updates).length) return toast('Nada para salvar', 'info');
   
   await db.ref('usuarios/' + S.user.uid).update(updates);
   if (updates.username) S.ud.username = updates.username;
@@ -1138,17 +1407,19 @@ async function verPerfil(uid) {
   const seguSnap = await db.ref('seguidores/' + uid).once('value');
   const seguCount = seguSnap.val() ? Object.keys(seguSnap.val()).length : 0;
   
-  const badges = [];
-  BADGES.forEach(function(b) { if (b.cond(u)) badges.push('<span class="badge green">' + b.nome + '</span>'); });
+  let selos = '';
+  if (u.isAdmin) selos += '<img src="' + IMG.seloAdmin + '" style="width:22px;height:22px" /> ';
+  if (u.isProf) selos += '<img src="' + IMG.seloProfessor + '" style="width:22px;height:22px" /> ';
+  if (u.isQuizzer) selos += '<img src="' + IMG.seloQuizzer + '" style="width:22px;height:22px" /> ';
+  if (u.plano === 'premium' || u.plano === 'pro') selos += '<img src="' + IMG.seloPremium + '" style="width:22px;height:22px" />';
   
   const content = $('profile-fullscreen-content');
   if (content) {
     content.innerHTML = '<div style="background:linear-gradient(135deg,#10B981,#3B82F6);border-radius:20px;padding:30px 20px;text-align:center;color:white;margin-bottom:20px">' +
       '<div style="width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.2);color:white;display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 12px;border:3px solid rgba(255,255,255,0.5);overflow:hidden">' + (u.avatar && u.avatar.startsWith('http') ? '<img src="' + esc(u.avatar) + '" style="width:100%;height:100%;object-fit:cover" />' : esc(u.avatar || '🎓')) + '</div>' +
       '<h2 style="font-size:22px;margin-bottom:5px">' + esc(u.fullname || u.username || '?') + '</h2>' +
-      '<p style="opacity:0.85;font-size:14px;margin-bottom:3px">@' + esc(u.username || '?') + '</p>' +
-      '<p style="opacity:0.75;font-size:13px;margin-bottom:10px">' + esc(u.bio || 'Sem bio') + '</p>' +
-      '<div>' + badges.join(' ') + '</div></div>' +
+      '<p style="opacity:0.85;font-size:14px;margin-bottom:3px">@' + esc(u.username || '?') + ' ' + selos + '</p>' +
+      '<p style="opacity:0.75;font-size:13px;margin-bottom:10px">' + esc(u.bio || 'Sem bio') + '</p></div>' +
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px">' +
         '<div class="card" style="text-align:center"><div style="font-size:22px;font-weight:800;color:#10B981">' + fmt(u.points || 0) + '</div><div style="font-size:10px;color:var(--text3)">Pontos</div></div>' +
         '<div class="card" style="text-align:center"><div style="font-size:22px;font-weight:800">' + (u.quizzesPlayed || 0) + '</div><div style="font-size:10px;color:var(--text3)">Quizzes</div></div>' +
@@ -1180,9 +1451,6 @@ async function toggleFollowProfile(uid) {
   } else {
     await ref.set(true);
     await db.ref('seguindo/' + uid + '/' + S.user.uid).set(true);
-    const cSnap = await db.ref('usuarios/' + uid + '/seguidores').once('value');
-    await db.ref('usuarios/' + uid).update({ seguidores: (cSnap.val() || 0) + 1 });
-    await db.ref('notificacoes/' + uid).push({ mensagem: '👥 @' + S.ud.username + ' te seguiu!', tipo: 'follow', lida: false, createdAt: Date.now() });
     if (btn) { btn.textContent = '✅ Seguindo'; btn.style.background = '#10B981'; }
   }
 }
@@ -1238,7 +1506,7 @@ async function loadNotifs() {
   const list = $('notificacoes-list'); if (!list) return;
   if (!n) { list.innerHTML = '<div style="color:var(--text3);padding:20px;text-align:center">🔔 Nenhuma notificação</div>'; return; }
   list.innerHTML = Object.entries(n).reverse().map(function(e) {
-    return '<div class="card ' + (e[1].lida ? '' : 'unread') + '" onclick="' + (e[1].roomId ? "navigate('chat');joinRoom('" + e[1].roomId + "')" : '') + '" style="cursor:' + (e[1].roomId ? 'pointer' : 'default') + ';margin-bottom:8px;' + (e[1].lida ? '' : 'border-left:3px solid #10B981') + '">' +
+    return '<div class="card" style="cursor:pointer;margin-bottom:8px;' + (e[1].lida ? '' : 'border-left:3px solid #10B981') + '">' +
       '<div style="font-size:14px">' + esc(e[1].mensagem) + '</div>' +
       '<div style="font-size:11px;color:var(--text3);margin-top:4px">' + ago(e[1].createdAt) + '</div></div>';
   }).join('');
@@ -1257,6 +1525,40 @@ async function marcarLidas() {
   toast('Todas lidas ✓', 'info');
 }
 
+// ========== SOBRE NÓS ==========
+async function loadSobre() {
+  const c = $('sobre-content'); if (!c) return;
+  const snap = await db.ref('config/sobre').once('value');
+  const data = snap.val();
+  if (data && data.texto) {
+    c.innerHTML = '<div style="line-height:1.8;font-size:14px">' + esc(data.texto).replace(/\n/g, '<br>') + '</div>';
+  } else {
+    c.innerHTML = '<div style="text-align:center;padding:20px"><p style="font-size:16px;font-weight:700;margin-bottom:10px">📚 Sexta-Feira Studies</p><p style="color:var(--text2);font-size:14px">Uma plataforma de estudos gamificada feita para estudantes e professores.</p><p style="color:var(--text2);font-size:14px;margin-top:10px">Aprenda, conecte-se e evolua com a gente!</p><p style="color:var(--text3);font-size:12px;margin-top:15px">Versão 3.0 - 2024</p></div>';
+  }
+}
+
+// ========== UPDATES ==========
+async function loadUpdates() {
+  const c = $('updates-list'); if (!c) return;
+  const snap = await db.ref('config/updates').once('value');
+  const updates = snap.val();
+  if (!updates) {
+    c.innerHTML = '<div class="card" style="text-align:center;padding:20px"><div style="font-weight:700">Nenhuma atualização</div><div style="color:var(--text3);font-size:12px">Em breve!</div></div>';
+    return;
+  }
+  c.innerHTML = Object.entries(updates).reverse().map(function(e) {
+    const u = e[1];
+    return '<div class="card" style="margin-bottom:12px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<h3 style="margin:0;font-size:15px">📋 ' + esc(u.titulo) + '</h3>' +
+        '<span class="badge" style="font-size:10px">v' + esc(u.versao) + '</span>' +
+      '</div>' +
+      '<p style="font-size:13px;color:var(--text2);line-height:1.6">' + esc(u.descricao).replace(/\n/g, '<br>') + '</p>' +
+      '<div style="font-size:11px;color:var(--text3);margin-top:8px">📅 ' + new Date(u.data).toLocaleDateString('pt-BR') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 // ========== PONTOS ==========
 async function addPts(pts) {
   if (!S.user || !pts) return;
@@ -1267,73 +1569,6 @@ async function addPts(pts) {
   await db.ref('usuarios/' + S.user.uid).update({ points: cur + total });
   if (S.ud) S.ud.points = cur + total;
   updateUI();
-}
-
-// ========== NEURINHO IA ==========
-const neurinhoHistory = [];
-
-async function sendNeurinhoMsg() {
-  const input = $('neurinho-input'); const msg = input ? input.value.trim() : '';
-  if (!msg) return;
-  
-  const div = $('neurinho-messages'); if (!div) return;
-  div.innerHTML += '<div style="text-align:right;margin-bottom:10px"><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">' + esc(msg) + '</div></div>';
-  if (input) input.value = '';
-  div.scrollTop = div.scrollHeight;
-  
-  const typingId = 'ntyping-' + Date.now();
-  div.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:24px;height:24px;border-radius:50%" /> 🧠 Pensando...</div></div>';
-  div.scrollTop = div.scrollHeight;
-  
-  neurinhoHistory.push({ role: 'user', content: msg });
-  if (neurinhoHistory.length > 20) neurinhoHistory.shift();
-  
-  try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: 'Você é o Neurinho, um assistente de estudos brasileiro. Responda sempre em português com emojis. Seja amigável e paciente.' },
-          { role: 'user', content: msg }
-        ],
-        max_tokens: 500,
-        temperature: 0.7
-      })
-    });
-    
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Groq error:', response.status, errText);
-      throw new Error('Status ' + response.status);
-    }
-    
-    const data = await response.json();
-    console.log('Groq response:', data);
-    
-    const reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
-    
-    const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
-    neurinhoHistory.push({ role: 'assistant', content: reply });
-  } catch(e) {
-    console.error('Neurinho error:', e);
-    const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-    
-    // Resposta offline amigável
-    const respostas = [
-      '🧠 Hmm, interessante! Me conte mais sobre isso! 🤔',
-      '🧠 Ótima pergunta! Continue explorando a plataforma! 📚',
-      '🧠 Você está no caminho certo! Bons estudos! 💪⭐',
-      '🧠 Que tal jogar um quiz sobre esse assunto? 🎮',
-      '🧠 Adorei sua curiosidade! O conhecimento é infinito! 🌟'
-    ];
-    const resposta = respostas[Math.floor(Math.random() * respostas.length)];
-    
-    div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="https://i.ibb.co/x8K3qg66/Chat-GPT-Image-28-de-abr-de-2026-16-34-20.png" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + resposta + '</span></div></div>';
-  }
-  div.scrollTop = div.scrollHeight;
 }
 
 // ========== IMGBB UPLOAD ==========
@@ -1385,8 +1620,8 @@ async function admLoad(tab) {
     c.innerHTML = d ? Object.values(d).map(function(u) {
       return '<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:13px">@' + esc(u.username) + ' · ' + fmt(u.points) + ' pts</span>' +
         '<div style="display:flex;gap:5px">' +
-          (S.ud.adminLevel >= 3 ? '<button class="btn btn-sm" onclick="admToggleQuizzer(\'' + u.uid + '\')" style="background:' + (u.isQuizzer ? '#FEF3C7' : 'var(--border)') + ';color:var(--text);box-shadow:none;font-size:11px">' + (u.isQuizzer ? '🎮 Quizzer' : 'Tornar Quizzer') + '</button>' : '') +
-          (S.ud.adminLevel >= 2 ? '<button class="btn btn-sm" onclick="admToggleProf(\'' + u.uid + '\')" style="background:' + (u.isProf ? '#D1FAE5' : 'var(--border)') + ';color:var(--text);box-shadow:none;font-size:11px">' + (u.isProf ? '✅ Prof' : 'Tornar Prof') + '</button>' : '') +
+          (S.ud.adminLevel >= 3 ? '<button class="btn btn-sm" onclick="admToggleQuizzer(\'' + u.uid + '\')" style="background:' + (u.isQuizzer ? '#FEF3C7' : 'var(--border)') + ';color:var(--text)">' + (u.isQuizzer ? '🎮 Quizzer' : 'Tornar Quizzer') + '</button>' : '') +
+          (S.ud.adminLevel >= 2 ? '<button class="btn btn-sm" onclick="admToggleProf(\'' + u.uid + '\')" style="background:' + (u.isProf ? '#D1FAE5' : 'var(--border)') + ';color:var(--text)">' + (u.isProf ? '✅ Prof' : 'Tornar Prof') + '</button>' : '') +
           '<button class="btn btn-danger btn-sm" onclick="admDelUser(\'' + u.uid + '\')">🗑</button>' +
         '</div></div>';
     }).join('') : 'Nenhum';
@@ -1414,7 +1649,7 @@ async function admToggleProf(uid) {
 }
 
 async function admToggleQuizzer(uid) {
-  if (S.ud.adminLevel < 3) return toast('Sem permissão (nível 3+)', 'error');
+  if (S.ud.adminLevel < 3) return toast('Sem permissão', 'error');
   const snap = await db.ref('usuarios/' + uid).once('value');
   const u = snap.val(); if (!u) return;
   await db.ref('usuarios/' + uid).update({ isQuizzer: !u.isQuizzer });
@@ -1422,16 +1657,6 @@ async function admToggleQuizzer(uid) {
   admLoad('usuarios');
 }
 
-async function ativarTodasBadges() {
- const senha = prompt('🔑 Digite o código de acesso:');
-if (senha !== 'sextafeira' && senha !== 'admin123') return toast('Código incorreto!', 'error');
-  const dados = { materiasCreated: 100, topicosCreated: 100, topicosLidos: 200, comentarios: 200, quizzesPlayed: 600, quizzesCreated: 200, quizPerfeito: 50, quizRapido: 50, quizAltaNota: 200, postsDuvida: 50, postsDica: 50, totalPosts: 200, maxLikes: 100, seguidores: 600, seguindo: 100, msgsChat: 2000, salasCriadas: 10, convitesEnviados: 100, pvCount: 100, verificados: 20, neurinhoMsgs: 200, rankPosition: 1, isProf: true, points: 99999999999999999999999999 };
-  await db.ref('usuarios/' + S.user.uid).update(dados);
-  Object.assign(S.ud, dados);
-  updateUI();
-  toast('🏅 TODAS AS BADGES ATIVADAS! Recarregue (F5)!', 'success');
-}
-
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal.show').forEach(function(m) { m.classList.remove('show'); }); } });
 
-console.log('✅ Sexta-Feira Studies PRONTO!');
+console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
