@@ -1248,7 +1248,7 @@ async function sendJarvisImage() {
       const base64Data = e.target.result.split(',')[1];
       const promptTexto = mensagemTexto || 'Descreva esta imagem em detalhes. Se for uma questão de estudo, explique a resposta correta. Responda em português.';
       
-      const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY, {
+     const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1775,7 +1775,6 @@ function gerarPDF() {
       <div style="display:flex;gap:15px;justify-content:center;margin-top:10px">
         <span style="color:#666;font-size:12px">👤 Aluno: _____________________</span>
         <span style="color:#666;font-size:12px">📅 Data: ____/____/________</span>
-        <span style="color:#666;font-size:12px">⭐ Nota: ________</span>
       </div>
     </div>
     
@@ -1783,14 +1782,14 @@ function gerarPDF() {
       ${questoes.map((q, i) => `
         <div style="margin-bottom:20px;padding:10px;background:#F8FAFC;border-radius:8px">
           <strong>${i+1}.</strong> ${q}
-          <div style="margin-top:8px;color:#999;font-size:12px">R: _____________________________________________</div>
+          <div style="margin-top:8px;color:#999;font-size:12px">_____________________________________________</div>
         </div>
       `).join('')}
     </div>
     
     <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:3px solid #10B981;color:#10B981;font-weight:700;font-size:13px">
       ✨ Criado com Sexta-Feira Studies ✨<br>
-      <span style="font-size:10px;color:#999">sexta-feira-studies.firebaseapp.com</span>
+      <span style="font-size:10px;color:#999">sexta-feira.vercel.app</span>
     </div>
   `;
   
@@ -1838,17 +1837,18 @@ function fecharPreview() {
   if (previewCard) previewCard.style.display = 'none';
 }
 
-async function gerarPDFcomIA() {
+async function gerarQuestoesIA() {
   const disciplina = $('tarefa-disciplina')?.value.trim();
   const titulo = $('tarefa-titulo')?.value.trim();
+  const qtd = parseInt($('tarefa-qtd')?.value || '10');
   
-  if (!disciplina) {
-    toast('Preencha o campo Disciplina!', 'error');
+  if (!disciplina && !titulo) {
+    toast('Preencha Disciplina ou Título!', 'error');
     return;
   }
   
   const tema = titulo || disciplina;
-  toast('🤖 Gerando questões com IA...', 'info');
+  toast('🤖 Gerando ' + qtd + ' questões...', 'info');
   
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -1858,24 +1858,74 @@ async function gerarPDFcomIA() {
         model: 'llama-3.1-8b-instant',
         messages: [{ 
           role: 'user', 
-          content: `Crie 10 questões sobre "${tema}" para uma lista de exercícios. Formato: uma questão por linha, começando com número. Exemplo:\n1. Qual a capital do Brasil?\n2. Resolva a equação...` 
+          content: `Crie exatamente ${qtd} questões sobre "${tema}". Regras:
+1. Apenas as questões, sem introdução
+2. Uma questão por linha
+3. NÃO numere as questões
+4. Não diga "aqui estão as questões"
+5. Vá direto para as perguntas` 
         }],
-        max_tokens: 1000
+        max_tokens: 1500
       })
     });
     
     const data = await response.json();
-    const questoes = data.choices?.[0]?.message?.content || '';
+    let questoes = data.choices?.[0]?.message?.content || '';
+    
+    // Limpa a resposta da IA
+    questoes = questoes
+      .replace(/^(Aqui estão|Segue|Lista|Eis).*?\n/i, '') // Remove frases introdutórias
+      .replace(/^\d+\.\s*/gm, '') // Remove numeração existente
+      .split('\n')
+      .filter(q => q.trim().length > 10)
+      .slice(0, qtd)
+      .join('\n');
     
     const campo = $('tarefa-conteudo');
     if (campo) {
       campo.value = questoes;
-      toast('✅ Questões geradas! Agora clique em "Gerar PDF"', 'success');
+      toast('✅ ' + qtd + ' questões geradas! Clique em Visualizar', 'success');
     }
   } catch(e) {
     console.error('Erro IA:', e);
     toast('❌ Erro ao gerar questões', 'error');
   }
+}
+
+// ========== HISTÓRICO DE NAVEGAÇÃO ==========
+let navHistory = [];
+
+// Substitua a função navigate original por esta:
+const navigateOriginal = navigate;
+navigate = function(name) {
+  // Salva no histórico
+  if (navHistory.length === 0 || navHistory[navHistory.length - 1] !== name) {
+    navHistory.push(name);
+  }
+  if (navHistory.length > 20) navHistory.shift();
+  
+  // Atualiza a URL sem recarregar
+  history.pushState({ screen: name }, '', '#' + name);
+  
+  // Chama a função original
+  navigateOriginal(name);
+};
+
+// Quando o usuário clica no botão voltar do navegador
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.screen) {
+    navigateOriginal(e.state.screen);
+  } else {
+    navigateOriginal('home');
+  }
+});
+
+// Inicializa com a URL atual
+if (window.location.hash) {
+  const screen = window.location.hash.substring(1);
+  setTimeout(function() {
+    navigateOriginal(screen);
+  }, 500);
 }
 
 console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
