@@ -1753,56 +1753,62 @@ function gerarPDF() {
   const titulo = $('tarefa-titulo')?.value || 'Lista de Exercícios';
   const disciplina = $('tarefa-disciplina')?.value || '';
   const professor = $('tarefa-professor')?.value || '';
+  const alinhamento = $('tarefa-alinhamento')?.value || 'centro';
   const conteudo = $('tarefa-conteudo')?.value || '';
   
   if (!conteudo.trim()) {
-    toast('Digite as questões!', 'error');
+    toast('Digite as questões ou use "Gerar com IA"!', 'error');
     return;
   }
   
-  const questoes = conteudo.split('\n').filter(q => q.trim());
+  // Remove numeração existente e filtra linhas vazias
+  const questoes = conteudo
+    .split('\n')
+    .map(q => q.replace(/^\d+[\.\)\-]\s*/, '').trim()) // Remove numeração
+    .filter(q => q.length > 5); // Remove linhas muito curtas
+  
+  if (questoes.length === 0) {
+    toast('Nenhuma questão encontrada!', 'error');
+    return;
+  }
+  
+  const alinhamentoCSS = alinhamento === 'esquerda' ? 'left' : alinhamento === 'direita' ? 'right' : 'center';
   
   const html = `
-    <div style="text-align:center;border-bottom:3px solid #10B981;padding-bottom:20px;margin-bottom:25px">
-      <div style="font-size:24px;font-weight:800;color:#10B981;margin-bottom:5px">
-        <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;margin-right:8px" />
-        Sexta-Feira Studies
+    <div style="text-align:${alinhamentoCSS};border-bottom:2px solid #10B981;padding-bottom:15px;margin-bottom:25px">
+      <div style="font-size:20px;font-weight:800;color:#10B981;margin-bottom:5px">
+        📚 Sexta-Feira Studies
       </div>
-      <h2 style="margin:15px 0 5px;color:#1A1A2E">${titulo}</h2>
-      ${disciplina ? '<p style="color:#666;margin:3px 0"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
-      ${professor ? '<p style="color:#666;margin:3px 0"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
-      <p style="color:#999;font-size:11px;margin:3px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
-      <div style="display:flex;gap:15px;justify-content:center;margin-top:10px">
-        <span style="color:#666;font-size:12px">👤 Aluno: _____________________</span>
-        <span style="color:#666;font-size:12px">📅 Data: ____/____/________</span>
+      <h2 style="margin:10px 0 5px;font-size:18px">${titulo}</h2>
+      ${disciplina ? '<p style="color:#555;margin:3px 0;font-size:13px"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
+      ${professor ? '<p style="color:#555;margin:3px 0;font-size:13px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
+      <p style="color:#888;font-size:11px;margin:3px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+      <div style="display:flex;gap:10px;justify-content:${alinhamentoCSS};margin-top:10px;font-size:12px;color:#555">
+        <span>👤 Aluno: ___________________</span>
+        <span>📅 Data: ____/____/____</span>
       </div>
     </div>
     
-    <div style="line-height:2.2;font-size:14px;min-height:400px">
+    <div style="line-height:2.2;font-size:14px">
       ${questoes.map((q, i) => `
-        <div style="margin-bottom:20px;padding:10px;background:#F8FAFC;border-radius:8px">
+        <div style="margin-bottom:18px;padding:8px 0">
           <strong>${i+1}.</strong> ${q}
-          <div style="margin-top:8px;color:#999;font-size:12px">_____________________________________________</div>
+          <div style="margin-top:5px;color:#aaa;font-size:12px;border-bottom:1px dotted #ddd;padding-bottom:5px">_______________________________________________________</div>
         </div>
       `).join('')}
     </div>
     
-    <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:3px solid #10B981;color:#10B981;font-weight:700;font-size:13px">
+    <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:2px solid #10B981;color:#10B981;font-weight:700;font-size:12px">
       ✨ Criado com Sexta-Feira Studies ✨<br>
       <span style="font-size:10px;color:#999">sexta-feira.vercel.app</span>
     </div>
   `;
   
-  const previewCard = $('pdf-preview-card');
-  const previewContent = $('pdf-preview-content');
+  $('pdf-preview-card').style.display = 'block';
+  $('pdf-preview-content').innerHTML = html;
+  $('pdf-preview-card').scrollIntoView({ behavior: 'smooth' });
   
-  if (previewCard && previewContent) {
-    previewCard.style.display = 'block';
-    previewContent.innerHTML = html;
-    previewCard.scrollIntoView({ behavior: 'smooth' });
-  }
-  
-  toast('✅ PDF gerado! Clique em Imprimir para salvar.', 'success');
+  toast('✅ Visualização pronta! Clique em Imprimir', 'success');
 }
 
 function imprimirPDF() {
