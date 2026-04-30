@@ -458,19 +458,27 @@ async function openMateria(id) {
     c.innerHTML = html;
   });
 
-  // Vídeos
-  db.ref('videos/' + id).on('value', function(snap) {
-    const v = snap.val();
-    const c = $('videos-materia'); if (!c) return;
-    if (!v) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">🎬 Nenhum vídeo</div>'; return; }
-    c.innerHTML = Object.entries(v).map(function(e) {
-      return '<div class="card" style="margin-bottom:10px"><div style="font-weight:700;margin-bottom:8px">🎬 ' + esc(e[1].titulo || 'Vídeo') + '</div>' +
-        (e[1].url ? '<iframe width="100%" height="200" src="' + esc(e[1].url) + '" frameborder="0" allowfullscreen style="border-radius:10px"></iframe>' :
-        '<div class="video-container"><video controls src="' + esc(e[1].videoUrl) + '" style="width:100%;border-radius:10px"></video></div>') +
-        '<div style="font-size:11px;color:var(--text3);margin-top:4px">Por @' + esc(e[1].autorNome || '?') + '</div></div>';
-    }).join('');
-  });
-
+ // Vídeos
+db.ref('videos/' + id).on('value', function(snap) {
+  const v = snap.val();
+  const c = $('videos-materia'); if (!c) return;
+  if (!v) { c.innerHTML = '<div style="color:var(--text3);padding:10px;text-align:center">🎬 Nenhum vídeo</div>'; return; }
+  c.innerHTML = Object.entries(v).map(function(e) {
+    const vid = e[1];
+    const youtubeId = vid.url ? vid.url.split('/embed/')[1] || vid.url.split('v=')[1]?.split('&')[0] : null;
+    const thumbUrl = youtubeId ? 'https://img.youtube.com/vi/' + youtubeId + '/hqdefault.jpg' : 'https://i.ibb.co/R4S25MLb/a-minimalist-video-placeholder-graphic-f-po-VW-34-So-GZi-R1-Jv-BJtq-Q-we-OQ6-QOs-Sw-WKo-FSe-T81-HHA-sd.jpg';
+    
+    return '<div class="video-card" onclick="abrirVideo(\'' + esc(vid.url || vid.videoUrl) + '\')">' +
+      '<div class="video-card-thumb">' +
+        '<img src="' + thumbUrl + '" alt="' + esc(vid.titulo) + '" />' +
+        '<div class="video-play-icon">▶</div>' +
+      '</div>' +
+      '<div style="font-weight:700;font-size:14px">🎬 ' + esc(vid.titulo || 'Vídeo') + '</div>' +
+      '<div style="font-size:11px;color:var(--text3);margin-top:4px">Por @' + esc(vid.autorNome || '?') + '</div>' +
+    '</div>';
+  }).join('');
+});
+  
   // Quizzes
   db.ref('quizzes/' + id).on('value', async function(snap) {
     const q = snap.val();
@@ -1658,5 +1666,56 @@ async function admToggleQuizzer(uid) {
 }
 
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal.show').forEach(function(m) { m.classList.remove('show'); }); } });
+
+// ========== ABRIR VÍDEO EM TELA CHEIA ==========
+function abrirVideo(url) {
+  // Remove player anterior se existir
+  const existente = document.querySelector('.video-overlay');
+  if (existente) existente.remove();
+  
+  // Cria overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'video-overlay';
+  
+  // Cria botão fechar
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'video-close-btn';
+  closeBtn.innerHTML = '✕';
+  closeBtn.onclick = function() { overlay.remove(); };
+  
+  // Cria container do vídeo
+  const container = document.createElement('div');
+  container.className = 'video-container';
+  
+  // Verifica se é YouTube ou vídeo direto
+  if (url.includes('youtube.com/embed/') || url.includes('youtube.com/watch') || url.includes('youtu.be')) {
+    let embedUrl = url;
+    if (url.includes('watch?v=')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+    } else if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+    } else if (!url.includes('autoplay')) {
+      embedUrl += '?autoplay=1';
+    }
+    container.innerHTML = '<iframe src="' + embedUrl + '" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+  } else {
+    container.innerHTML = '<video src="' + url + '" controls autoplay></video>';
+  }
+  
+  overlay.appendChild(closeBtn);
+  overlay.appendChild(container);
+  document.body.appendChild(overlay);
+  
+  // Fecha com ESC
+  const escHandler = function(e) {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
 
 console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
