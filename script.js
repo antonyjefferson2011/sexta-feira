@@ -1840,18 +1840,76 @@ function baixarTarefa() {
   if (!conteudo) return;
   
   const titulo = $('tarefa-titulo')?.value || 'Tarefa';
+  const professor = $('tarefa-professor')?.value || '';
   
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@media print{@page{margin:1.5cm;size:A4}}body{font-family:Arial,sans-serif;padding:30px;line-height:1.8;font-size:13px}</style></head><body>' + conteudo + '</body></html>';
+  // Abre em nova janela com botão de imprimir (que salva como PDF nativo)
+  const novaJanela = window.open('', '_blank', 'width=900,height=700');
+  novaJanela.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${titulo}</title>
+      <style>
+        @media print {
+          @page { margin: 1.5cm; size: A4; }
+          body { margin: 0; }
+          .no-print { display: none; }
+        }
+        body { 
+          font-family: Arial, sans-serif; 
+          padding: 30px; 
+          line-height: 2; 
+          font-size: 13px;
+          color: #000;
+        }
+        .no-print {
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 999;
+        }
+        .btn-imprimir {
+          background: #10B981;
+          color: white;
+          border: none;
+          padding: 12px 30px;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 700;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .btn-imprimir:hover {
+          background: #059669;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="no-print" style="text-align:center;width:100%">
+        <button class="btn-imprimir" onclick="window.print()">
+          🖨️ Clique aqui para Salvar como PDF
+        </button>
+        <p style="font-size:12px;color:#666;margin-top:8px">
+          Na janela de impressão, escolha <strong>"Salvar como PDF"</strong> no destino
+        </p>
+      </div>
+      <div style="margin-top:80px">
+        ${conteudo}
+      </div>
+      <script>
+        // Abre automaticamente a janela de impressão
+        setTimeout(function() {
+          window.print();
+        }, 1500);
+      <\\/script>
+    </body>
+    </html>
+  `);
+  novaJanela.document.close();
   
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = titulo.replace(/[^a-zA-Z0-9]/g, '_') + '.html';
-  a.click();
-  
-  toast('📥 Baixado! Abra o arquivo e pressione Ctrl+P para salvar como PDF.', 'success');
+  toast('📄 Janela aberta! Escolha "Salvar como PDF" na impressão', 'success');
 }
-
 function fecharPreview() {
   const previewCard = $('pdf-preview-card');
   if (previewCard) previewCard.style.display = 'none';
