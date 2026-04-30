@@ -1952,6 +1952,7 @@ function imprimirTarefa() {
 }
 
 // ========== PARTICIPAR DO DESAFIO ==========
+// ========== PARTICIPAR DO DESAFIO ==========
 let desafioAtual = null;
 let respostasDesafio = [];
 
@@ -1964,7 +1965,7 @@ async function participarDesafio(desafioId) {
   respostasDesafio = [];
   
   // Mostra o desafio
-  const c = $('desafios-list');
+  const c = $('desafios-lista');
   if (!c) return;
   
   c.innerHTML = `
@@ -1972,7 +1973,7 @@ async function participarDesafio(desafioId) {
       <h2>⚔️ ${desafio.titulo}</h2>
       <p style="opacity:0.9">${desafio.descricao || ''}</p>
       <p style="margin-top:10px">🏆 Prêmio: <strong>+${desafio.premio} pontos</strong></p>
-      <p>📅 Até: ${new Date(desafio.dataLimite).toLocaleDateString('pt-BR')}</p>
+      <p>📅 Até: ${new Date(desafio.fim).toLocaleString('pt-BR')}</p>
     </div>
     <div id="desafio-questoes"></div>
   `;
@@ -2019,16 +2020,15 @@ async function finalizarDesafio() {
   
   questoes.forEach((q, i) => {
     if (q.tipo === 'multipla') {
-      const altCorreta = q.resposta.toUpperCase().charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
-      if (respostasDesafio[i] === altCorreta) acertos++;
+      const respostasLetras = { 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+      const correta = respostasLetras[q.resposta.toLowerCase()] ?? -1;
+      if (parseInt(respostasDesafio[i]) === correta) acertos++;
     }
-    // Dissertativa não conta automático
   });
   
   const pct = Math.round((acertos / questoes.length) * 100);
   const ganhou = pct >= 70 ? desafioAtual.premio : Math.round(desafioAtual.premio * (pct / 100));
   
-  // Salva resultado
   await db.ref('desafios/' + desafioAtual.id + '/participantes/' + S.user.uid).set({
     nome: S.ud.username,
     acertos: acertos,
@@ -2038,10 +2038,7 @@ async function finalizarDesafio() {
     data: Date.now()
   });
   
-  // Adiciona pontos
-  if (ganhou > 0) {
-    await addPts(ganhou);
-  }
+  if (ganhou > 0) await addPts(ganhou);
   
   alert(`🏆 Desafio concluído!\n\nAcertos: ${acertos}/${questoes.length} (${pct}%)\nPontos ganhos: +${ganhou}`);
   
@@ -2051,24 +2048,21 @@ async function finalizarDesafio() {
 }
 
 function parseQuestoesDesafio(texto) {
+  if (!texto) return [];
   const blocos = texto.split('\n\n').filter(b => b.trim());
   return blocos.map(bloco => {
     const linhas = bloco.trim().split('\n');
-    const pergunta = linhas[0];
-    const resposta = linhas.find(l => l.startsWith('RESPOSTA:'))?.replace('RESPOSTA:', '').trim() || '';
+    const pergunta = linhas[0].replace(/^\d+[\.\)\-]\s*/, '');
+    const resposta = linhas.find(l => l.toUpperCase().startsWith('RESPOSTA:'))?.replace(/RESPOSTA:/i, '').trim() || '';
     
     if (linhas.some(l => /^[a-dA-D]\)/.test(l.trim()))) {
-      // Múltipla escolha
-      const alternativas = linhas.filter(l => /^[a-dA-D]\)/.test(l.trim()));
+      const alternativas = linhas.filter(l => /^[a-dA-D]\)/.test(l.trim())).map(l => l.replace(/^[a-dA-D]\)\s*/, ''));
       return { tipo: 'multipla', pergunta, alternativas, resposta };
     } else {
-      // Dissertativa
       return { tipo: 'dissertativa', pergunta, resposta };
     }
   });
-}
-
-// ========== DESAFIOS (SISTEMA COMPLETO) ==========
+}// ========== DESAFIOS (SISTEMA COMPLETO) ==========
 
 // Criar desafio (ADM)
 async function criarDesafioAdm() {
