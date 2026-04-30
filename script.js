@@ -1951,4 +1951,121 @@ function imprimirTarefa() {
   setTimeout(() => novaJanela.print(), 500);
 }
 
+// ========== PARTICIPAR DO DESAFIO ==========
+let desafioAtual = null;
+let respostasDesafio = [];
+
+async function participarDesafio(desafioId) {
+  const snap = await db.ref('desafios/' + desafioId).once('value');
+  const desafio = snap.val();
+  if (!desafio) return;
+  
+  desafioAtual = { id: desafioId, ...desafio };
+  respostasDesafio = [];
+  
+  // Mostra o desafio
+  const c = $('desafios-list');
+  if (!c) return;
+  
+  c.innerHTML = `
+    <div class="card" style="background:linear-gradient(135deg,#10B981,#3B82F6);color:white;text-align:center;padding:25px;margin-bottom:20px">
+      <h2>⚔️ ${desafio.titulo}</h2>
+      <p style="opacity:0.9">${desafio.descricao || ''}</p>
+      <p style="margin-top:10px">🏆 Prêmio: <strong>+${desafio.premio} pontos</strong></p>
+      <p>📅 Até: ${new Date(desafio.dataLimite).toLocaleDateString('pt-BR')}</p>
+    </div>
+    <div id="desafio-questoes"></div>
+  `;
+  
+  // Parse das questões
+  const questoes = parseQuestoesDesafio(desafio.questoes);
+  const qDiv = $('desafio-questoes');
+  if (!qDiv) return;
+  
+  qDiv.innerHTML = questoes.map((q, i) => {
+    if (q.tipo === 'multipla') {
+      return `
+        <div class="card" style="margin-bottom:15px">
+          <strong>${i+1}. ${q.pergunta}</strong>
+          <div style="margin-top:10px">
+            ${q.alternativas.map((a, j) => `
+              <label style="display:block;padding:8px;cursor:pointer;border-radius:8px;margin:3px 0" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='transparent'">
+                <input type="radio" name="q${i}" value="${j}" onchange="respostaDesafio(${i}, ${j})"> ${a}
+              </label>
+            `).join('')}
+          </div>
+        </div>`;
+    } else {
+      return `
+        <div class="card" style="margin-bottom:15px">
+          <strong>${i+1}. ${q.pergunta}</strong>
+          <textarea class="input-field" rows="3" placeholder="Sua resposta..." onchange="respostaDesafio(${i}, this.value)" style="margin-top:10px"></textarea>
+        </div>`;
+    }
+  }).join('') + `
+    <button class="btn btn-dourado btn-full" onclick="finalizarDesafio()" style="margin-top:20px">🏆 Enviar Respostas</button>
+  `;
+}
+
+function respostaDesafio(index, valor) {
+  respostasDesafio[index] = valor;
+}
+
+async function finalizarDesafio() {
+  if (!desafioAtual) return;
+  
+  const questoes = parseQuestoesDesafio(desafioAtual.questoes);
+  let acertos = 0;
+  
+  questoes.forEach((q, i) => {
+    if (q.tipo === 'multipla') {
+      const altCorreta = q.resposta.toUpperCase().charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+      if (respostasDesafio[i] === altCorreta) acertos++;
+    }
+    // Dissertativa não conta automático
+  });
+  
+  const pct = Math.round((acertos / questoes.length) * 100);
+  const ganhou = pct >= 70 ? desafioAtual.premio : Math.round(desafioAtual.premio * (pct / 100));
+  
+  // Salva resultado
+  await db.ref('desafios/' + desafioAtual.id + '/participantes/' + S.user.uid).set({
+    nome: S.ud.username,
+    acertos: acertos,
+    total: questoes.length,
+    pct: pct,
+    pontosGanhos: ganhou,
+    data: Date.now()
+  });
+  
+  // Adiciona pontos
+  if (ganhou > 0) {
+    await addPts(ganhou);
+  }
+  
+  alert(`🏆 Desafio concluído!\n\nAcertos: ${acertos}/${questoes.length} (${pct}%)\nPontos ganhos: +${ganhou}`);
+  
+  desafioAtual = null;
+  respostasDesafio = [];
+  navigate('desafios');
+}
+
+function parseQuestoesDesafio(texto) {
+  const blocos = texto.split('\n\n').filter(b => b.trim());
+  return blocos.map(bloco => {
+    const linhas = bloco.trim().split('\n');
+    const pergunta = linhas[0];
+    const resposta = linhas.find(l => l.startsWith('RESPOSTA:'))?.replace('RESPOSTA:', '').trim() || '';
+    
+    if (linhas.some(l => /^[a-dA-D]\)/.test(l.trim()))) {
+      // Múltipla escolha
+      const alternativas = linhas.filter(l => /^[a-dA-D]\)/.test(l.trim()));
+      return { tipo: 'multipla', pergunta, alternativas, resposta };
+    } else {
+      // Dissertativa
+      return { tipo: 'dissertativa', pergunta, resposta };
+    }
+  });
+}
+
 console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
