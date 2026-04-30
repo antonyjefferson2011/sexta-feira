@@ -1771,20 +1771,23 @@ async function gerarTarefaCompleta() {
         model: 'llama-3.1-8b-instant',
         messages: [{ 
           role: 'user', 
-          content: `Baseado nesta descrição: "${descricao}"
+          content: `Crie questões baseado em: "${descricao}"
 
-Crie um array JSON com as questões. Formato EXATO:
+RETORNE APENAS UM ARRAY JSON neste formato exato, sem texto adicional:
+
 [
-  {"tipo":"multipla","pergunta":"Qual a capital do Brasil?","alternativas":["Rio de Janeiro","São Paulo","Brasília","Salvador"]},
-  {"tipo":"dissertativa","pergunta":"Explique o processo de fotossíntese."},
-  {"tipo":"vf","pergunta":"A Terra é plana."}
+  {"t":"m","q":"Qual a capital do Brasil?","a":["Rio de Janeiro","São Paulo","Brasília","Salvador"]},
+  {"t":"d","q":"Explique a fotossíntese."},
+  {"t":"v","q":"A Terra é plana."}
 ]
 
-REGRAS:
-- "tipo" só pode ser: "multipla", "dissertativa" ou "vf"
-- "multipla" precisa de 4 alternativas
-- "dissertativa" e "vf" não precisam de alternativas
-- Retorne APENAS o JSON, sem texto adicional`
+Onde:
+- "t":"m" = múltipla escolha (com array "a" de 4 alternativas)
+- "t":"d" = dissertativa (sem "a")
+- "t":"v" = verdadeiro/falso (sem "a")
+- Cada alternativa do array "a" DEVE ser uma string SEPARADA
+
+IMPORTANTE: Retorne APENAS o JSON, nada mais.`
         }],
         max_tokens: 4000,
         temperature: 0.7
@@ -1795,51 +1798,56 @@ REGRAS:
     let txt = data.choices?.[0]?.message?.content || '';
     
     // Extrai o JSON
-    let jsonStr = txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1);
+    txt = txt.trim();
+    let start = txt.indexOf('[');
+    let end = txt.lastIndexOf(']');
+    if (start === -1 || end === -1) throw new Error('JSON não encontrado');
+    
+    let jsonStr = txt.substring(start, end + 1);
     let questoes = JSON.parse(jsonStr);
     
-    // Monta HTML limpo
-    let html = `
-      <div style="text-align:center;margin-bottom:25px">
-        <h2 style="margin:0 0 8px;font-size:18px">${titulo || 'Lista de Exercícios'}</h2>
-        ${professor ? '<p style="color:#555;margin:3px 0;font-size:12px"><b>Professor(a):</b> ' + professor + '</p>' : ''}
-        <p style="color:#888;font-size:10px;margin:3px 0">${new Date().toLocaleDateString('pt-BR')}</p>
-        <p style="font-size:10px;color:#555;margin-top:8px">
-          Aluno: ___________________ &nbsp;&nbsp; Data: ____/____/____ &nbsp;&nbsp; Nota: _____
-        </p>
-      </div>
-      <hr style="border:1px solid #ddd;margin-bottom:20px">
-    `;
+    if (!Array.isArray(questoes) || questoes.length === 0) {
+      throw new Error('Array vazio');
+    }
+    
+    // Monta HTML LIMPO
+    let html = `<div style="text-align:center;margin-bottom:25px">
+      <h2 style="margin:0 0 8px;font-size:18px">${titulo || 'Lista de Exercícios'}</h2>
+      ${professor ? '<p style="color:#555;margin:3px 0;font-size:12px"><b>Professor(a):</b> ' + professor + '</p>' : ''}
+      <p style="color:#888;font-size:10px;margin:3px 0">${new Date().toLocaleDateString('pt-BR')}</p>
+      <p style="font-size:10px;color:#555;margin-top:8px">
+        Aluno: ___________________ &nbsp;&nbsp; Data: ____/____/____ &nbsp;&nbsp; Nota: _____
+      </p>
+    </div>
+    <hr style="border:1px solid #ddd;margin-bottom:20px">`;
     
     questoes.forEach((q, i) => {
-      if (q.tipo === 'multipla') {
-        html += `
-          <div style="margin-bottom:20px">
-            <strong>${i+1}.</strong> ${q.pergunta}
-            <div style="margin-left:22px;margin-top:5px">
-              ${q.alternativas.map((a, j) => `<div style="margin:3px 0">${String.fromCharCode(97+j)}) ${a}</div>`).join('')}
-            </div>
-          </div>`;
-      } else if (q.tipo === 'vf') {
-        html += `
-          <div style="margin-bottom:20px">
-            <strong>${i+1}.</strong> ${q.pergunta}
-            <div style="margin-left:22px;margin-top:5px">( ) Verdadeiro &nbsp;&nbsp; ( ) Falso</div>
-          </div>`;
+      if (q.t === 'm' && Array.isArray(q.a) && q.a.length >= 2) {
+        // Múltipla escolha - cada alternativa em linha separada
+        html += `<div style="margin-bottom:20px">
+          <strong>${i+1}.</strong> ${q.q}
+          <div style="margin-left:22px;margin-top:5px">
+            ${q.a.map((alt, j) => `<div style="margin:3px 0">${String.fromCharCode(97+j)}) ${alt}</div>`).join('')}
+          </div>
+        </div>`;
+      } else if (q.t === 'v') {
+        // Verdadeiro/Falso
+        html += `<div style="margin-bottom:20px">
+          <strong>${i+1}.</strong> ${q.q}
+          <div style="margin-left:22px;margin-top:5px">( ) Verdadeiro &nbsp;&nbsp; ( ) Falso</div>
+        </div>`;
       } else {
-        html += `
-          <div style="margin-bottom:20px">
-            <strong>${i+1}.</strong> ${q.pergunta}
-            <div style="border-bottom:1px dotted #ddd;height:50px;margin-top:5px"></div>
-          </div>`;
+        // Dissertativa
+        html += `<div style="margin-bottom:20px">
+          <strong>${i+1}.</strong> ${q.q}
+          <div style="border-bottom:1px dotted #ddd;height:60px;margin-top:5px;margin-left:22px"></div>
+        </div>`;
       }
     });
     
-    html += `
-      <div style="text-align:center;margin-top:40px;font-size:10px;color:#ccc">
-        Feito com ❤️ por Sexta-Feira Studies
-      </div>
-    `;
+    html += `<div style="text-align:center;margin-top:40px;font-size:10px;color:#ccc">
+      Feito com ❤️ por Sexta-Feira Studies
+    </div>`;
     
     $('pdf-preview-card').style.display = 'block';
     $('pdf-preview-content').innerHTML = html;
@@ -1849,10 +1857,9 @@ REGRAS:
     
   } catch(e) {
     console.error('Erro:', e);
-    toast('❌ Erro. Tente descrever de forma mais simples.', 'error');
+    toast('❌ Tente de novo com uma descrição mais simples.', 'error');
   }
 }
-
 function baixarTarefa() {
   const conteudo = $('pdf-preview-content');
   if (!conteudo) return;
