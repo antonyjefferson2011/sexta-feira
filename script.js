@@ -1836,79 +1836,59 @@ REGRAS:
 }
 
 function baixarTarefa() {
-  const conteudo = $('pdf-preview-content')?.innerHTML;
+  const conteudo = $('pdf-preview-content');
   if (!conteudo) return;
   
   const titulo = $('tarefa-titulo')?.value || 'Tarefa';
-  const professor = $('tarefa-professor')?.value || '';
   
-  // Abre em nova janela com botão de imprimir (que salva como PDF nativo)
-  const novaJanela = window.open('', '_blank', 'width=900,height=700');
-  novaJanela.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>${titulo}</title>
-      <style>
-        @media print {
-          @page { margin: 1.5cm; size: A4; }
-          body { margin: 0; }
-          .no-print { display: none; }
-        }
-        body { 
-          font-family: Arial, sans-serif; 
-          padding: 30px; 
-          line-height: 2; 
-          font-size: 13px;
-          color: #000;
-        }
-        .no-print {
-          position: fixed;
-          top: 10px;
-          right: 10px;
-          z-index: 999;
-        }
-        .btn-imprimir {
-          background: #10B981;
-          color: white;
-          border: none;
-          padding: 12px 30px;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 700;
-          cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        .btn-imprimir:hover {
-          background: #059669;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="no-print" style="text-align:center;width:100%">
-        <button class="btn-imprimir" onclick="window.print()">
-          🖨️ Clique aqui para Salvar como PDF
-        </button>
-        <p style="font-size:12px;color:#666;margin-top:8px">
-          Na janela de impressão, escolha <strong>"Salvar como PDF"</strong> no destino
-        </p>
-      </div>
-      <div style="margin-top:80px">
-        ${conteudo}
-      </div>
-      <script>
-        // Abre automaticamente a janela de impressão
-        setTimeout(function() {
-          window.print();
-        }, 1500);
-      <\\/script>
-    </body>
-    </html>
-  `);
-  novaJanela.document.close();
+  toast('📥 Gerando PDF...', 'info');
   
-  toast('📄 Janela aberta! Escolha "Salvar como PDF" na impressão', 'success');
+  // Pega o texto puro (sem HTML)
+  let texto = '';
+  const elementos = conteudo.querySelectorAll('div, strong, p');
+  elementos.forEach(el => {
+    texto += el.textContent + '\n';
+  });
+  
+  // Cria PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  // Configurações
+  doc.setFont('helvetica');
+  doc.setFontSize(16);
+  
+  // Título
+  doc.text(titulo, 105, 20, { align: 'center' });
+  
+  // Linha separadora
+  doc.setDrawColor(16, 185, 129);
+  doc.line(20, 25, 190, 25);
+  
+  // Conteúdo
+  doc.setFontSize(11);
+  
+  const linhas = doc.splitTextToSize(texto, 170);
+  let y = 35;
+  
+  linhas.forEach(linha => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.text(linha, 20, y);
+    y += 7;
+  });
+  
+  // Rodapé
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Feito com ❤ por Sexta-Feira Studies', 105, 285, { align: 'center' });
+  
+  // Download
+  doc.save(titulo.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf');
+  
+  toast('✅ PDF baixado com sucesso!', 'success');
 }
 function fecharPreview() {
   const previewCard = $('pdf-preview-card');
