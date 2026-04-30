@@ -829,6 +829,7 @@
       <a class="nav-link" onclick="navigate('desafios')">⚔️ Desafios</a>
       <a class="nav-link" onclick="navigate('chat')">💬 Chat</a>
       <a class="nav-link" onclick="navigate('jarvis')">🧠 Jarvis IA</a>
+      <a class="nav-link" onclick="navigate('tarefas')">📄 Criar Tarefa</a>
       <a class="nav-link" onclick="navigate('perfil')">👤 Perfil</a>
       <a class="nav-link" onclick="navigate('notificacoes')">🔔 Notificações</a>
       <a class="nav-link" onclick="navigate('sobre')">ℹ️ Sobre Nós</a>
@@ -844,6 +845,42 @@
   <!-- MAIN CONTENT -->
   <div class="main-content" id="main-content">
 
+    <!-- CRIADOR DE TAREFAS -->
+<div id="screen-tarefas" class="screen">
+  <div style="text-align:center;margin-bottom:20px">
+    <img src="https://i.ibb.co/pB3yvfp3/image.png" alt="Tarefas" style="width:60px;height:60px;border-radius:50%;margin-bottom:10px;object-fit:cover" />
+    <h2 style="font-size:22px">📄 Criador de Tarefas</h2>
+    <p style="color:var(--text3);font-size:13px">Crie listas de exercícios para imprimir ou salvar como PDF</p>
+  </div>
+  
+  <div class="card">
+    <input type="text" id="tarefa-titulo" class="input-field" placeholder="Título (ex: Lista de Exercícios - Matemática)" />
+    <div class="grid-2">
+      <input type="text" id="tarefa-disciplina" class="input-field" placeholder="Disciplina" />
+      <input type="text" id="tarefa-professor" class="input-field" placeholder="Nome do professor" />
+    </div>
+    <textarea id="tarefa-conteudo" class="input-field" rows="12" placeholder="Digite as questões aqui...&#10;&#10;Exemplo:&#10;1. Qual a capital do Brasil?&#10;2. Resolva a equação 2x + 5 = 15&#10;3. Explique o processo de fotossíntese..."></textarea>
+    
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button class="btn btn-primary btn-full" onclick="gerarPDF()">📥 Gerar PDF / Imprimir</button>
+      <button class="btn btn-accent btn-full" onclick="gerarPDFcomIA()">🤖 Gerar questões com IA</button>
+    </div>
+  </div>
+  
+  <!-- Preview do PDF -->
+  <div class="card" id="pdf-preview-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+      <h3 style="margin:0">📄 Pré-visualização</h3>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="imprimirPDF()">🖨️ Imprimir</button>
+        <button class="btn btn-outline btn-sm" onclick="fecharPreview()">✕ Fechar</button>
+      </div>
+    </div>
+    <div id="pdf-preview-content" style="background:white;color:#1A1A2E;padding:30px;border-radius:10px;line-height:1.8;font-size:14px"></div>
+  </div>
+</div>
+
+    
     <!-- HOME -->
     <div id="screen-home" class="screen active">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
