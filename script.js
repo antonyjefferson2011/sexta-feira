@@ -1247,7 +1247,7 @@ async function sendJarvisImage() {
       const base64Data = e.target.result.split(',')[1];
       const promptTexto = mensagemTexto || 'Descreva esta imagem em detalhes. Se for uma questão de estudo, explique a resposta correta. Responda em português.';
       
-      const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY, {
+      const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
