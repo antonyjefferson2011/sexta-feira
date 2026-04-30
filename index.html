@@ -632,41 +632,113 @@
       color: var(--text3);
     }
 
-    /* VIDEO PLAYER */
-    .video-container {
-      position: relative;
-      width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #000;
-      margin: 10px 0;
-    }
+   /* VIDEO PLAYER - TELA CHEIA */
+.video-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 300;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .video-container video,
-    .video-container iframe {
-      width: 100%;
-      aspect-ratio: 16/9;
-    }
+.video-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #000;
+  z-index: 299;
+}
 
-    .video-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      font-size: 12px;
-    }
+.video-container video,
+.video-container iframe {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  object-fit: contain;
+}
 
-    .video-controls button {
-      background: none;
-      border: none;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      padding: 2px 6px;
-    }
+.video-close-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 301;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
 
+.video-close-btn:hover {
+  background: #EF4444;
+  transform: scale(1.1);
+}
+
+/* Cards de vídeo */
+.video-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.video-card:hover {
+  border-color: #10B981;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.video-card-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.video-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-play-icon {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: rgba(16, 185, 129, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: white;
+  transition: transform 0.2s;
+}
+
+.video-card:hover .video-play-icon {
+  transform: scale(1.1);
+}
     /* RESPONSIVE */
     @media (min-width: 768px) {
       .sidebar { transform: translateX(0); }
