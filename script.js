@@ -274,6 +274,7 @@ function navigate(name) {
   else if (name === 'adm') loadAdm();
   else if (name === 'sobre') loadSobre();
   else if (name === 'updates') loadUpdates();
+  else if (name === 'tarefas') loadTarefas();
 }
 
 function toggleSidebar() {
@@ -1737,6 +1738,144 @@ function abrirVideo(url) {
     }
   };
   document.addEventListener('keydown', escHandler);
+}
+
+// ========== CRIADOR DE TAREFAS PDF ==========
+function loadTarefas() {
+  // Carrega os dados do usuário nos campos
+  if (S.ud) {
+    const profInput = $('tarefa-professor');
+    if (profInput && !profInput.value) profInput.value = S.ud.fullname || '';
+  }
+}
+
+function gerarPDF() {
+  const titulo = $('tarefa-titulo')?.value || 'Lista de Exercícios';
+  const disciplina = $('tarefa-disciplina')?.value || '';
+  const professor = $('tarefa-professor')?.value || '';
+  const conteudo = $('tarefa-conteudo')?.value || '';
+  
+  if (!conteudo.trim()) {
+    toast('Digite as questões!', 'error');
+    return;
+  }
+  
+  const questoes = conteudo.split('\n').filter(q => q.trim());
+  
+  const html = `
+    <div style="text-align:center;border-bottom:3px solid #10B981;padding-bottom:20px;margin-bottom:25px">
+      <div style="font-size:24px;font-weight:800;color:#10B981;margin-bottom:5px">
+        <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;margin-right:8px" />
+        Sexta-Feira Studies
+      </div>
+      <h2 style="margin:15px 0 5px;color:#1A1A2E">${titulo}</h2>
+      ${disciplina ? '<p style="color:#666;margin:3px 0"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
+      ${professor ? '<p style="color:#666;margin:3px 0"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
+      <p style="color:#999;font-size:11px;margin:3px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+      <div style="display:flex;gap:15px;justify-content:center;margin-top:10px">
+        <span style="color:#666;font-size:12px">👤 Aluno: _____________________</span>
+        <span style="color:#666;font-size:12px">📅 Data: ____/____/________</span>
+        <span style="color:#666;font-size:12px">⭐ Nota: ________</span>
+      </div>
+    </div>
+    
+    <div style="line-height:2.2;font-size:14px;min-height:400px">
+      ${questoes.map((q, i) => `
+        <div style="margin-bottom:20px;padding:10px;background:#F8FAFC;border-radius:8px">
+          <strong>${i+1}.</strong> ${q}
+          <div style="margin-top:8px;color:#999;font-size:12px">R: _____________________________________________</div>
+        </div>
+      `).join('')}
+    </div>
+    
+    <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:3px solid #10B981;color:#10B981;font-weight:700;font-size:13px">
+      ✨ Criado com Sexta-Feira Studies ✨<br>
+      <span style="font-size:10px;color:#999">sexta-feira-studies.firebaseapp.com</span>
+    </div>
+  `;
+  
+  const previewCard = $('pdf-preview-card');
+  const previewContent = $('pdf-preview-content');
+  
+  if (previewCard && previewContent) {
+    previewCard.style.display = 'block';
+    previewContent.innerHTML = html;
+    previewCard.scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  toast('✅ PDF gerado! Clique em Imprimir para salvar.', 'success');
+}
+
+function imprimirPDF() {
+  const conteudo = $('pdf-preview-content')?.innerHTML;
+  if (!conteudo) return;
+  
+  const titulo = $('tarefa-titulo')?.value || 'Tarefa';
+  
+  const novaJanela = window.open('', '_blank', 'width=900,height=700');
+  novaJanela.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${titulo} - Sexta-Feira Studies</title>
+      <style>
+        @media print { body { margin: 0; padding: 20px; } }
+        body { font-family: 'Sora', Arial, sans-serif; padding: 40px; }
+      </style>
+    </head>
+    <body>${conteudo}</body>
+    </html>
+  `);
+  novaJanela.document.close();
+  
+  setTimeout(() => {
+    novaJanela.print();
+  }, 500);
+}
+
+function fecharPreview() {
+  const previewCard = $('pdf-preview-card');
+  if (previewCard) previewCard.style.display = 'none';
+}
+
+async function gerarPDFcomIA() {
+  const disciplina = $('tarefa-disciplina')?.value.trim();
+  const titulo = $('tarefa-titulo')?.value.trim();
+  
+  if (!disciplina) {
+    toast('Preencha o campo Disciplina!', 'error');
+    return;
+  }
+  
+  const tema = titulo || disciplina;
+  toast('🤖 Gerando questões com IA...', 'info');
+  
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ 
+          role: 'user', 
+          content: `Crie 10 questões sobre "${tema}" para uma lista de exercícios. Formato: uma questão por linha, começando com número. Exemplo:\n1. Qual a capital do Brasil?\n2. Resolva a equação...` 
+        }],
+        max_tokens: 1000
+      })
+    });
+    
+    const data = await response.json();
+    const questoes = data.choices?.[0]?.message?.content || '';
+    
+    const campo = $('tarefa-conteudo');
+    if (campo) {
+      campo.value = questoes;
+      toast('✅ Questões geradas! Agora clique em "Gerar PDF"', 'success');
+    }
+  } catch(e) {
+    console.error('Erro IA:', e);
+    toast('❌ Erro ao gerar questões', 'error');
+  }
 }
 
 console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
