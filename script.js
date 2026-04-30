@@ -1761,11 +1761,10 @@ function gerarPDF() {
     return;
   }
   
-  // Remove numeração existente e filtra linhas vazias
   const questoes = conteudo
     .split('\n')
-    .map(q => q.replace(/^\d+[\.\)\-]\s*/, '').trim()) // Remove numeração
-    .filter(q => q.length > 5); // Remove linhas muito curtas
+    .map(q => q.replace(/^\d+[\.\)\-]\s*/, '').trim())
+    .filter(q => q.length > 5);
   
   if (questoes.length === 0) {
     toast('Nenhuma questão encontrada!', 'error');
@@ -1775,32 +1774,29 @@ function gerarPDF() {
   const alinhamentoCSS = alinhamento === 'esquerda' ? 'left' : alinhamento === 'direita' ? 'right' : 'center';
   
   const html = `
-    <div style="text-align:${alinhamentoCSS};border-bottom:2px solid #10B981;padding-bottom:15px;margin-bottom:25px">
-      <div style="font-size:20px;font-weight:800;color:#10B981;margin-bottom:5px">
-        📚 Sexta-Feira Studies
-      </div>
-      <h2 style="margin:10px 0 5px;font-size:18px">${titulo}</h2>
-      ${disciplina ? '<p style="color:#555;margin:3px 0;font-size:13px"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
-      ${professor ? '<p style="color:#555;margin:3px 0;font-size:13px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
-      <p style="color:#888;font-size:11px;margin:3px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
-      <div style="display:flex;gap:10px;justify-content:${alinhamentoCSS};margin-top:10px;font-size:12px;color:#555">
-        <span>👤 Aluno: ___________________</span>
-        <span>📅 Data: ____/____/____</span>
+    <div style="text-align:${alinhamentoCSS};margin-bottom:25px">
+      <h2 style="margin:0 0 5px;font-size:20px">${titulo}</h2>
+      ${disciplina ? '<p style="color:#555;margin:2px 0;font-size:13px"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
+      ${professor ? '<p style="color:#555;margin:2px 0;font-size:13px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
+      <p style="color:#888;font-size:11px;margin:2px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+      <div style="margin-top:10px;font-size:12px;color:#555">
+        👤 Aluno: ___________________ &nbsp;&nbsp; 📅 Data: ____/____/____ &nbsp;&nbsp; ⭐ Nota: _____
       </div>
     </div>
     
+    <hr style="border:1px solid #ddd;margin-bottom:20px">
+    
     <div style="line-height:2.2;font-size:14px">
       ${questoes.map((q, i) => `
-        <div style="margin-bottom:18px;padding:8px 0">
+        <div style="margin-bottom:15px">
           <strong>${i+1}.</strong> ${q}
-          <div style="margin-top:5px;color:#aaa;font-size:12px;border-bottom:1px dotted #ddd;padding-bottom:5px">_______________________________________________________</div>
+          <div style="margin-top:3px;color:#aaa;font-size:12px">R: _____________________________________________</div>
         </div>
       `).join('')}
     </div>
     
-    <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:2px solid #10B981;color:#10B981;font-weight:700;font-size:12px">
-      ✨ Criado com Sexta-Feira Studies ✨<br>
-      <span style="font-size:10px;color:#999">sexta-feira.vercel.app</span>
+    <div style="text-align:center;margin-top:40px;font-size:11px;color:#999">
+      Feito com ❤️ por Sexta-Feira Studies
     </div>
   `;
   
@@ -1808,9 +1804,8 @@ function gerarPDF() {
   $('pdf-preview-content').innerHTML = html;
   $('pdf-preview-card').scrollIntoView({ behavior: 'smooth' });
   
-  toast('✅ Visualização pronta! Clique em Imprimir', 'success');
+  toast('✅ Visualização pronta!', 'success');
 }
-
 function imprimirPDF() {
   const conteudo = $('pdf-preview-content')?.innerHTML;
   if (!conteudo) return;
