@@ -847,40 +847,31 @@
 
   <!-- MAIN CONTENT -->
   <div class="main-content" id="main-content">
-
-   <!-- CRIADOR DE TAREFAS -->
+<!-- CRIADOR DE TAREFAS -->
 <div id="screen-tarefas" class="screen">
-  <div style="text-align:center;margin-bottom:20px">
-    <h2 style="font-size:22px">📄 Criador de Tarefas com IA</h2>
-    <p style="color:var(--text3);font-size:13px">Descreva como quer a tarefa e a IA gera tudo</p>
-  </div>
-  
-  <div class="card">
-    <label style="font-size:12px;color:var(--text2);margin-bottom:5px;display:block">
-      📝 Descreva a tarefa que você quer:
-    </label>
-    <textarea id="tarefa-descricao" class="input-field" rows="4" placeholder="Exemplos:&#10;&#10;• Quero 20 questões de múltipla escolha sobre Revolução Francesa&#10;• Crie 10 questões dissertativas e 5 de verdadeiro ou falso sobre Matemática Básica&#10;• 30 questões: 15 de alternativas (A B C D) e 15 para completar, tema: Geografia do Brasil"></textarea>
+  <div style="text-align:center;margin-bottom:30px;padding:40px 20px">
+    <div style="font-size:60px;margin-bottom:20px">🚧</div>
+    <h2 style="font-size:22px;margin-bottom:10px">Criador de Tarefas</h2>
+    <p style="color:var(--text3);font-size:14px;margin-bottom:25px">
+      Esta funcionalidade está em desenvolvimento e em breve estará disponível!
+    </p>
     
-    <div class="grid-2">
-      <input type="text" id="tarefa-titulo" class="input-field" placeholder="📝 Título da tarefa" />
-      <input type="text" id="tarefa-professor" class="input-field" placeholder="👤 Nome do professor" />
+    <div class="card" style="background:var(--gold-light);border:1px solid var(--gold);max-width:500px;margin:0 auto;text-align:left">
+      <h3 style="color:#92400E;margin-bottom:10px">📋 O que está por vir:</h3>
+      <ul style="color:#92400E;font-size:13px;line-height:2;padding-left:20px">
+        <li>✅ Geração de questões com IA</li>
+        <li>✅ Múltipla escolha (A B C D)</li>
+        <li>✅ Questões dissertativas</li>
+        <li>✅ Verdadeiro ou Falso</li>
+        <li>⏳ Download em PDF editável</li>
+        <li>⏳ Personalização de cabeçalho</li>
+        <li>⏳ Gabarito automático</li>
+      </ul>
     </div>
     
-    <button class="btn btn-accent btn-full" onclick="gerarTarefaCompleta()" style="margin-top:10px">
-      🤖 Gerar Tarefa Completa com IA
-    </button>
-  </div>
-  
-  <!-- Preview -->
-  <div class="card" id="pdf-preview-card" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
-      <h3 style="margin:0">📄 Pré-visualização</h3>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="baixarTarefa()">📥 Baixar</button>
-        <button class="btn btn-outline btn-sm" onclick="$('pdf-preview-card').style.display='none'">✕</button>
-      </div>
-    </div>
-    <div id="pdf-preview-content" style="background:white;color:#1A1A2E;padding:25px;border-radius:10px;line-height:1.8;font-size:14px;font-family:Arial,sans-serif"></div>
+    <p style="color:var(--text3);font-size:12px;margin-top:25px">
+      Enquanto isso, você pode usar o <strong>Gerador IA</strong> no painel admin para criar questões!
+    </p>
   </div>
 </div>
     
