@@ -1761,10 +1761,12 @@ function gerarPDF() {
     return;
   }
   
+  // Separa questões por linha em branco OU por linha normal
   const questoes = conteudo
-    .split('\n')
+    .split(/\n\n+/) // Separa por linha em branco primeiro
+    .flatMap(bloco => bloco.split('\n')) // Depois por linha
     .map(q => q.replace(/^\d+[\.\)\-]\s*/, '').trim())
-    .filter(q => q.length > 5);
+    .filter(q => q.length > 3);
   
   if (questoes.length === 0) {
     toast('Nenhuma questão encontrada!', 'error');
@@ -1774,28 +1776,53 @@ function gerarPDF() {
   const alinhamentoCSS = alinhamento === 'esquerda' ? 'left' : alinhamento === 'direita' ? 'right' : 'center';
   
   const html = `
-    <div style="text-align:${alinhamentoCSS};margin-bottom:25px">
-      <h2 style="margin:0 0 5px;font-size:20px">${titulo}</h2>
-      ${disciplina ? '<p style="color:#555;margin:2px 0;font-size:13px"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
-      ${professor ? '<p style="color:#555;margin:2px 0;font-size:13px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
-      <p style="color:#888;font-size:11px;margin:2px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
-      <div style="margin-top:10px;font-size:12px;color:#555">
-        👤 Aluno: ___________________ &nbsp;&nbsp; 📅 Data: ____/____/____ &nbsp;&nbsp; 
+    <div style="text-align:${alinhamentoCSS};margin-bottom:20px">
+      <h2 style="margin:0 0 5px;font-size:18px">${titulo}</h2>
+      ${disciplina ? '<p style="color:#555;margin:2px 0;font-size:12px"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
+      ${professor ? '<p style="color:#555;margin:2px 0;font-size:12px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
+      <p style="color:#888;font-size:10px;margin:2px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+      <div style="margin-top:8px;font-size:11px;color:#555">
+        👤 Aluno: ___________________ &nbsp;&nbsp; 📅 ____/____/____ &nbsp;&nbsp; ⭐ Nota: _____
       </div>
     </div>
     
     <hr style="border:1px solid #ddd;margin-bottom:20px">
     
-    <div style="line-height:2.2;font-size:14px">
-      ${questoes.map((q, i) => `
-        <div style="margin-bottom:15px">
-          <strong>${i+1}.</strong> ${q}
-          <div style="margin-top:3px;color:#aaa;font-size:12px">R: _____________________________________________</div>
-        </div>
-      `).join('')}
+    <div style="line-height:2;font-size:13px">
+      ${questoes.map((q, i) => {
+        // Verifica se a questão tem alternativas (contém letras seguidas de )
+        const temAlternativas = /[a-dA-D]\s*[\)\.\-]/.test(q);
+        
+        if (temAlternativas) {
+          // Divide a pergunta das alternativas
+          const partes = q.split(/[a-dA-D]\s*[\)\.\-]/);
+          const pergunta = partes[0].trim();
+          const alternativas = q.match(/[a-dA-D]\s*[\)\.\-]\s*[^a-dA-D]+/g) || [];
+          
+          return `
+            <div style="margin-bottom:20px;page-break-inside:avoid">
+              <strong>${i+1}.</strong> ${pergunta}
+              <div style="margin-left:20px;margin-top:5px">
+                ${alternativas.map((alt, j) => `
+                  <div style="margin:3px 0">
+                    ${String.fromCharCode(97 + j)}) ${alt.replace(/^[a-dA-D]\s*[\)\.\-]\s*/, '').trim()}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div style="margin-bottom:15px;page-break-inside:avoid">
+              <strong>${i+1}.</strong> ${q}
+              <div style="margin-top:3px;color:#bbb;font-size:11px">R: _____________________________________________</div>
+            </div>
+          `;
+        }
+      }).join('')}
     </div>
     
-    <div style="text-align:center;margin-top:40px;font-size:11px;color:#999">
+    <div style="text-align:center;margin-top:40px;font-size:10px;color:#ccc">
       Feito com ❤️ por Sexta-Feira Studies
     </div>
   `;
@@ -1806,6 +1833,7 @@ function gerarPDF() {
   
   toast('✅ Visualização pronta!', 'success');
 }
+
 function imprimirTarefa() {
   const conteudo = $('pdf-preview-content')?.innerHTML;
   if (!conteudo) return;
@@ -1881,40 +1909,44 @@ async function gerarQuestoesIA() {
         model: 'llama-3.1-8b-instant',
         messages: [{ 
           role: 'user', 
-          content: `Crie exatamente ${qtd} questões sobre "${tema}". Regras:
-1. Apenas as questões, sem introdução
-2. Uma questão por linha
-3. NÃO numere as questões
-4. Não diga "aqui estão as questões"
-5. Vá direto para as perguntas` 
+          content: `Crie ${qtd} questões sobre "${tema}" no seguinte formato:
+- Apenas as perguntas, uma por linha
+- NÃO numere
+- NÃO escreva introdução
+- Se for múltipla escolha, use formato:
+Pergunta?
+a) Opção A
+b) Opção B
+c) Opção C
+d) Opção D
+- Se for dissertativa, apenas a pergunta em uma linha` 
         }],
-        max_tokens: 1500
+        max_tokens: 2000,
+        temperature: 0.8
       })
     });
     
     const data = await response.json();
     let questoes = data.choices?.[0]?.message?.content || '';
     
-    // Limpa a resposta da IA
+    // Limpa
     questoes = questoes
-      .replace(/^(Aqui estão|Segue|Lista|Eis).*?\n/i, '') // Remove frases introdutórias
-      .replace(/^\d+\.\s*/gm, '') // Remove numeração existente
+      .replace(/^(Aqui estão|Segue|Lista|Eis|Vamos).*?\n/i, '')
+      .replace(/^\d+[\.\)\-]\s*/gm, '')
       .split('\n')
-      .filter(q => q.trim().length > 10)
-      .slice(0, qtd)
+      .filter(q => q.trim().length > 5)
       .join('\n');
     
     const campo = $('tarefa-conteudo');
     if (campo) {
       campo.value = questoes;
-      toast('✅ ' + qtd + ' questões geradas! Clique em Visualizar', 'success');
+      toast('✅ Questões geradas! Visualize e baixe.', 'success');
     }
   } catch(e) {
     console.error('Erro IA:', e);
-    toast('❌ Erro ao gerar questões', 'error');
+    toast('❌ Erro ao gerar', 'error');
   }
 }
-
 // ========== HISTÓRICO DE NAVEGAÇÃO ==========
 let navHistory = [];
 
@@ -2001,22 +2033,34 @@ function fecharPreview() {
 }
 
 function baixarPDF() {
-  const elemento = $('pdf-preview-content');
-  if (!elemento) return;
+  const conteudo = $('pdf-preview-content')?.innerHTML;
+  if (!conteudo) return;
   
   const titulo = $('tarefa-titulo')?.value || 'Tarefa';
+  const nomeArquivo = titulo.replace(/[^a-zA-Z0-9]/g, '_') + '.html';
   
-  const opt = {
-    margin: [10, 10, 10, 10],
-    filename: titulo.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+  const htmlCompleto = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${titulo}</title>
+  <style>
+    @media print { @page { margin: 1.5cm; size: A4; } body { margin: 0; } }
+    body { font-family: Arial, sans-serif; padding: 30px; color: #1A1A2E; line-height: 2; font-size: 14px; }
+  </style>
+</head>
+<body>${conteudo}</body>
+</html>`;
   
-  html2pdf().set(opt).from(elemento).save();
+  const blob = new Blob([htmlCompleto], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nomeArquivo;
+  a.click();
+  URL.revokeObjectURL(url);
   
-  toast('📥 PDF baixando...', 'success');
+  toast('📥 Arquivo baixado! Abra e pressione Ctrl+P para salvar como PDF', 'success');
 }
 
 function imprimirTarefa() {
