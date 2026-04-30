@@ -2000,4 +2000,42 @@ function fecharPreview() {
   $('pdf-preview-card').style.display = 'none';
 }
 
+function baixarPDF() {
+  const elemento = $('pdf-preview-content');
+  if (!elemento) return;
+  
+  const titulo = $('tarefa-titulo')?.value || 'Tarefa';
+  
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: titulo.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  
+  html2pdf().set(opt).from(elemento).save();
+  
+  toast('📥 PDF baixando...', 'success');
+}
+
+function imprimirTarefa() {
+  const conteudo = $('pdf-preview-content')?.innerHTML;
+  if (!conteudo) return;
+  
+  const titulo = $('tarefa-titulo')?.value || 'Tarefa';
+  
+  const novaJanela = window.open('', '_blank', 'width=900,height=700');
+  novaJanela.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>${titulo}</title></head>
+    <body style="font-family:Arial,sans-serif;padding:20px">${conteudo}</body>
+    </html>
+  `);
+  novaJanela.document.close();
+  
+  setTimeout(() => novaJanela.print(), 500);
+}
+
 console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
