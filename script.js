@@ -1761,7 +1761,7 @@ async function gerarTarefaCompleta() {
     return;
   }
   
-  toast('🤖 Gerando tarefa completa...', 'info');
+  toast('🤖 Gerando tarefa...', 'info');
   
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -1771,53 +1771,71 @@ async function gerarTarefaCompleta() {
         model: 'llama-3.1-8b-instant',
         messages: [{ 
           role: 'user', 
-          content: `Crie uma lista de exercícios baseada nesta descrição: "${descricao}"
+          content: `Baseado nesta descrição: "${descricao}"
+
+Crie um array JSON com as questões. Formato EXATO:
+[
+  {"tipo":"multipla","pergunta":"Qual a capital do Brasil?","alternativas":["Rio de Janeiro","São Paulo","Brasília","Salvador"]},
+  {"tipo":"dissertativa","pergunta":"Explique o processo de fotossíntese."},
+  {"tipo":"vf","pergunta":"A Terra é plana."}
+]
 
 REGRAS:
-1. NÃO escreva introdução, apenas as questões
-2. Formate EXATAMENTE assim:
-   • Múltipla escolha: "1. Pergunta?\na) Opção A\nb) Opção B\nc) Opção C\nd) Opção D"
-   • Dissertativa: "2. Pergunta?"
-   • Verdadeiro/Falso: "3. Afirmação\n( ) Verdadeiro ( ) Falso"
-3. Uma linha em branco entre cada questão
-4. Não use markdown, apenas texto puro`
+- "tipo" só pode ser: "multipla", "dissertativa" ou "vf"
+- "multipla" precisa de 4 alternativas
+- "dissertativa" e "vf" não precisam de alternativas
+- Retorne APENAS o JSON, sem texto adicional`
         }],
         max_tokens: 4000,
-        temperature: 0.8
+        temperature: 0.7
       })
     });
     
     const data = await response.json();
-    const questoes = data.choices?.[0]?.message?.content || '';
+    let txt = data.choices?.[0]?.message?.content || '';
     
-    // Monta o HTML do PDF
-    const html = `
-      <div style="text-align:center;margin-bottom:20px">
-        <h2 style="margin:0 0 5px;font-size:16px">${titulo || 'Lista de Exercícios'}</h2>
-        ${professor ? '<p style="color:#555;margin:2px 0;font-size:11px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
-        <p style="color:#888;font-size:10px;margin:2px 0">${new Date().toLocaleDateString('pt-BR')}</p>
-        <div style="margin-top:8px;font-size:10px;color:#555">
-          👤 Aluno: ___________________ &nbsp;&nbsp; 📅 ____/____/____ &nbsp;&nbsp; ⭐ Nota: _____
-        </div>
+    // Extrai o JSON
+    let jsonStr = txt.substring(txt.indexOf('['), txt.lastIndexOf(']') + 1);
+    let questoes = JSON.parse(jsonStr);
+    
+    // Monta HTML limpo
+    let html = `
+      <div style="text-align:center;margin-bottom:25px">
+        <h2 style="margin:0 0 8px;font-size:18px">${titulo || 'Lista de Exercícios'}</h2>
+        ${professor ? '<p style="color:#555;margin:3px 0;font-size:12px"><b>Professor(a):</b> ' + professor + '</p>' : ''}
+        <p style="color:#888;font-size:10px;margin:3px 0">${new Date().toLocaleDateString('pt-BR')}</p>
+        <p style="font-size:10px;color:#555;margin-top:8px">
+          Aluno: ___________________ &nbsp;&nbsp; Data: ____/____/____ &nbsp;&nbsp; Nota: _____
+        </p>
       </div>
       <hr style="border:1px solid #ddd;margin-bottom:20px">
-      <div style="line-height:2;font-size:13px">
-        ${questoes.split('\n\n').map(bloco => {
-          const linhas = bloco.trim().split('\n');
-          if (linhas.length > 1 && /^[a-dA-D]\)/.test(linhas[1])) {
-            // Múltipla escolha
-            return '<div style="margin-bottom:18px"><strong>' + linhas[0] + '</strong><div style="margin-left:18px;margin-top:4px">' + 
-              linhas.slice(1).map(l => '<div style="margin:2px 0">' + l + '</div>').join('') + '</div></div>';
-          } else if (bloco.includes('Verdadeiro') || bloco.includes('Falso')) {
-            // V/F
-            return '<div style="margin-bottom:18px">' + bloco.split('\n').map(l => '<div style="margin:2px 0">' + l + '</div>').join('') + '</div>';
-          } else if (linhas.length === 1) {
-            // Dissertativa
-            return '<div style="margin-bottom:18px"><strong>' + linhas[0] + '</strong><div style="margin-top:4px;border-bottom:1px dotted #ddd;height:40px"></div></div>';
-          }
-          return '<div style="margin-bottom:15px">' + bloco + '</div>';
-        }).join('')}
-      </div>
+    `;
+    
+    questoes.forEach((q, i) => {
+      if (q.tipo === 'multipla') {
+        html += `
+          <div style="margin-bottom:20px">
+            <strong>${i+1}.</strong> ${q.pergunta}
+            <div style="margin-left:22px;margin-top:5px">
+              ${q.alternativas.map((a, j) => `<div style="margin:3px 0">${String.fromCharCode(97+j)}) ${a}</div>`).join('')}
+            </div>
+          </div>`;
+      } else if (q.tipo === 'vf') {
+        html += `
+          <div style="margin-bottom:20px">
+            <strong>${i+1}.</strong> ${q.pergunta}
+            <div style="margin-left:22px;margin-top:5px">( ) Verdadeiro &nbsp;&nbsp; ( ) Falso</div>
+          </div>`;
+      } else {
+        html += `
+          <div style="margin-bottom:20px">
+            <strong>${i+1}.</strong> ${q.pergunta}
+            <div style="border-bottom:1px dotted #ddd;height:50px;margin-top:5px"></div>
+          </div>`;
+      }
+    });
+    
+    html += `
       <div style="text-align:center;margin-top:40px;font-size:10px;color:#ccc">
         Feito com ❤️ por Sexta-Feira Studies
       </div>
@@ -1827,11 +1845,11 @@ REGRAS:
     $('pdf-preview-content').innerHTML = html;
     $('pdf-preview-card').scrollIntoView({ behavior: 'smooth' });
     
-    toast('✅ Tarefa gerada! Visualize e baixe.', 'success');
+    toast('✅ ' + questoes.length + ' questões geradas!', 'success');
     
   } catch(e) {
     console.error('Erro:', e);
-    toast('❌ Erro ao gerar. Tente novamente.', 'error');
+    toast('❌ Erro. Tente descrever de forma mais simples.', 'error');
   }
 }
 
