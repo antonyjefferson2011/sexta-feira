@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#10B981" />
@@ -900,7 +903,8 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
       <h3 style="margin:0">📄 Pré-visualização</h3>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="imprimirTarefa()">🖨️ Imprimir / Salvar PDF</button>
+        <button class="btn btn-primary btn-sm" onclick="baixarPDF()">📥 Baixar PDF</button>
+<button class="btn btn-outline btn-sm" onclick="imprimirTarefa()">🖨️ Imprimir</button>
         <button class="btn btn-outline btn-sm" onclick="$('pdf-preview-card').style.display='none'">✕ Fechar</button>
       </div>
     </div>
