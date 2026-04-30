@@ -1812,41 +1812,47 @@ function imprimirTarefa() {
   
   const titulo = $('tarefa-titulo')?.value || 'Tarefa';
   
-  const novaJanela = window.open('', '_blank', 'width=900,height=700');
-  novaJanela.document.write(`
+  // Cria o HTML completo do PDF
+  const htmlCompleto = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${titulo} - Sexta-Feira Studies</title>
+      <meta charset="UTF-8" />
       <style>
-        @media print { 
-          body { margin: 0; padding: 10px; }
-          @page { margin: 1.5cm; size: A4; }
-        }
+        @page { margin: 1.5cm; size: A4; }
         body { 
           font-family: Arial, sans-serif; 
-          padding: 25px; 
+          padding: 20px; 
           color: #1A1A2E;
+          line-height: 1.8;
         }
-        .no-print { display: none; }
       </style>
     </head>
-    <body>
-      <div class="no-print" style="background:#10B981;color:white;padding:12px 20px;margin-bottom:20px;border-radius:8px;text-align:center;position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:999;font-family:Arial,sans-serif">
-        <button onclick="window.print()" style="background:white;color:#10B981;border:none;padding:10px 25px;border-radius:6px;font-weight:700;cursor:pointer;font-size:14px;margin-right:10px">🖨️ Imprimir / Salvar PDF</button>
-        <button onclick="window.close()" style="background:transparent;color:white;border:1px solid white;padding:10px 25px;border-radius:6px;cursor:pointer;font-size:14px">✕ Fechar</button>
-      </div>
-      <div style="margin-top:60px">${conteudo}</div>
-      <script>
-        // Já abre a janela de impressão automaticamente
-        setTimeout(function() {
-          window.print();
-        }, 1000);
-      <\/script>
-    </body>
+    <body>${conteudo}</body>
     </html>
-  `);
+  `;
+  
+  // Cria o download
+  const blob = new Blob([htmlCompleto], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = titulo.replace(/[^a-zA-Z0-9]/g, '_') + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  // Também abre para imprimir
+  const novaJanela = window.open('', '_blank', 'width=900,height=700');
+  novaJanela.document.write(htmlCompleto);
   novaJanela.document.close();
+  
+  setTimeout(() => {
+    novaJanela.print();
+  }, 800);
+  
+  toast('✅ PDF baixado e janela de impressão aberta!', 'success');
 }
 
 function fecharPreview() {
