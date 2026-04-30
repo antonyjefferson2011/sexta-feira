@@ -1740,147 +1740,116 @@ function abrirVideo(url) {
   document.addEventListener('keydown', escHandler);
 }
 
-// ========== CRIADOR DE TAREFAS PDF ==========
+// ========== GERADOR DE TAREFAS COM IA ==========
+
 function loadTarefas() {
-  // Carrega os dados do usuário nos campos
   if (S.ud) {
     const profInput = $('tarefa-professor');
-    if (profInput && !profInput.value) profInput.value = S.ud.fullname || '';
+    if (profInput && !profInput.value) {
+      profInput.value = S.ud.fullname || S.ud.username || '';
+    }
   }
 }
 
-function gerarPDF() {
-  const titulo = $('tarefa-titulo')?.value || 'Lista de Exercícios';
-  const disciplina = $('tarefa-disciplina')?.value || '';
-  const professor = $('tarefa-professor')?.value || '';
-  const alinhamento = $('tarefa-alinhamento')?.value || 'centro';
-  const conteudo = $('tarefa-conteudo')?.value || '';
+async function gerarTarefaCompleta() {
+  const descricao = $('tarefa-descricao')?.value?.trim();
+  const titulo = $('tarefa-titulo')?.value?.trim();
+  const professor = $('tarefa-professor')?.value?.trim();
   
-  if (!conteudo.trim()) {
-    toast('Digite as questões ou use "Gerar com IA"!', 'error');
+  if (!descricao) {
+    toast('Descreva a tarefa que você quer!', 'error');
     return;
   }
   
-  // Separa questões por linha em branco OU por linha normal
-  const questoes = conteudo
-    .split(/\n\n+/) // Separa por linha em branco primeiro
-    .flatMap(bloco => bloco.split('\n')) // Depois por linha
-    .map(q => q.replace(/^\d+[\.\)\-]\s*/, '').trim())
-    .filter(q => q.length > 3);
+  toast('🤖 Gerando tarefa completa...', 'info');
   
-  if (questoes.length === 0) {
-    toast('Nenhuma questão encontrada!', 'error');
-    return;
-  }
-  
-  const alinhamentoCSS = alinhamento === 'esquerda' ? 'left' : alinhamento === 'direita' ? 'right' : 'center';
-  
-  const html = `
-    <div style="text-align:${alinhamentoCSS};margin-bottom:20px">
-      <h2 style="margin:0 0 5px;font-size:18px">${titulo}</h2>
-      ${disciplina ? '<p style="color:#555;margin:2px 0;font-size:12px"><strong>Disciplina:</strong> ' + disciplina + '</p>' : ''}
-      ${professor ? '<p style="color:#555;margin:2px 0;font-size:12px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
-      <p style="color:#888;font-size:10px;margin:2px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
-      <div style="margin-top:8px;font-size:11px;color:#555">
-        👤 Aluno: ___________________ &nbsp;&nbsp; 📅 ____/____/____ &nbsp;&nbsp; ⭐ Nota: _____
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ 
+          role: 'user', 
+          content: `Crie uma lista de exercícios baseada nesta descrição: "${descricao}"
+
+REGRAS:
+1. NÃO escreva introdução, apenas as questões
+2. Formate EXATAMENTE assim:
+   • Múltipla escolha: "1. Pergunta?\na) Opção A\nb) Opção B\nc) Opção C\nd) Opção D"
+   • Dissertativa: "2. Pergunta?"
+   • Verdadeiro/Falso: "3. Afirmação\n( ) Verdadeiro ( ) Falso"
+3. Uma linha em branco entre cada questão
+4. Não use markdown, apenas texto puro`
+        }],
+        max_tokens: 4000,
+        temperature: 0.8
+      })
+    });
+    
+    const data = await response.json();
+    const questoes = data.choices?.[0]?.message?.content || '';
+    
+    // Monta o HTML do PDF
+    const html = `
+      <div style="text-align:center;margin-bottom:20px">
+        <h2 style="margin:0 0 5px;font-size:16px">${titulo || 'Lista de Exercícios'}</h2>
+        ${professor ? '<p style="color:#555;margin:2px 0;font-size:11px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
+        <p style="color:#888;font-size:10px;margin:2px 0">${new Date().toLocaleDateString('pt-BR')}</p>
+        <div style="margin-top:8px;font-size:10px;color:#555">
+          👤 Aluno: ___________________ &nbsp;&nbsp; 📅 ____/____/____ &nbsp;&nbsp; ⭐ Nota: _____
+        </div>
       </div>
-    </div>
+      <hr style="border:1px solid #ddd;margin-bottom:20px">
+      <div style="line-height:2;font-size:13px">
+        ${questoes.split('\n\n').map(bloco => {
+          const linhas = bloco.trim().split('\n');
+          if (linhas.length > 1 && /^[a-dA-D]\)/.test(linhas[1])) {
+            // Múltipla escolha
+            return '<div style="margin-bottom:18px"><strong>' + linhas[0] + '</strong><div style="margin-left:18px;margin-top:4px">' + 
+              linhas.slice(1).map(l => '<div style="margin:2px 0">' + l + '</div>').join('') + '</div></div>';
+          } else if (bloco.includes('Verdadeiro') || bloco.includes('Falso')) {
+            // V/F
+            return '<div style="margin-bottom:18px">' + bloco.split('\n').map(l => '<div style="margin:2px 0">' + l + '</div>').join('') + '</div>';
+          } else if (linhas.length === 1) {
+            // Dissertativa
+            return '<div style="margin-bottom:18px"><strong>' + linhas[0] + '</strong><div style="margin-top:4px;border-bottom:1px dotted #ddd;height:40px"></div></div>';
+          }
+          return '<div style="margin-bottom:15px">' + bloco + '</div>';
+        }).join('')}
+      </div>
+      <div style="text-align:center;margin-top:40px;font-size:10px;color:#ccc">
+        Feito com ❤️ por Sexta-Feira Studies
+      </div>
+    `;
     
-    <hr style="border:1px solid #ddd;margin-bottom:20px">
+    $('pdf-preview-card').style.display = 'block';
+    $('pdf-preview-content').innerHTML = html;
+    $('pdf-preview-card').scrollIntoView({ behavior: 'smooth' });
     
-    <div style="line-height:2;font-size:13px">
-      ${questoes.map((q, i) => {
-        // Verifica se a questão tem alternativas (contém letras seguidas de )
-        const temAlternativas = /[a-dA-D]\s*[\)\.\-]/.test(q);
-        
-        if (temAlternativas) {
-          // Divide a pergunta das alternativas
-          const partes = q.split(/[a-dA-D]\s*[\)\.\-]/);
-          const pergunta = partes[0].trim();
-          const alternativas = q.match(/[a-dA-D]\s*[\)\.\-]\s*[^a-dA-D]+/g) || [];
-          
-          return `
-            <div style="margin-bottom:20px;page-break-inside:avoid">
-              <strong>${i+1}.</strong> ${pergunta}
-              <div style="margin-left:20px;margin-top:5px">
-                ${alternativas.map((alt, j) => `
-                  <div style="margin:3px 0">
-                    ${String.fromCharCode(97 + j)}) ${alt.replace(/^[a-dA-D]\s*[\)\.\-]\s*/, '').trim()}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        } else {
-          return `
-            <div style="margin-bottom:15px;page-break-inside:avoid">
-              <strong>${i+1}.</strong> ${q}
-              <div style="margin-top:3px;color:#bbb;font-size:11px">R: _____________________________________________</div>
-            </div>
-          `;
-        }
-      }).join('')}
-    </div>
+    toast('✅ Tarefa gerada! Visualize e baixe.', 'success');
     
-    <div style="text-align:center;margin-top:40px;font-size:10px;color:#ccc">
-      Feito com ❤️ por Sexta-Feira Studies
-    </div>
-  `;
-  
-  $('pdf-preview-card').style.display = 'block';
-  $('pdf-preview-content').innerHTML = html;
-  $('pdf-preview-card').scrollIntoView({ behavior: 'smooth' });
-  
-  toast('✅ Visualização pronta!', 'success');
+  } catch(e) {
+    console.error('Erro:', e);
+    toast('❌ Erro ao gerar. Tente novamente.', 'error');
+  }
 }
 
-function imprimirTarefa() {
+function baixarTarefa() {
   const conteudo = $('pdf-preview-content')?.innerHTML;
   if (!conteudo) return;
   
   const titulo = $('tarefa-titulo')?.value || 'Tarefa';
   
-  // Cria o HTML completo do PDF
-  const htmlCompleto = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8" />
-      <style>
-        @page { margin: 1.5cm; size: A4; }
-        body { 
-          font-family: Arial, sans-serif; 
-          padding: 20px; 
-          color: #1A1A2E;
-          line-height: 1.8;
-        }
-      </style>
-    </head>
-    <body>${conteudo}</body>
-    </html>
-  `;
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@media print{@page{margin:1.5cm;size:A4}}body{font-family:Arial,sans-serif;padding:30px;line-height:1.8;font-size:13px}</style></head><body>' + conteudo + '</body></html>';
   
-  // Cria o download
-  const blob = new Blob([htmlCompleto], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const a = document.createElement('a');
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = titulo.replace(/[^a-zA-Z0-9]/g, '_') + '.html';
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
   
-  // Também abre para imprimir
-  const novaJanela = window.open('', '_blank', 'width=900,height=700');
-  novaJanela.document.write(htmlCompleto);
-  novaJanela.document.close();
-  
-  setTimeout(() => {
-    novaJanela.print();
-  }, 800);
-  
-  toast('✅ PDF baixado e janela de impressão aberta!', 'success');
+  toast('📥 Baixado! Abra o arquivo e pressione Ctrl+P para salvar como PDF.', 'success');
 }
 
 function fecharPreview() {
