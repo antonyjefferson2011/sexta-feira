@@ -1238,7 +1238,7 @@ async function sendJarvisImage() {
   reader.onload = async function(e) {
     const imgId = 'img-' + Date.now();
     div.innerHTML += '<div style="text-align:right;margin-bottom:10px" id="' + imgId + '"><img src="' + e.target.result + '" style="max-width:200px;max-height:200px;border-radius:12px;margin-bottom:5px" />' + 
-      (mensagemTexto ? '<div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">' + esc(mensagemTexto) + '</div>' : '<div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">📷 Analise esta imagem</div>') +
+      (mensagemTexto ? '<div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">' + esc(mensagemTexto) + '</div>' : '') +
       '</div>';
     div.scrollTop = div.scrollHeight;
     
@@ -1247,20 +1247,19 @@ async function sendJarvisImage() {
     div.scrollTop = div.scrollHeight;
     
     try {
-      const base64 = e.target.result; // Já está em base64
-      const promptTexto = mensagemTexto || 'Descreva esta imagem em português. Se for uma questão de estudo, explique a resposta detalhadamente.';
+      const promptTexto = mensagemTexto || 'Analise esta imagem e descreva o que você vê. Se for uma questão de estudo, explique a resposta em português.';
       
-      // Usa o modelo correto da Groq com visão
+      // Usa o modelo Llama 3.2 11B (suporta imagens via URL base64)
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
         body: JSON.stringify({
-          model: 'llama-3.2-90b-vision-preview', // Modelo com visão
+          model: 'llama-3.2-11b-vision-preview', // Modelo de visão atualizado
           messages: [{
             role: 'user',
             content: [
               { type: 'text', text: promptTexto },
-              { type: 'image_url', image_url: { url: base64 } }
+              { type: 'image_url', image_url: { url: e.target.result } }
             ]
           }],
           max_tokens: 800
@@ -1268,9 +1267,30 @@ async function sendJarvisImage() {
       });
       
       if (!response.ok) {
-        const errText = await response.text();
-        console.error('Erro API:', response.status, errText);
-        throw new Error('Status ' + response.status);
+        const errData = await response.json();
+        console.error('Erro API:', response.status, JSON.stringify(errData).substring(0,200));
+        
+        // Se o modelo de visão falhar, usa o modelo de texto normal como fallback
+        const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
+        
+        const fallbackPrompt = 'O usuário enviou uma imagem e disse: "' + promptTexto + '". Responda em português: explique que você não consegue ver imagens no momento, mas peça para o usuário descrever o que está na imagem que você ajuda com o conteúdo. Seja amigável.';
+        
+        const fbResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+          body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [{ role: 'user', content: fallbackPrompt }],
+            max_tokens: 200
+          })
+        });
+        
+        const fbData = await fbResponse.json();
+        const fbReply = fbData.choices?.[0]?.message?.content || '📷 Não consegui ver a imagem agora. Me descreva o que está nela que eu ajudo! 😊';
+        
+        div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(fbReply) + '</span></div></div>';
+        div.scrollTop = div.scrollHeight;
+        return;
       }
       
       const data = await response.json();
@@ -1287,24 +1307,7 @@ async function sendJarvisImage() {
     } catch(e) {
       console.error('Jarvis image error:', e);
       const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-      
-      // Tenta com modelo de texto normal (fallback)
-      try {
-        const fallbackResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
-          body: JSON.stringify({
-            model: 'llama-3.1-8b-instant',
-            messages: [{ role: 'user', content: 'O usuário enviou uma imagem. Responda: "📷 Não consegui processar a imagem agora, mas se você descrever o que está nela, posso ajudar! 😊"' }],
-            max_tokens: 100
-          })
-        });
-        const fbData = await fallbackResponse.json();
-        const fbReply = fbData.choices?.[0]?.message?.content || '📷 Não consegui processar a imagem. Tente descrever o que você vê! 😊';
-        div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(fbReply) + '</span></div></div>';
-      } catch(e2) {
-        div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>📷 Boa imagem! Me descreva o que você vê que eu ajudo! 😊</span></div></div>';
-      }
+      div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>📷 Me descreva o que está na imagem que eu te ajudo! 😊</span></div></div>';
     }
     div.scrollTop = div.scrollHeight;
   };
