@@ -42,7 +42,7 @@ const IMG = {
 // ========== API KEYS ==========
 const IMGBB_API_KEY = '86427cccd2a94fb42a0754ffd7f19e79';
 const GROQ_API_KEY = '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';
-
+const GEMINI_API_KEY = 'AIzaSyAXrp3JQp0gEzm8S17pQtZrasMvZ4SadWY';
 // ========== STATE ==========
 const S = {
   user: null, ud: null, mid: null, aid: null,
