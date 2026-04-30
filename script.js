@@ -1933,5 +1933,54 @@ if (window.location.hash) {
     navigateOriginal(screen);
   }, 500);
 }
+// ========== IMPRIMIR TAREFA ==========
+function imprimirTarefa() {
+  const conteudo = $('pdf-preview-content')?.innerHTML;
+  if (!conteudo) return;
+  
+  const titulo = $('tarefa-titulo')?.value || 'Tarefa';
+  
+  const novaJanela = window.open('', '_blank', 'width=900,height=700');
+  novaJanela.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${titulo} - Sexta-Feira Studies</title>
+      <style>
+        @media print { 
+          body { margin: 0; padding: 15px; }
+          @page { margin: 1cm; }
+        }
+        body { 
+          font-family: Arial, sans-serif; 
+          padding: 30px; 
+          color: #1A1A2E;
+        }
+      </style>
+    </head>
+    <body>${conteudo}</body>
+    </html>
+  `);
+  novaJanela.document.close();
+  
+  setTimeout(() => {
+    novaJanela.print();
+  }, 800);
+}
+
+// ========== LOAD TAREFAS ==========
+function loadTarefas() {
+  if (S.ud) {
+    const profInput = $('tarefa-professor');
+    if (profInput && !profInput.value) {
+      profInput.value = S.ud.fullname || S.ud.username || '';
+    }
+  }
+}
+
+// ========== FECHAR PREVIEW ==========
+function fecharPreview() {
+  $('pdf-preview-card').style.display = 'none';
+}
 
 console.log('✅ Sexta-Feira Studies v3.0 PRONTO!');
