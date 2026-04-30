@@ -1180,34 +1180,42 @@ async function sendJarvisMsg() {
   div.innerHTML += '<div id="' + typingId + '" style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:center;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px"><img src="' + IMG.jarvis + '" style="width:24px;height:24px;border-radius:50%" /> 🧠 Pensando...</div></div>';
   div.scrollTop = div.scrollHeight;
   
+  // Adiciona ao histórico
   jarvisHistory.push({ role: 'user', content: msg });
-  if (jarvisHistory.length > 20) jarvisHistory.shift();
+  if (jarvisHistory.length > 20) jarvisHistory = jarvisHistory.slice(-20);
   
   try {
+    const messages = [
+      { role: 'system', content: 'Você é o Jarvis, um assistente de estudos brasileiro. Responda sempre em português com emojis. Seja amigável e paciente. Lembre-se do contexto da conversa.' },
+      ...jarvisHistory // Inclui todo o histórico
+    ];
+    
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
       body: JSON.stringify({
         model: 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: 'Você é o Jarvis, um assistente de estudos brasileiro. Responda sempre em português com emojis. Seja amigável e paciente.' },
-          { role: 'user', content: msg }
-        ],
+        messages: messages,
         max_tokens: 500,
         temperature: 0.7
       })
     });
+    
+    if (!response.ok) throw new Error('Status ' + response.status);
     
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content || 'Desculpe, não entendi! 😅';
     
     const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
     div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
+    
     jarvisHistory.push({ role: 'assistant', content: reply });
+    if (jarvisHistory.length > 20) jarvisHistory = jarvisHistory.slice(-20);
+    
   } catch(e) {
     console.error('Jarvis error:', e);
     const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-    const respostas = ['🧠 Hmm, interessante! Me conte mais sobre isso! 🤔','🧠 Ótima pergunta! Continue explorando a plataforma! 📚','🧠 Você está no caminho certo! Bons estudos! 💪⭐','🧠 Que tal jogar um quiz sobre esse assunto? 🎮','🧠 Adorei sua curiosidade! O conhecimento é infinito! 🌟'];
+    const respostas = ['🧠 Hmm, interessante! Me conte mais! 🤔','🧠 Ótima pergunta! Continue explorando! 📚','🧠 Você está no caminho certo! 💪⭐'];
     div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + respostas[Math.floor(Math.random()*respostas.length)] + '</span></div></div>';
   }
   div.scrollTop = div.scrollHeight;
@@ -1220,10 +1228,18 @@ async function sendJarvisImage() {
   const div = $('jarvis-messages'); if (!div) return;
   const file = input.files[0];
   
+  // Pega o texto do input também (se tiver)
+  const textoInput = $('jarvis-input');
+  const mensagemTexto = textoInput ? textoInput.value.trim() : '';
+  if (textoInput) textoInput.value = '';
+  
   // Mostra a imagem
   const reader = new FileReader();
   reader.onload = async function(e) {
-    div.innerHTML += '<div style="text-align:right;margin-bottom:10px"><img src="' + e.target.result + '" style="max-width:200px;border-radius:12px;margin-bottom:5px" /><div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">📷 Analise esta imagem</div></div>';
+    const imgId = 'img-' + Date.now();
+    div.innerHTML += '<div style="text-align:right;margin-bottom:10px" id="' + imgId + '"><img src="' + e.target.result + '" style="max-width:200px;max-height:200px;border-radius:12px;margin-bottom:5px" />' + 
+      (mensagemTexto ? '<div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">' + esc(mensagemTexto) + '</div>' : '<div style="display:inline-block;max-width:80%;padding:10px 14px;border-radius:18px;background:#10B981;color:white;font-size:14px">📷 Analise esta imagem</div>') +
+      '</div>';
     div.scrollTop = div.scrollHeight;
     
     const typingId = 'jtyping-' + Date.now();
@@ -1231,32 +1247,64 @@ async function sendJarvisImage() {
     div.scrollTop = div.scrollHeight;
     
     try {
-      const base64 = await fileToBase64(file);
+      const base64 = e.target.result; // Já está em base64
+      const promptTexto = mensagemTexto || 'Descreva esta imagem em português. Se for uma questão de estudo, explique a resposta detalhadamente.';
+      
+      // Usa o modelo correto da Groq com visão
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
         body: JSON.stringify({
-          model: 'llama-3.2-11b-vision-preview',
+          model: 'llama-3.2-90b-vision-preview', // Modelo com visão
           messages: [{
             role: 'user',
             content: [
-              { type: 'text', text: 'Descreva esta imagem em português. Se for uma questão de estudo, explique a resposta.' },
+              { type: 'text', text: promptTexto },
               { type: 'image_url', image_url: { url: base64 } }
             ]
           }],
-          max_tokens: 500
+          max_tokens: 800
         })
       });
+      
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Erro API:', response.status, errText);
+        throw new Error('Status ' + response.status);
+      }
       
       const data = await response.json();
       const reply = data.choices?.[0]?.message?.content || 'Não consegui analisar a imagem 😅';
       
       const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
       div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(reply) + '</span></div></div>';
+      
+      // Salva no histórico
+      jarvisHistory.push({ role: 'user', content: '[Imagem] ' + promptTexto });
+      jarvisHistory.push({ role: 'assistant', content: reply });
+      if (jarvisHistory.length > 20) jarvisHistory = jarvisHistory.slice(-20);
+      
     } catch(e) {
       console.error('Jarvis image error:', e);
       const typingEl = document.getElementById(typingId); if (typingEl) typingEl.remove();
-      div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>📷 Boa imagem! Mas não consegui processar agora. Tente perguntar em texto! 😊</span></div></div>';
+      
+      // Tenta com modelo de texto normal (fallback)
+      try {
+        const fallbackResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+          body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [{ role: 'user', content: 'O usuário enviou uma imagem. Responda: "📷 Não consegui processar a imagem agora, mas se você descrever o que está nela, posso ajudar! 😊"' }],
+            max_tokens: 100
+          })
+        });
+        const fbData = await fallbackResponse.json();
+        const fbReply = fbData.choices?.[0]?.message?.content || '📷 Não consegui processar a imagem. Tente descrever o que você vê! 😊';
+        div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>' + esc(fbReply) + '</span></div></div>';
+      } catch(e2) {
+        div.innerHTML += '<div style="text-align:left;margin-bottom:10px"><div style="display:inline-flex;align-items:flex-start;gap:8px;max-width:80%;padding:10px 14px;border-radius:18px;background:var(--input-bg);color:var(--text);font-size:14px;line-height:1.5"><img src="' + IMG.jarvis + '" style="width:28px;height:28px;border-radius:50%;margin-top:2px" /><span>📷 Boa imagem! Me descreva o que você vê que eu ajudo! 😊</span></div></div>';
+      }
     }
     div.scrollTop = div.scrollHeight;
   };
