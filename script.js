@@ -1780,7 +1780,7 @@ function gerarPDF() {
       ${professor ? '<p style="color:#555;margin:2px 0;font-size:13px"><strong>Professor(a):</strong> ' + professor + '</p>' : ''}
       <p style="color:#888;font-size:11px;margin:2px 0">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
       <div style="margin-top:10px;font-size:12px;color:#555">
-        👤 Aluno: ___________________ &nbsp;&nbsp; 📅 Data: ____/____/____ &nbsp;&nbsp; ⭐ Nota: _____
+        👤 Aluno: ___________________ &nbsp;&nbsp; 📅 Data: ____/____/____ &nbsp;&nbsp; 
       </div>
     </div>
     
