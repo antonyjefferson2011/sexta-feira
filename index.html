@@ -851,51 +851,24 @@
    <!-- CRIADOR DE TAREFAS -->
 <div id="screen-tarefas" class="screen">
   <div style="text-align:center;margin-bottom:20px">
-    <h2 style="font-size:22px">📄 Criador de Tarefas</h2>
-    <p style="color:var(--text3);font-size:13px">Crie listas de exercícios profissionais</p>
-  </div>
-  
-  <div class="card" style="background:linear-gradient(135deg,#D1FAE5,#DBEAFE);margin-bottom:15px">
-    <p style="font-size:13px;margin:0;text-align:center">
-      💡 <strong>2 formas de criar:</strong><br>
-      <span style="font-size:11px;color:var(--text2)">
-        📝 <strong>Manual:</strong> Cole suas questões no campo abaixo<br>
-        🤖 <strong>IA:</strong> Preencha Disciplina/Título e clique em "Gerar com IA"
-      </span>
-    </p>
+    <h2 style="font-size:22px">📄 Criador de Tarefas com IA</h2>
+    <p style="color:var(--text3);font-size:13px">Descreva como quer a tarefa e a IA gera tudo</p>
   </div>
   
   <div class="card">
-    <input type="text" id="tarefa-titulo" class="input-field" placeholder="📝 Título da tarefa" />
+    <label style="font-size:12px;color:var(--text2);margin-bottom:5px;display:block">
+      📝 Descreva a tarefa que você quer:
+    </label>
+    <textarea id="tarefa-descricao" class="input-field" rows="4" placeholder="Exemplos:&#10;&#10;• Quero 20 questões de múltipla escolha sobre Revolução Francesa&#10;• Crie 10 questões dissertativas e 5 de verdadeiro ou falso sobre Matemática Básica&#10;• 30 questões: 15 de alternativas (A B C D) e 15 para completar, tema: Geografia do Brasil"></textarea>
     
     <div class="grid-2">
-      <input type="text" id="tarefa-disciplina" class="input-field" placeholder="📚 Disciplina (ex: Matemática)" />
+      <input type="text" id="tarefa-titulo" class="input-field" placeholder="📝 Título da tarefa" />
       <input type="text" id="tarefa-professor" class="input-field" placeholder="👤 Nome do professor" />
     </div>
     
-    <div class="grid-2">
-      <select id="tarefa-alinhamento" class="input-field">
-        <option value="esquerda">📌 Texto à esquerda</option>
-        <option value="centro" selected>📌 Centralizado</option>
-        <option value="direita">📌 Texto à direita</option>
-      </select>
-      <select id="tarefa-qtd" class="input-field">
-        <option value="5">5 questões</option>
-        <option value="10" selected>10 questões</option>
-        <option value="15">15 questões</option>
-        <option value="20">20 questões</option>
-      </select>
-    </div>
-    
-    <label style="font-size:11px;color:var(--text3);margin-bottom:5px;display:block">
-      📝 Questões (uma por linha - não numere, o sistema numera automaticamente)
-    </label>
-    <textarea id="tarefa-conteudo" class="input-field" rows="10" placeholder="Exemplo:&#10;Qual a capital do Brasil?&#10;Resolva a equação 2x + 5 = 15&#10;Explique o processo de fotossíntese&#10;&#10;🤖 Se usar IA, deixe este campo em branco"></textarea>
-    
-    <div style="display:flex;gap:10px;margin-top:10px">
-      <button class="btn btn-primary btn-full" onclick="gerarPDF()">📥 Visualizar e Imprimir</button>
-      <button class="btn btn-accent btn-full" onclick="gerarQuestoesIA()">🤖 Gerar com IA</button>
-    </div>
+    <button class="btn btn-accent btn-full" onclick="gerarTarefaCompleta()" style="margin-top:10px">
+      🤖 Gerar Tarefa Completa com IA
+    </button>
   </div>
   
   <!-- Preview -->
@@ -903,9 +876,8 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
       <h3 style="margin:0">📄 Pré-visualização</h3>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="baixarPDF()">📥 Baixar PDF</button>
-<button class="btn btn-outline btn-sm" onclick="imprimirTarefa()">🖨️ Imprimir</button>
-        <button class="btn btn-outline btn-sm" onclick="$('pdf-preview-card').style.display='none'">✕ Fechar</button>
+        <button class="btn btn-primary btn-sm" onclick="baixarTarefa()">📥 Baixar</button>
+        <button class="btn btn-outline btn-sm" onclick="$('pdf-preview-card').style.display='none'">✕</button>
       </div>
     </div>
     <div id="pdf-preview-content" style="background:white;color:#1A1A2E;padding:25px;border-radius:10px;line-height:1.8;font-size:14px;font-family:Arial,sans-serif"></div>
