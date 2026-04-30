@@ -1026,11 +1026,31 @@
       <div id="ranking-list" style="margin-top:15px"></div>
     </div>
 
-    <!-- DESAFIOS -->
-    <div id="screen-desafios" class="screen">
-      <h2 style="font-size:22px;margin-bottom:15px">⚔️ Desafios</h2>
-      <div id="desafios-list"></div>
+   <!-- TAB DESAFIOS -->
+<div id="tab-desafios" class="tab-content">
+  <div class="card">
+    <h3>⚔️ Criar Novo Desafio</h3>
+    <input type="text" id="des-titulo" placeholder="Título do desafio (ex: Quiz de Conhecimentos Gerais)" />
+    <textarea id="des-descricao" rows="2" placeholder="Descrição (ex: Teste seus conhecimentos gerais!)"></textarea>
+    <div class="grid-3">
+      <input type="number" id="des-premio" placeholder="Prêmio em pontos" />
+      <input type="date" id="des-data" />
+      <select id="des-qtd-questoes" class="input-field">
+        <option value="5">5 questões</option>
+        <option value="10" selected>10 questões</option>
+        <option value="15">15 questões</option>
+        <option value="20">20 questões</option>
+      </select>
     </div>
+    <label style="font-size:12px;color:var(--text2);margin-top:10px;display:block">📝 Questões do desafio:</label>
+    <textarea id="des-questoes" rows="10" placeholder="Cole as questões aqui (uma por linha)&#10;&#10;Formato para múltipla escolha:&#10;Qual a capital do Brasil?&#10;a) Rio de Janeiro&#10;b) São Paulo&#10;c) Brasília&#10;d) Salvador&#10;RESPOSTA: c&#10;&#10;Formato dissertativa:&#10;Explique a fotossíntese.&#10;RESPOSTA: Processo pelo qual as plantas...&#10;&#10;Separe cada questão com uma linha em branco"></textarea>
+    <button class="btn btn-dourado" onclick="criarDesafio()" style="margin-top:10px;width:100%">🏆 Criar Desafio</button>
+  </div>
+  <div class="card">
+    <h3>📋 Desafios Criados</h3>
+    <div id="desafios-admin-list"></div>
+  </div>
+</div>
 
     <!-- FEED -->
     <div id="screen-descobrir" class="screen">
