@@ -8,15 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div id="app">
-        <!-- Login Screen -->
+        <!-- Tela de Login -->
         <div id="login-screen" class="screen active">
             <div class="login-container">
                 <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="login-logo">
@@ -36,6 +31,9 @@
                     <button onclick="loginComGoogle()" class="btn-google">
                         <i class="fab fa-google"></i> Entrar com Google
                     </button>
+                    <p class="link-text">
+                        <a href="#" onclick="recuperarSenha()">Esqueceu a senha?</a>
+                    </p>
                     <p class="link-text">Não tem conta? <a href="#" onclick="mostrarRegistro()">Registre-se</a></p>
                 </div>
 
@@ -62,7 +60,7 @@
             </div>
         </div>
 
-        <!-- Main App -->
+        <!-- App Principal -->
         <div id="main-app" class="screen">
             <!-- Sidebar Desktop -->
             <nav id="sidebar">
@@ -70,31 +68,64 @@
                     <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="sidebar-logo">
                     <h3>SFS</h3>
                 </div>
+                <div class="sidebar-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="global-search" placeholder="Buscar..." oninput="buscaGlobal()">
+                </div>
                 <ul class="nav-menu">
-                    <li onclick="navegar('home')" data-page="home"><i class="fas fa-home"></i> <span>Home</span></li>
+                    <li onclick="navegar('home')" data-page="home" class="active"><i class="fas fa-home"></i> <span>Home</span></li>
                     <li onclick="navegar('materias')" data-page="materias"><i class="fas fa-book"></i> <span>Disciplinas</span></li>
                     <li onclick="navegar('ranking')" data-page="ranking"><i class="fas fa-trophy"></i> <span>Ranking</span></li>
                     <li onclick="navegar('desafios')" data-page="desafios"><i class="fas fa-flag"></i> <span>Desafios</span></li>
                     <li onclick="navegar('jarvis')" data-page="jarvis"><i class="fas fa-robot"></i> <span>Jarvis IA</span></li>
                     <li onclick="navegar('feed')" data-page="feed"><i class="fas fa-newspaper"></i> <span>Feed</span></li>
+                    <li onclick="navegar('chat')" data-page="chat"><i class="fas fa-comments"></i> <span>Chat</span></li>
+                    <li onclick="navegar('grupos')" data-page="grupos"><i class="fas fa-users"></i> <span>Grupos</span></li>
+                    <li onclick="navegar('flashcards')" data-page="flashcards"><i class="fas fa-clone"></i> <span>Flashcards</span></li>
+                    <li onclick="navegar('pomodoro')" data-page="pomodoro"><i class="fas fa-clock"></i> <span>Pomodoro</span></li>
                     <li onclick="navegar('perfil')" data-page="perfil"><i class="fas fa-user-circle"></i> <span>Perfil</span></li>
-                    <li onclick="navegar('sobre')" data-page="sobre"><i class="fas fa-info-circle"></i> <span>Sobre Nós</span></li>
+                    <li onclick="navegar('sobre')" data-page="sobre"><i class="fas fa-info-circle"></i> <span>Sobre</span></li>
                     <li onclick="navegar('updates')" data-page="updates"><i class="fas fa-sync-alt"></i> <span>Updates</span></li>
+                    <li onclick="navegar('calendario')" data-page="calendario"><i class="fas fa-calendar"></i> <span>Calendário</span></li>
                 </ul>
-                <div class="sidebar-footer" id="sidebar-footer"></div>
+                <div class="sidebar-footer">
+                    Feito com ❤️ por<br>Sexta-Feira Studies
+                </div>
             </nav>
 
-            <!-- Main Content -->
+            <!-- Conteúdo Principal -->
             <main id="main-content">
+                <header id="top-bar">
+                    <div class="top-bar-left">
+                        <button id="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <h2 id="page-title">Home</h2>
+                    </div>
+                    <div class="top-bar-right">
+                        <button class="icon-btn" onclick="navegar('notificacoes')" id="notif-btn">
+                            <i class="fas fa-bell"></i>
+                            <span id="notif-badge" class="badge-notif" style="display:none;">0</span>
+                        </button>
+                        <button class="icon-btn" onclick="toggleModoFoco()" id="foco-btn">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </div>
+                </header>
+                
                 <div id="page-home" class="page active"></div>
                 <div id="page-materias" class="page"></div>
                 <div id="page-ranking" class="page"></div>
                 <div id="page-desafios" class="page"></div>
                 <div id="page-jarvis" class="page"></div>
                 <div id="page-feed" class="page"></div>
+                <div id="page-chat" class="page"></div>
+                <div id="page-grupos" class="page"></div>
+                <div id="page-flashcards" class="page"></div>
+                <div id="page-pomodoro" class="page"></div>
                 <div id="page-perfil" class="page"></div>
                 <div id="page-sobre" class="page"></div>
                 <div id="page-updates" class="page"></div>
+                <div id="page-calendario" class="page"></div>
+                <div id="page-notificacoes" class="page"></div>
                 <div id="page-materia-detalhes" class="page"></div>
                 <div id="page-aula" class="page"></div>
                 <div id="page-quiz" class="page"></div>
@@ -103,17 +134,22 @@
 
         <!-- Bottom Nav Mobile -->
         <nav id="bottom-nav">
-            <button onclick="navegar('home')" data-page="home"><i class="fas fa-home"></i></button>
+            <button onclick="navegar('home')" data-page="home" class="active"><i class="fas fa-home"></i></button>
             <button onclick="navegar('materias')" data-page="materias"><i class="fas fa-book"></i></button>
-            <button onclick="navegar('ranking')" data-page="ranking"><i class="fas fa-trophy"></i></button>
             <button onclick="navegar('feed')" data-page="feed"><i class="fas fa-newspaper"></i></button>
+            <button onclick="navegar('ranking')" data-page="ranking"><i class="fas fa-trophy"></i></button>
             <button onclick="navegar('perfil')" data-page="perfil"><i class="fas fa-user-circle"></i></button>
         </nav>
 
-        <!-- Toast Container -->
+        <!-- Container de Toast -->
         <div id="toast-container"></div>
     </div>
 
-    <script src="script.js?v=2"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>
