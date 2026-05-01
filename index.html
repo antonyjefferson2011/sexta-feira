@@ -1,360 +1,119 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sexta-Feira Studies</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sexta-Feira Studies</title>
+    <link rel="icon" href="https://i.ibb.co/4nVtZpr2/Gemini-Generated-Image-vrc8thvrc8thvrc8.png">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header id="header" class="hidden">
-      <div class="header-content">
-        <div class="logo">
-          <span class="logo-icon">📚</span>
-          <span class="logo-text">Sexta-Feira Studies</span>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="login-logo">
+                <h2>Sexta-Feira Studies</h2>
+                <p class="login-subtitle">A rede social de estudos gamificada</p>
+                
+                <div id="login-form">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="login-username" placeholder="@usuario" autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="login-password" placeholder="Senha">
+                    </div>
+                    <button onclick="fazerLogin()" class="btn-primary">Entrar</button>
+                    <button onclick="loginComGoogle()" class="btn-google">
+                        <i class="fab fa-google"></i> Entrar com Google
+                    </button>
+                    <p class="link-text">Não tem conta? <a href="#" onclick="mostrarRegistro()">Registre-se</a></p>
+                </div>
+
+                <div id="registro-form" style="display:none;">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="reg-fullname" placeholder="Nome completo">
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-at"></i>
+                        <input type="text" id="reg-username" placeholder="@usuario">
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="reg-email" placeholder="Email">
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="reg-password" placeholder="Senha">
+                    </div>
+                    <button onclick="registrar()" class="btn-primary">Registrar</button>
+                    <p class="link-text">Já tem conta? <a href="#" onclick="mostrarLogin()">Faça login</a></p>
+                </div>
+            </div>
         </div>
-        <nav class="nav-desktop">
-          <button class="nav-btn" data-screen="home">Home</button>
-          <button class="nav-btn" data-screen="disciplinas">Disciplinas</button>
-          <button class="nav-btn" data-screen="ranking">Ranking</button>
-          <button class="nav-btn" data-screen="desafios">Desafios</button>
-          <button class="nav-btn" data-screen="jarvis">Jarvis IA</button>
+
+        <!-- Main App -->
+        <div id="main-app" class="screen">
+            <!-- Sidebar Desktop -->
+            <nav id="sidebar">
+                <div class="sidebar-header">
+                    <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="sidebar-logo">
+                    <h3>SFS</h3>
+                </div>
+                <ul class="nav-menu">
+                    <li onclick="navegar('home')" data-page="home"><i class="fas fa-home"></i> <span>Home</span></li>
+                    <li onclick="navegar('materias')" data-page="materias"><i class="fas fa-book"></i> <span>Disciplinas</span></li>
+                    <li onclick="navegar('ranking')" data-page="ranking"><i class="fas fa-trophy"></i> <span>Ranking</span></li>
+                    <li onclick="navegar('desafios')" data-page="desafios"><i class="fas fa-flag"></i> <span>Desafios</span></li>
+                    <li onclick="navegar('jarvis')" data-page="jarvis"><i class="fas fa-robot"></i> <span>Jarvis IA</span></li>
+                    <li onclick="navegar('feed')" data-page="feed"><i class="fas fa-newspaper"></i> <span>Feed</span></li>
+                    <li onclick="navegar('perfil')" data-page="perfil"><i class="fas fa-user-circle"></i> <span>Perfil</span></li>
+                    <li onclick="navegar('sobre')" data-page="sobre"><i class="fas fa-info-circle"></i> <span>Sobre Nós</span></li>
+                    <li onclick="navegar('updates')" data-page="updates"><i class="fas fa-sync-alt"></i> <span>Updates</span></li>
+                </ul>
+                <div class="sidebar-footer" id="sidebar-footer"></div>
+            </nav>
+
+            <!-- Main Content -->
+            <main id="main-content">
+                <div id="page-home" class="page active"></div>
+                <div id="page-materias" class="page"></div>
+                <div id="page-ranking" class="page"></div>
+                <div id="page-desafios" class="page"></div>
+                <div id="page-jarvis" class="page"></div>
+                <div id="page-feed" class="page"></div>
+                <div id="page-perfil" class="page"></div>
+                <div id="page-sobre" class="page"></div>
+                <div id="page-updates" class="page"></div>
+                <div id="page-materia-detalhes" class="page"></div>
+                <div id="page-aula" class="page"></div>
+                <div id="page-quiz" class="page"></div>
+            </main>
+        </div>
+
+        <!-- Bottom Nav Mobile -->
+        <nav id="bottom-nav">
+            <button onclick="navegar('home')" data-page="home"><i class="fas fa-home"></i></button>
+            <button onclick="navegar('materias')" data-page="materias"><i class="fas fa-book"></i></button>
+            <button onclick="navegar('ranking')" data-page="ranking"><i class="fas fa-trophy"></i></button>
+            <button onclick="navegar('feed')" data-page="feed"><i class="fas fa-newspaper"></i></button>
+            <button onclick="navegar('perfil')" data-page="perfil"><i class="fas fa-user-circle"></i></button>
         </nav>
-        <div class="header-right">
-          <div class="user-points" id="userPoints">0 XP</div>
-          <button class="profile-btn" data-screen="perfil" id="profileBtn">
-            <img src="" alt="Avatar" id="headerAvatar">
-          </button>
-          <button class="logout-btn" id="logoutBtn">Sair</button>
-        </div>
-        <button class="menu-mobile-btn" id="menuMobileBtn">☰</button>
-      </div>
-      <nav class="nav-mobile hidden" id="navMobile">
-        <button class="nav-btn" data-screen="home">Home</button>
-        <button class="nav-btn" data-screen="disciplinas">Disciplinas</button>
-        <button class="nav-btn" data-screen="ranking">Ranking</button>
-        <button class="nav-btn" data-screen="desafios">Desafios</button>
-        <button class="nav-btn" data-screen="jarvis">Jarvis IA</button>
-        <button class="nav-btn" data-screen="perfil">Perfil</button>
-      </nav>
-    </header>
 
-    <!-- Auth Screen -->
-    <div id="authScreen" class="screen">
-      <div class="auth-container">
-        <div class="auth-header">
-          <span class="auth-logo">📚</span>
-          <h1>Sexta-Feira Studies</h1>
-          <p>Sua rede social de estudos</p>
-        </div>
-        <div class="auth-tabs">
-          <button class="auth-tab active" data-tab="login">Entrar</button>
-          <button class="auth-tab" data-tab="register">Criar Conta</button>
-        </div>
-        <!-- Login Form -->
-        <form id="loginForm" class="auth-form">
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="loginEmail" required placeholder="seu@email.com">
-          </div>
-          <div class="form-group">
-            <label>Senha</label>
-            <input type="password" id="loginPassword" required placeholder="Sua senha">
-          </div>
-          <button type="submit" class="btn-primary">Entrar</button>
-          <div class="divider"><span>ou</span></div>
-          <button type="button" class="btn-google" id="googleLoginBtn">
-            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            Continuar com Google
-          </button>
-        </form>
-        <!-- Register Form -->
-        <form id="registerForm" class="auth-form hidden">
-          <div class="form-group">
-            <label>Nome Completo</label>
-            <input type="text" id="registerName" required placeholder="Seu nome">
-          </div>
-          <div class="form-group">
-            <label>@usuário</label>
-            <input type="text" id="registerUsername" required placeholder="seunome" pattern="[a-z0-9_]+">
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="registerEmail" required placeholder="seu@email.com">
-          </div>
-          <div class="form-group">
-            <label>Senha</label>
-            <input type="password" id="registerPassword" required placeholder="Mínimo 6 caracteres" minlength="6">
-          </div>
-          <button type="submit" class="btn-primary">Criar Conta</button>
-        </form>
-      </div>
+        <!-- Toast Container -->
+        <div id="toast-container"></div>
     </div>
 
-    <!-- Home Screen -->
-    <div id="homeScreen" class="screen hidden">
-      <div class="container">
-        <div class="welcome-section">
-          <h1>Olá, <span id="welcomeName">Estudante</span>!</h1>
-          <p>Continue sua jornada de aprendizado</p>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">🏆</div>
-            <div class="stat-info">
-              <span class="stat-value" id="statPoints">0</span>
-              <span class="stat-label">Pontos XP</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-info">
-              <span class="stat-value" id="statStreak">0</span>
-              <span class="stat-label">Dias seguidos</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📖</div>
-            <div class="stat-info">
-              <span class="stat-value" id="statLessons">0</span>
-              <span class="stat-label">Aulas concluídas</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">✅</div>
-            <div class="stat-info">
-              <span class="stat-value" id="statQuizzes">0</span>
-              <span class="stat-label">Quizzes feitos</span>
-            </div>
-          </div>
-        </div>
-        <div class="quick-actions">
-          <h2>Acesso Rápido</h2>
-          <div class="actions-grid">
-            <button class="action-card" data-screen="disciplinas">
-              <span class="action-icon">📚</span>
-              <span>Disciplinas</span>
-            </button>
-            <button class="action-card" data-screen="desafios">
-              <span class="action-icon">🎯</span>
-              <span>Desafios</span>
-            </button>
-            <button class="action-card" data-screen="ranking">
-              <span class="action-icon">🏅</span>
-              <span>Ranking</span>
-            </button>
-            <button class="action-card" data-screen="jarvis">
-              <span class="action-icon">🤖</span>
-              <span>Jarvis IA</span>
-            </button>
-          </div>
-        </div>
-        <div class="daily-challenge">
-          <h2>Desafio do Dia</h2>
-          <div class="challenge-card" id="dailyChallengeCard">
-            <div class="challenge-info">
-              <h3 id="dailyChallengeTitle">Carregando...</h3>
-              <p id="dailyChallengeDesc">Aguarde</p>
-            </div>
-            <div class="challenge-reward">
-              <span id="dailyChallengeReward">+0 XP</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Disciplinas Screen -->
-    <div id="disciplinasScreen" class="screen hidden">
-      <div class="container">
-        <h1>Disciplinas</h1>
-        <div class="search-box">
-          <input type="text" id="searchDisciplinas" placeholder="Buscar disciplina...">
-        </div>
-        <div class="disciplinas-grid" id="disciplinasGrid">
-          <!-- Gerado via JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Aulas Screen -->
-    <div id="aulasScreen" class="screen hidden">
-      <div class="container">
-        <button class="back-btn" data-screen="disciplinas">← Voltar</button>
-        <h1 id="aulasTitle">Aulas</h1>
-        <div class="aulas-list" id="aulasList">
-          <!-- Gerado via JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Aula Detail Screen -->
-    <div id="aulaDetailScreen" class="screen hidden">
-      <div class="container">
-        <button class="back-btn" id="backToAulas">← Voltar</button>
-        <article class="aula-content">
-          <h1 id="aulaDetailTitle">Título da Aula</h1>
-          <div class="aula-meta">
-            <span class="difficulty" id="aulaDetailDifficulty">Fácil</span>
-            <span class="duration" id="aulaDetailDuration">10 min</span>
-          </div>
-          <div class="aula-body" id="aulaDetailBody">
-            <!-- Conteúdo da aula -->
-          </div>
-          <button class="btn-primary btn-quiz" id="startQuizBtn">Fazer Quiz</button>
-        </article>
-      </div>
-    </div>
-
-    <!-- Quiz Screen -->
-    <div id="quizScreen" class="screen hidden">
-      <div class="container">
-        <div class="quiz-header">
-          <div class="quiz-progress">
-            <span id="quizProgress">Questão 1 de 5</span>
-            <div class="progress-bar">
-              <div class="progress-fill" id="quizProgressBar"></div>
-            </div>
-          </div>
-          <div class="quiz-timer" id="quizTimer">30s</div>
-        </div>
-        <div class="quiz-content">
-          <h2 class="quiz-question" id="quizQuestion">Carregando pergunta...</h2>
-          <div class="quiz-options" id="quizOptions">
-            <!-- Gerado via JS -->
-          </div>
-        </div>
-        <div class="quiz-result hidden" id="quizResult">
-          <div class="result-icon" id="resultIcon">🎉</div>
-          <h2 id="resultTitle">Parabéns!</h2>
-          <p id="resultMessage">Você acertou X de Y questões</p>
-          <div class="result-xp" id="resultXP">+0 XP</div>
-          <button class="btn-primary" id="backToDisciplinas">Continuar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ranking Screen -->
-    <div id="rankingScreen" class="screen hidden">
-      <div class="container">
-        <h1>Ranking</h1>
-        <div class="ranking-tabs">
-          <button class="ranking-tab active" data-period="global">Global</button>
-          <button class="ranking-tab" data-period="semanal">Semanal</button>
-        </div>
-        <div class="ranking-list" id="rankingList">
-          <!-- Gerado via JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Desafios Screen -->
-    <div id="desafiosScreen" class="screen hidden">
-      <div class="container">
-        <h1>Desafios</h1>
-        <div class="desafios-tabs">
-          <button class="desafio-tab active" data-type="diarios">Diários</button>
-          <button class="desafio-tab" data-type="semanais">Semanais</button>
-        </div>
-        <div class="desafios-list" id="desafiosList">
-          <!-- Gerado via JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Jarvis Screen -->
-    <div id="jarvisScreen" class="screen hidden">
-      <div class="container jarvis-container">
-        <div class="jarvis-header">
-          <div class="jarvis-avatar">🤖</div>
-          <div class="jarvis-info">
-            <h1>Jarvis IA</h1>
-            <p>Seu assistente de estudos</p>
-          </div>
-        </div>
-        <div class="chat-messages" id="chatMessages">
-          <div class="message bot">
-            <div class="message-content">
-              Olá! Eu sou o Jarvis, seu assistente de estudos. Como posso ajudar você hoje?
-            </div>
-          </div>
-        </div>
-        <form class="chat-input" id="chatForm">
-          <input type="text" id="chatInput" placeholder="Digite sua dúvida..." autocomplete="off">
-          <button type="submit" class="send-btn">Enviar</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Perfil Screen -->
-    <div id="perfilScreen" class="screen hidden">
-      <div class="container">
-        <div class="perfil-header">
-          <div class="perfil-avatar-container">
-            <img src="" alt="Avatar" id="perfilAvatar" class="perfil-avatar">
-          </div>
-          <h1 id="perfilName">Nome do Usuário</h1>
-          <p id="perfilUsername">@usuario</p>
-        </div>
-        <div class="perfil-stats">
-          <div class="perfil-stat">
-            <span class="perfil-stat-value" id="perfilPoints">0</span>
-            <span class="perfil-stat-label">Pontos XP</span>
-          </div>
-          <div class="perfil-stat">
-            <span class="perfil-stat-value" id="perfilRank">#0</span>
-            <span class="perfil-stat-label">Posição</span>
-          </div>
-          <div class="perfil-stat">
-            <span class="perfil-stat-value" id="perfilStreak">0</span>
-            <span class="perfil-stat-label">Dias seguidos</span>
-          </div>
-        </div>
-        <div class="perfil-section">
-          <h2>Conquistas</h2>
-          <div class="conquistas-grid" id="conquistasGrid">
-            <!-- Gerado via JS -->
-          </div>
-        </div>
-        <button class="btn-admin hidden" id="adminBtn" data-screen="painel">Painel Admin</button>
-      </div>
-    </div>
-
-    <!-- Admin Panel -->
-    <div id="painelScreen" class="screen hidden">
-      <div class="container">
-        <button class="back-btn" data-screen="perfil">← Voltar</button>
-        <h1>Painel Administrativo</h1>
-        <div class="admin-tabs">
-          <button class="admin-tab active" data-admin="usuarios">Usuários</button>
-          <button class="admin-tab" data-admin="disciplinas">Disciplinas</button>
-          <button class="admin-tab" data-admin="quizzes">Quizzes</button>
-          <button class="admin-tab" data-admin="desafios">Desafios</button>
-        </div>
-        <div class="admin-content" id="adminContent">
-          <!-- Gerado via JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Toast -->
-    <div id="toast" class="toast hidden">
-      <span id="toastMessage"></span>
-    </div>
-
-    <!-- Loading -->
-    <div id="loading" class="loading hidden">
-      <div class="spinner"></div>
-    </div>
-  </div>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-  <script src="script.js"></script>
+    <script src="script.js?v=2"></script>
 </body>
 </html>
