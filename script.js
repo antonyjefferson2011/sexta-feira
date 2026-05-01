@@ -392,4 +392,14 @@ async function jarvisAsk() {
   div.scrollTop = div.scrollHeight;
 }
 
+// Força carregar home ao iniciar
+setTimeout(() => {
+  if (S.user && S.ud) {
+    navigate('home');
+    console.log('✅ Home carregada');
+  } else {
+    console.log('⏳ Aguardando auth...');
+  }
+}, 2000);
+
 console.log('✅ Sexta-Feira Studies PRONTO!');
