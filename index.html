@@ -1,21 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#10B981" />
   <meta name="color-scheme" content="light dark" />
   <title>Sexta-Feira Studies</title>
-  
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="https://i.ibb.co/4nVtZpr2/Gemini-Generated-Image-vrc8thvrc8thvrc8.png" />
-  
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #F8FAFC;
@@ -26,21 +18,17 @@
       --border: #E2E8F0;
       --primary: #10B981;
       --primary-light: #D1FAE5;
-      --primary-dark: #059669;
       --accent: #3B82F6;
       --accent-light: #DBEAFE;
       --hover: #F1F5F9;
       --input-bg: #F8FAFC;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
       --gold: #F59E0B;
       --gold-light: #FEF3C7;
       --danger: #EF4444;
       --danger-light: #FEE2E2;
-      --success: #10B981;
-      --success-light: #D1FAE5;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0F172A;
@@ -51,40 +39,29 @@
         --border: #334155;
         --input-bg: #1E293B;
         --hover: #1E293B;
-        --shadow: 0 1px 3px rgba(0,0,0,0.3);
-        --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
         --primary-light: #064E3B;
         --accent-light: #1E3A5F;
         --gold-light: #78350F;
         --danger-light: #7F1D1D;
-        --success-light: #064E3B;
       }
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Sora', 'Nunito', sans-serif;
+      font-family: 'Sora', sans-serif;
       background: var(--bg);
       color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-      transition: background 0.3s, color 0.3s;
-      line-height: 1.6;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
-
     #auth-screen {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #10B981 0%, #3B82F6 50%, #10B981 100%);
+      background: linear-gradient(135deg, #10B981, #3B82F6);
       padding: 20px;
     }
-
     .auth-card {
       background: var(--card);
       border-radius: 20px;
@@ -94,52 +71,23 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
       text-align: center;
     }
-
-    .auth-logo {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 20px;
-    }
-
-    .auth-logo img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .auth-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: #10B981;
-      margin-bottom: 5px;
-    }
-
-    .auth-subtitle {
-      font-size: 13px;
-      color: var(--text3);
-      margin-bottom: 25px;
-    }
-
+    .auth-card img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 20px; }
+    .auth-card h1 { color: #10B981; font-size: 22px; margin-bottom: 5px; }
+    .auth-card p { color: var(--text3); font-size: 13px; margin-bottom: 25px; }
     .input-field {
       width: 100%;
-      padding: 12px 14px;
+      padding: 12px;
       border: 2px solid var(--border);
       border-radius: 12px;
       font-size: 14px;
       font-family: 'Sora', sans-serif;
-      outline: none;
       background: var(--input-bg);
       color: var(--text);
       margin-bottom: 10px;
-      transition: border 0.2s, box-shadow 0.2s;
+      outline: none;
+      transition: border 0.2s;
     }
-
-    .input-field:focus {
-      border-color: #10B981;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-
+    .input-field:focus { border-color: #10B981; }
     .btn {
       display: inline-flex;
       align-items: center;
@@ -150,679 +98,160 @@
       border-radius: 12px;
       font-size: 14px;
       font-weight: 700;
-      font-family: 'Sora', sans-serif;
       cursor: pointer;
       transition: all 0.2s;
-      text-decoration: none;
-      box-shadow: var(--shadow);
     }
-
-    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
-    .btn:active { transform: translateY(0); }
+    .btn:hover { transform: translateY(-1px); }
     .btn-primary { background: #10B981; color: white; }
-    .btn-primary:hover { background: #059669; }
     .btn-accent { background: #3B82F6; color: white; }
-    .btn-accent:hover { background: #2563EB; }
-    .btn-outline { background: var(--card); color: var(--text); border: 2px solid var(--border); box-shadow: none; }
-    .btn-outline:hover { border-color: #10B981; color: #10B981; }
+    .btn-outline { background: var(--card); color: var(--text); border: 2px solid var(--border); }
     .btn-danger { background: #EF4444; color: white; }
-    .btn-danger:hover { background: #DC2626; }
-    .btn-google { background: white; color: #333; border: 2px solid #E2E8F0; font-weight: 600; }
-    .btn-google:hover { background: #F8FAFC; }
     .btn-full { width: 100%; }
     .btn-sm { padding: 8px 14px; font-size: 12px; }
-
+    
     .topbar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 56px;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      z-index: 100;
-      box-shadow: var(--shadow);
+      position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; z-index: 100;
     }
-
-    .topbar-brand {
-      font-weight: 800;
-      font-size: 18px;
-      color: #10B981;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .topbar-brand img {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .notif-btn {
-      position: relative;
-      font-size: 20px;
-      color: var(--text2);
-      cursor: pointer;
-      padding: 4px;
-      background: none;
-      border: none;
-    }
-
-    .notif-badge {
-      position: absolute;
-      top: -2px; right: -2px;
-      background: #EF4444;
-      color: white;
-      font-size: 9px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-    }
-
+    .topbar-brand { font-weight: 800; font-size: 18px; color: #10B981; display: flex; align-items: center; gap: 8px; }
+    .topbar-brand img { width: 28px; height: 28px; border-radius: 50%; }
     .topbar-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: #10B981;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      overflow: hidden;
+      width: 34px; height: 34px; border-radius: 50%; background: #10B981;
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; cursor: pointer; overflow: hidden;
     }
-
-    .topbar-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
     .sidebar {
-      position: fixed;
-      top: 56px; left: 0; bottom: 0;
-      width: 260px;
-      background: var(--card);
-      border-right: 1px solid var(--border);
-      z-index: 99;
-      transform: translateX(-100%);
-      transition: transform 0.3s;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
+      position: fixed; top: 56px; left: 0; bottom: 0; width: 260px;
+      background: var(--card); border-right: 1px solid var(--border);
+      z-index: 99; transform: translateX(-100%); transition: transform 0.3s;
+      display: flex; flex-direction: column; overflow-y: auto;
     }
-
     .sidebar.open { transform: translateX(0); }
-
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 98;
-    }
-
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 98; }
     .sidebar-overlay.show { display: block; }
-
-    .sidebar-user {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 20px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sidebar-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: #10B981;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      font-weight: 700;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .sidebar-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .sidebar-name { font-weight: 700; font-size: 15px; }
-    .sidebar-pts { font-size: 12px; color: #10B981; font-weight: 600; }
-
-    .nav-link {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text2);
-      transition: background 0.15s, color 0.15s;
-      text-decoration: none;
-    }
-
+    .sidebar-user { display: flex; align-items: center; gap: 12px; padding: 20px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-avatar { width: 44px; height: 44px; border-radius: 50%; background: #10B981; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; overflow: hidden; flex-shrink: 0; }
+    .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .nav-link { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text2); }
     .nav-link:hover { background: var(--hover); color: #10B981; }
-
-    .main-content {
-      padding: 72px 16px 100px;
-      max-width: 700px;
-      margin: 0 auto;
-      min-height: 100vh;
-      flex: 1;
-    }
-
+    
+    .main-content { padding: 72px 16px 100px; max-width: 700px; margin: 0 auto; flex: 1; }
     .screen { display: none; }
     .screen.active { display: block; animation: fadeIn 0.2s ease; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: var(--shadow);
-      margin-bottom: 10px;
-      border: 1px solid var(--border);
-      transition: box-shadow 0.2s;
-    }
-
-    .card:hover { box-shadow: var(--shadow-md); }
-    .card-clickable { cursor: pointer; }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .stat-card:hover { border-color: #10B981; transform: translateY(-2px); }
-
-    .stat-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-
-    .stat-icon.green { background: var(--primary-light); color: #10B981; }
-    .stat-icon.blue { background: var(--accent-light); color: #3B82F6; }
-    .stat-icon.gold { background: var(--gold-light); color: #F59E0B; }
-
-    .stat-val { font-size: 22px; font-weight: 800; color: var(--text); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .card { background: var(--card); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 10px; border: 1px solid var(--border); }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: var(--card); border-radius: 16px; padding: 14px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); cursor: pointer; }
+    .stat-val { font-size: 22px; font-weight: 800; }
     .stat-label { font-size: 11px; color: var(--text3); font-weight: 600; }
-
-    .progress-track {
-      height: 8px;
-      background: var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #10B981, #3B82F6);
-      border-radius: 10px;
-      transition: width 0.5s ease;
-    }
-
+    .progress-track { height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #10B981, #3B82F6); border-radius: 10px; transition: width 0.5s; }
+    .section-title { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin: 15px 0 10px; }
+    
     .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: 64px;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      z-index: 100;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+      position: fixed; bottom: 0; left: 0; right: 0; height: 64px;
+      background: var(--card); border-top: 1px solid var(--border);
+      display: flex; align-items: center; z-index: 100;
     }
-
-    .bnav-item {
-      flex: 1;
-      text-align: center;
-      cursor: pointer;
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text3);
-      padding: 6px 0;
-      transition: color 0.2s;
-    }
-
-    .bnav-item:hover { color: #10B981; }
-
-    .chat-container {
-      display: flex;
-      gap: 10px;
-      height: calc(100vh - 200px);
-      min-height: 400px;
-    }
-
-    .chat-sidebar {
-      width: 180px;
-      background: var(--card);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-
-    .chat-main {
-      flex: 1;
-      background: var(--card);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-    }
-
-    .chat-input-row {
-      display: flex;
-      gap: 8px;
-      padding: 10px;
-      border-top: 1px solid var(--border);
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
-
+    .bnav-item { flex: 1; text-align: center; cursor: pointer; font-size: 10px; font-weight: 600; color: var(--text3); padding: 6px 0; }
+    
+    .modal { display: none; position: fixed; inset: 0; z-index: 200; align-items: center; justify-content: center; }
     .modal.show { display: flex; }
-
-    .modal-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-    }
-
-    .modal-box {
-      position: relative;
-      background: var(--card);
-      border-radius: 20px;
-      padding: 24px;
-      width: 90%;
-      max-width: 450px;
-      max-height: 85vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    }
-
-    .toast-container {
-      position: fixed;
-      bottom: 80px;
-      right: 16px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .toast {
-      background: var(--card);
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      animation: slideIn 0.3s ease;
-      border-left: 3px solid #10B981;
-      max-width: 300px;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    .image-preview {
-      max-width: 200px;
-      max-height: 200px;
-      border-radius: 12px;
-      margin-top: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .image-preview.large {
-      max-width: 100%;
-      max-height: 300px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 15px;
-      font-size: 10px;
-      font-weight: 700;
-      margin: 2px;
-      background: var(--hover);
-      color: var(--text2);
-    }
-
-    .badge.gold { background: var(--gold-light); color: #92400E; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+    .modal-box { position: relative; background: var(--card); border-radius: 20px; padding: 24px; width: 90%; max-width: 450px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    
+    .toast-container { position: fixed; bottom: 80px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: var(--card); padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; border-left: 3px solid #10B981; max-width: 300px; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 15px; font-size: 10px; font-weight: 700; }
     .badge.green { background: var(--primary-light); color: #059669; }
-    .badge.blue { background: var(--accent-light); color: #1D4ED8; }
-
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 15px 0 10px;
-    }
-
-    .selo-img {
-      width: 18px;
-      height: 18px;
-      vertical-align: middle;
-      margin-left: 2px;
-    }
-
-    .view-count {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--text3);
-    }
-
-    .view-count img {
-      width: 14px;
-      height: 14px;
-      opacity: 0.5;
-    }
-
-    /* FOOTER */
+    
     .site-footer {
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      padding: 30px 20px;
-      text-align: center;
-      margin-top: auto;
+      background: var(--card); border-top: 1px solid var(--border);
+      padding: 30px 20px; text-align: center; margin-top: auto;
     }
-
-    .site-footer .footer-logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-bottom: 10px;
-    }
-
-    .site-footer .footer-text {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 5px;
-    }
-
-    .site-footer .footer-subtext {
-      font-size: 12px;
-      color: var(--text3);
-      margin-bottom: 15px;
-    }
-
-    .site-footer .footer-links {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 15px;
-    }
-
-    .site-footer .footer-links a {
-      color: var(--text2);
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .site-footer .footer-links a:hover {
-      color: #10B981;
-    }
-
-    .site-footer .footer-copy {
-      font-size: 11px;
-      color: var(--text3);
-    }
-
-   /* VIDEO PLAYER - TELA CHEIA */
-.video-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 300;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.video-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #000;
-  z-index: 299;
-}
-
-.video-container video,
-.video-container iframe {
-  width: 100%;
-  height: 100%;
-  max-width: 1200px;
-  max-height: 90vh;
-  object-fit: contain;
-}
-
-.video-close-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 301;
-  background: rgba(239, 68, 68, 0.9);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.video-close-btn:hover {
-  background: #EF4444;
-  transform: scale(1.1);
-}
-
-/* Cards de vídeo */
-.video-card {
-  background: var(--card);
-  border-radius: 12px;
-  padding: 15px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.video-card:hover {
-  border-color: #10B981;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.video-card-thumb {
-  width: 100%;
-  aspect-ratio: 16/9;
-  background: #000;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-  overflow: hidden;
-  position: relative;
-}
-
-.video-card-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.video-play-icon {
-  position: absolute;
-  width: 60px;
-  height: 60px;
-  background: rgba(16, 185, 129, 0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30px;
-  color: white;
-  transition: transform 0.2s;
-}
-
-.video-card:hover .video-play-icon {
-  transform: scale(1.1);
-}
-    /* RESPONSIVE */
+    .site-footer img { width: 40px; height: 40px; border-radius: 50%; margin-bottom: 10px; }
+    .site-footer .footer-text { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+    .site-footer .footer-copy { font-size: 11px; color: var(--text3); }
+    .site-footer a { color: var(--text2); text-decoration: none; font-size: 12px; font-weight: 600; margin: 0 8px; cursor: pointer; }
+    .site-footer a:hover { color: #10B981; }
+    
+    .selo-img { width: 16px; height: 16px; vertical-align: middle; margin-left: 3px; }
+    .view-count { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text3); }
+    
+    .video-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--border); cursor: pointer; }
+    .video-card:hover { border-color: #10B981; }
+    .video-card-thumb { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; position: relative; overflow: hidden; }
+    .video-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .video-play-icon { position: absolute; width: 60px; height: 60px; background: rgba(16,185,129,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+    .video-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 299; }
+    .video-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 300; display: flex; align-items: center; justify-content: center; }
+    .video-container iframe { width: 100%; height: 100%; max-width: 1200px; max-height: 90vh; }
+    .video-close-btn { position: fixed; top: 20px; right: 20px; z-index: 301; background: #EF4444; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; }
+    
     @media (min-width: 768px) {
       .sidebar { transform: translateX(0); }
       .sidebar-overlay { display: none !important; }
       .main-content { padding-left: 280px; }
       .bottom-nav { display: none; }
-      .chat-sidebar { width: 220px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ==================== AUTH SCREEN ==================== -->
+<!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="auth-logo">
-      <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Sexta-Feira Studies" />
-    </div>
-    <h1 class="auth-title">Sexta-Feira Studies</h1>
-    <p class="auth-subtitle">Aprenda. Conecte. Evolua.</p>
-
+    <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
+    <h1>Sexta-Feira Studies</h1>
+    <p>Aprenda. Conecte. Evolua.</p>
     <div style="display:flex;gap:4px;background:var(--input-bg);border-radius:12px;padding:3px;margin-bottom:18px">
-      <button class="btn btn-primary" id="tab-login" onclick="switchAuthTab('login')" style="flex:1;box-shadow:none;">🔑 Entrar</button>
-      <button class="btn btn-outline" id="tab-register" onclick="switchAuthTab('register')" style="flex:1;box-shadow:none;">✨ Cadastrar</button>
+      <button class="btn btn-primary" id="tab-login" onclick="switchAuthTab('login')" style="flex:1">🔑 Entrar</button>
+      <button class="btn btn-outline" id="tab-register" onclick="switchAuthTab('register')" style="flex:1">✨ Cadastrar</button>
     </div>
-
     <div id="login-form">
-      <input type="text" id="login-username" class="input-field" placeholder="@usuario" autocomplete="username" />
-      <input type="password" id="login-password" class="input-field" placeholder="Senha" autocomplete="current-password" />
-      <div id="login-error" style="display:none;background:var(--danger-light);color:#DC2626;padding:10px;border-radius:10px;margin-bottom:10px;font-size:12px"></div>
+      <input type="text" id="login-username" class="input-field" placeholder="@usuario" />
+      <input type="password" id="login-password" class="input-field" placeholder="Senha" />
+      <div id="login-error" style="display:none;background:#FEE2E2;color:#DC2626;padding:10px;border-radius:10px;margin-bottom:10px;font-size:12px"></div>
       <button class="btn btn-primary btn-full" onclick="handleLogin()">🚀 Entrar</button>
       <div style="text-align:center;margin:12px 0;color:var(--text3);font-size:12px">ou</div>
-      <button class="btn btn-google btn-full" onclick="loginWithGoogle()">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Entrar com Google
-      </button>
+      <button class="btn btn-outline btn-full" onclick="loginWithGoogle()">📧 Entrar com Google</button>
       <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3)">Novo? <a href="#" onclick="switchAuthTab('register')" style="color:#10B981;font-weight:700">Criar conta →</a></p>
     </div>
-
     <div id="register-form" style="display:none">
-      <input type="text" id="reg-fullname" class="input-field" placeholder="Nome completo" autocomplete="name" />
-      <input type="text" id="reg-username" class="input-field" placeholder="@usuario (ex: joao_silva)" style="text-transform:lowercase" autocomplete="off" />
-      <input type="email" id="reg-email" class="input-field" placeholder="E-mail" autocomplete="email" />
-      <input type="password" id="reg-password" class="input-field" placeholder="Senha (mín. 6)" autocomplete="new-password" />
-      <input type="password" id="reg-confirm" class="input-field" placeholder="Confirmar senha" autocomplete="new-password" />
-      <div id="reg-error" style="display:none;background:var(--danger-light);color:#DC2626;padding:10px;border-radius:10px;margin-bottom:10px;font-size:12px"></div>
+      <input type="text" id="reg-fullname" class="input-field" placeholder="Nome completo" />
+      <input type="text" id="reg-username" class="input-field" placeholder="@usuario" style="text-transform:lowercase" />
+      <input type="email" id="reg-email" class="input-field" placeholder="E-mail" />
+      <input type="password" id="reg-password" class="input-field" placeholder="Senha (mín. 6)" />
+      <input type="password" id="reg-confirm" class="input-field" placeholder="Confirmar senha" />
+      <div id="reg-error" style="display:none;background:#FEE2E2;color:#DC2626;padding:10px;border-radius:10px;margin-bottom:10px;font-size:12px"></div>
       <button class="btn btn-primary btn-full" onclick="handleRegister()">✨ Criar conta</button>
       <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3)">Já tem? <a href="#" onclick="switchAuthTab('login')" style="color:#10B981;font-weight:700">Entrar →</a></p>
     </div>
   </div>
 </div>
 
-<!-- ==================== APP ==================== -->
+<!-- APP -->
 <div id="app" style="display:none">
-
-  <!-- TOPBAR -->
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:10px">
       <button onclick="toggleSidebar()" style="font-size:22px;background:none;border:none;cursor:pointer;color:var(--text2)">☰</button>
-      <span class="topbar-brand">
-        <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
-        Sexta-Feira
-      </span>
+      <span class="topbar-brand"><img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />Sexta-Feira</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <button class="notif-btn" onclick="navigate('notificacoes')">
-        🔔
-        <span class="notif-badge" id="notif-badge">0</span>
-      </button>
+      <span onclick="navigate('notificacoes')" style="cursor:pointer;font-size:20px">🔔<span id="notif-badge" style="display:none;background:#EF4444;color:white;border-radius:50%;width:18px;height:18px;font-size:9px;position:absolute;top:-2px;right:-2px;display:none;align-items:center;justify-content:center">0</span></span>
       <div class="topbar-avatar" id="topbar-avatar" onclick="navigate('perfil')">?</div>
     </div>
   </div>
 
-  <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-user">
       <div class="sidebar-avatar" id="sidebar-avatar">?</div>
-      <div>
-        <div class="sidebar-name" id="sidebar-name">...</div>
-        <div class="sidebar-pts" id="sidebar-pts">0 pts</div>
-      </div>
+      <div><div class="sidebar-name" id="sidebar-name">...</div><div id="sidebar-pts" style="font-size:12px;color:#10B981">0 pts</div></div>
     </div>
     <div style="flex:1;overflow-y:auto;padding:8px 0">
       <a class="nav-link" onclick="navigate('home')">🏠 Home</a>
@@ -832,12 +261,10 @@
       <a class="nav-link" onclick="navigate('desafios')">⚔️ Desafios</a>
       <a class="nav-link" onclick="navigate('chat')">💬 Chat</a>
       <a class="nav-link" onclick="navigate('jarvis')">🧠 Jarvis IA</a>
-      <a class="nav-link" onclick="navigate('tarefas')">📄 Criar Tarefa</a>
       <a class="nav-link" onclick="navigate('perfil')">👤 Perfil</a>
-      <a class="nav-link" onclick="navigate('notificacoes')">🔔 Notificações</a>
-      <a class="nav-link" onclick="navigate('sobre')">ℹ️ Sobre Nós</a>
+      <a class="nav-link" onclick="navigate('sobre')">ℹ️ Sobre</a>
       <a class="nav-link" onclick="navigate('updates')">📋 Updates</a>
-      <a class="nav-link" id="nav-adm" onclick="navigate('adm')" style="display:none">⚙️ Admin</a>
+      <a class="nav-link" id="nav-adm" onclick="window.open('painel.html','_blank')" style="display:none">⚙️ Admin</a>
     </div>
     <div style="padding:12px;border-top:1px solid var(--border)">
       <button class="btn btn-danger btn-full" onclick="handleLogout()">🚪 Sair</button>
@@ -845,467 +272,27 @@
   </div>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-  <!-- MAIN CONTENT -->
   <div class="main-content" id="main-content">
-<!-- CRIADOR DE TAREFAS -->
-<div id="screen-tarefas" class="screen">
-  <div style="text-align:center;margin-bottom:30px;padding:40px 20px">
-    <div style="font-size:60px;margin-bottom:20px">🚧</div>
-    <h2 style="font-size:22px;margin-bottom:10px">Criador de Tarefas</h2>
-    <p style="color:var(--text3);font-size:14px;margin-bottom:25px">
-      Esta funcionalidade está em desenvolvimento e em breve estará disponível!
-    </p>
-    
-    <div class="card" style="background:var(--gold-light);border:1px solid var(--gold);max-width:500px;margin:0 auto;text-align:left">
-      <h3 style="color:#92400E;margin-bottom:10px">📋 O que está por vir:</h3>
-      <ul style="color:#92400E;font-size:13px;line-height:2;padding-left:20px">
-        <li>✅ Geração de questões com IA</li>
-        <li>✅ Múltipla escolha (A B C D)</li>
-        <li>✅ Questões dissertativas</li>
-        <li>✅ Verdadeiro ou Falso</li>
-        <li>⏳ Download em PDF editável</li>
-        <li>⏳ Personalização de cabeçalho</li>
-        <li>⏳ Gabarito automático</li>
-      </ul>
-    </div>
-    
-    <p style="color:var(--text3);font-size:12px;margin-top:25px">
-      Enquanto isso, você pode fazer quizzes!
-    </p>
+    <!-- Todas as screens vêm aqui -->
   </div>
-</div>
-    
-    <!-- HOME -->
-    <div id="screen-home" class="screen active">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <div>
-          <h2 id="home-greeting" style="font-size:22px;margin:0">Olá! 👋</h2>
-          <p style="color:var(--text3);font-size:13px;margin:2px 0 0">Continue estudando</p>
-        </div>
-        <span id="level-badge" style="background:#10B981;color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">🌱 Nível 1</span>
-      </div>
 
-      <div class="stats-grid">
-        <div class="stat-card" onclick="navigate('materias')">
-          <div class="stat-icon green">📚</div>
-          <div><div class="stat-val" id="stat-materias">0</div><div class="stat-label">Disciplinas</div></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon blue">🎮</div>
-          <div><div class="stat-val" id="stat-quizzes">0</div><div class="stat-label">Quizzes</div></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon gold">⭐</div>
-          <div><div class="stat-val" id="stat-pontos">0</div><div class="stat-label">Pontos</div></div>
-        </div>
-        <div class="stat-card" onclick="navigate('ranking')">
-          <div class="stat-icon blue">🏆</div>
-          <div><div class="stat-val" id="stat-rank">#--</div><div class="stat-label">Ranking</div></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;font-weight:600">
-          <span>📈 Progresso</span>
-          <span id="progress-text">0/100 pts</span>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      </div>
-
-      <div class="section-title">⚡ Ações rápidas</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px">
-        <button class="btn btn-primary btn-full" onclick="navigate('materias')">📚 Disciplinas</button>
-        <button class="btn btn-accent btn-full" onclick="openModal('post')">✍️ Postar</button>
-        <button class="btn btn-outline btn-full" onclick="navigate('chat')">💬 Chat</button>
-        <button class="btn btn-outline btn-full" onclick="navigate('jarvis')">🧠 Jarvis</button>
-      </div>
-
-      <div class="section-title">📰 Feed recente</div>
-      <div id="home-feed"></div>
-    </div>
-
-    <!-- MATÉRIAS -->
-    <div id="screen-materias" class="screen">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
-        <h2 style="font-size:22px">📚 Disciplinas</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModal('materia')">+ Nova</button>
-      </div>
-      <input type="text" id="search-materias" class="input-field" placeholder="🔍 Buscar disciplinas..." oninput="filterMaterias()" />
-      <div style="display:flex;gap:8px;margin-bottom:15px">
-        <button class="btn btn-primary btn-sm" onclick="setMateriaFilter('all',this)">Todas</button>
-        <button class="btn btn-outline btn-sm" onclick="setMateriaFilter('mine',this)">Minhas</button>
-      </div>
-      <div id="materias-grid"></div>
-    </div>
-
-    <!-- DETALHE MATÉRIA -->
-    <div id="screen-materia-detalhe" class="screen">
-      <button onclick="navigate('materias')" style="background:none;border:none;cursor:pointer;color:var(--text3);margin-bottom:15px;font-size:14px">← Voltar</button>
-      <div class="card" style="background:linear-gradient(135deg,#10B981,#3B82F6);color:white;text-align:center;padding:25px;margin-bottom:20px">
-        <span id="materia-hero-icon" style="font-size:50px">📚</span>
-        <h2 id="materia-hero-nome" style="margin:10px 0 5px">Disciplina</h2>
-        <p id="materia-hero-desc" style="opacity:0.9;font-size:14px">Descrição</p>
-        <span id="materia-hero-autor" style="font-size:11px;opacity:0.7">Por: --</span>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" onclick="openModal('aula')">+ Aula</button>
-        <button class="btn btn-accent btn-sm" onclick="openModal('video')">+ Vídeo</button>
-        <button class="btn btn-accent btn-sm" onclick="openModal('quiz-normal')">+ Quiz</button>
-        <button class="btn btn-outline btn-sm" onclick="openModal('quiz-cmd')">+ Quiz /cmd</button>
-      </div>
-      <div class="section-title">📝 Aulas</div>
-      <div id="aulas-list"></div>
-      <div class="section-title">🎬 Vídeos</div>
-      <div id="videos-materia"></div>
-      <div class="section-title">🎮 Quizzes</div>
-      <div id="quizzes-materia"></div>
-    </div>
-
-    <!-- AULA DETALHE -->
-    <div id="screen-aula-detalhe" class="screen">
-      <button onclick="navigate('materia-detalhe')" style="background:none;border:none;cursor:pointer;color:var(--text3);margin-bottom:15px">← Voltar</button>
-      <div class="card">
-        <h2 id="aula-title">Aula</h2>
-        <div id="aula-meta" style="font-size:11px;color:var(--text3);margin:6px 0 15px"></div>
-        <div id="aula-body" style="line-height:1.8"></div>
-      </div>
-      <div class="section-title">💬 Comentários</div>
-      <div id="aula-comentarios"></div>
-      <div style="display:flex;gap:8px;margin-top:15px">
-        <input type="text" id="new-comment" class="input-field" placeholder="Comente..." />
-        <button class="btn btn-primary btn-sm" onclick="addComment()">Enviar</button>
-      </div>
-    </div>
-
-    <!-- QUIZ GAME -->
-    <div id="screen-quiz-game" class="screen">
-      <div style="display:flex;align-items:center;gap:15px;margin-bottom:25px">
-        <button onclick="exitQuiz()" style="background:none;border:none;cursor:pointer;color:var(--text3)">← Sair</button>
-        <div style="flex:1"><div id="quiz-q-counter" style="font-size:12px;font-weight:700;color:var(--text3)">1/10</div><div class="progress-track"><div class="progress-fill" id="quiz-progress-fill" style="width:0%"></div></div></div>
-        <span id="quiz-timer" style="background:var(--gold-light);color:#92400E;padding:5px 10px;border-radius:20px;font-weight:700;font-size:13px">⏱ 30s</span>
-      </div>
-      <div class="card" style="padding:24px"><div id="quiz-q-num" style="font-size:11px;font-weight:700;color:#10B981;margin-bottom:6px">Questão 1</div><div id="quiz-question" style="font-size:17px;font-weight:700;margin-bottom:20px">...</div><div id="quiz-options"></div></div>
-      <div style="text-align:center;margin-top:12px;font-weight:700;color:#10B981">⭐ <span id="quiz-score-live">0</span> pts</div>
-    </div>
-
-    <!-- RESULTADO -->
-    <div id="screen-resultado" class="screen">
-      <div style="text-align:center;padding:20px 0">
-        <div id="resultado-emoji" style="font-size:80px">🎉</div>
-        <h2 id="resultado-titulo">Parabéns!</h2>
-        <p id="resultado-subtitulo" style="color:var(--text3)">Quiz finalizado</p>
-        <div class="stats-grid" style="margin:20px 0">
-          <div class="card" style="text-align:center"><div id="res-acertos" style="font-size:24px;font-weight:800;color:#10B981">0</div><div style="font-size:10px;color:var(--text3)">Acertos</div></div>
-          <div class="card" style="text-align:center"><div id="res-total" style="font-size:24px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Total</div></div>
-          <div class="card" style="text-align:center"><div id="res-pontos" style="font-size:24px;font-weight:800;color:#3B82F6">+0</div><div style="font-size:10px;color:var(--text3)">Pontos</div></div>
-          <div class="card" style="text-align:center"><div id="res-tempo" style="font-size:24px;font-weight:800">0s</div><div style="font-size:10px;color:var(--text3)">Tempo</div></div>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="resultado-barra-fill" style="width:0%"></div></div>
-        <p id="resultado-pct" style="font-weight:700;margin:8px 0">0%</p>
-        <div id="resultado-review" style="text-align:left;margin:15px 0"></div>
-        <div style="display:flex;gap:10px;justify-content:center">
-          <button class="btn btn-primary" onclick="navigate('home')">🏠 Início</button>
-          <button class="btn btn-outline" onclick="navigate('ranking')">🏆 Ranking</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- RANKING -->
-    <div id="screen-ranking" class="screen">
-      <h2 style="font-size:22px;margin-bottom:15px">🏆 Ranking</h2>
-      <div style="display:flex;gap:8px;margin-bottom:15px">
-        <button class="btn btn-primary btn-sm" id="rank-btn-alunos" onclick="switchRanking('alunos',this)">🎓 Alunos</button>
-        <button class="btn btn-outline btn-sm" id="rank-btn-professores" onclick="switchRanking('professores',this)">✅ Professores</button>
-      </div>
-      <div style="display:flex;justify-content:center;gap:15px;margin:20px 0" id="podio"></div>
-      <div class="card" style="background:var(--hover)">
-        <span>Sua posição: <strong id="my-rank-num">#--</strong></span>
-        <span id="my-rank-pts" style="margin-left:8px">0 pts</span>
-        <span id="my-rank-mode" style="font-size:10px;color:var(--text3);margin-left:8px"></span>
-      </div>
-      <div id="ranking-list" style="margin-top:15px"></div>
-    </div>
-
- <!-- DESAFIOS -->
-<div id="screen-desafios" class="screen">
-  <div style="text-align:center;margin-bottom:20px">
-    <h2 style="font-size:22px">⚔️ Desafios</h2>
-    <p style="color:var(--text3);font-size:13px">Participe dos desafios e ganhe pontos!</p>
-  </div>
-  
-  <!-- Banner de próximo desafio -->
-  <div id="desafio-banner" style="display:none"></div>
-  
-  <div id="desafios-lista"></div>
-</div>
-    <!-- FEED -->
-    <div id="screen-descobrir" class="screen">
-      <h2 style="font-size:22px;margin-bottom:15px">🌍 Feed Global</h2>
-      <div class="card" style="margin-bottom:15px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div class="topbar-avatar" id="pc-avatar" style="width:36px;height:36px">?</div>
-          <input type="text" id="new-post-text" class="input-field" placeholder="Compartilhe algo..." style="margin:0" />
-        </div>
-        <div id="post-image-preview" style="margin-bottom:8px"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-primary btn-sm" onclick="setPostType('post',this)">💬 Post</button>
-            <button class="btn btn-outline btn-sm" onclick="setPostType('dica',this)">💡 Dica</button>
-            <button class="btn btn-outline btn-sm" onclick="setPostType('duvida',this)">❓ Dúvida</button>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="file" id="post-image-input" accept="image/*" style="display:none" onchange="previewPostImage(this)" />
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('post-image-input').click()">📷</button>
-            <button class="btn btn-primary btn-sm" onclick="createPost()">Publicar</button>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" onclick="setFeedFilter('all',this)">Todos</button>
-        <button class="btn btn-outline btn-sm" onclick="setFeedFilter('post',this)">Posts</button>
-        <button class="btn btn-outline btn-sm" onclick="setFeedFilter('dica',this)">Dicas</button>
-        <button class="btn btn-outline btn-sm" onclick="setFeedFilter('duvida',this)">Dúvidas</button>
-        <button class="btn btn-outline btn-sm" onclick="setFeedFilter('usuarios',this)">👥 Usuários</button>
-      </div>
-      <input type="text" id="search-users-input" class="input-field" placeholder="🔍 Pesquisar usuários..." oninput="searchUsers()" style="display:none" />
-      <div id="descobrir-feed"></div>
-    </div>
-
-    <!-- CHAT -->
-    <div id="screen-chat" class="screen">
-      <h2 style="font-size:22px;margin-bottom:15px">💬 Chat</h2>
-      <div class="chat-container">
-        <div class="chat-sidebar">
-          <div style="padding:12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px">
-            Salas
-            <button class="btn btn-primary btn-sm" onclick="openModal('sala')" style="padding:4px 8px;border-radius:8px">+</button>
-          </div>
-          <div id="rooms-list"></div>
-        </div>
-        <div class="chat-main">
-          <div id="chat-no-room" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3)">Selecione uma sala</div>
-          <div id="chat-room-view" style="display:none;flex-direction:column;height:100%">
-            <div style="padding:10px 15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-              <strong id="chat-room-name">Sala</strong>
-              <button class="btn btn-outline btn-sm" onclick="openModal('invite')">+ Convidar</button>
-            </div>
-            <div class="chat-messages" id="chat-messages"></div>
-            <div class="chat-input-row">
-              <input type="file" id="chat-image-input" accept="image/*" style="display:none" onchange="sendChatImage()" />
-              <button class="btn btn-outline btn-sm" onclick="document.getElementById('chat-image-input').click()">📷</button>
-              <input type="text" id="chat-msg-input" class="input-field" placeholder="Mensagem..." style="margin:0;flex:1" />
-              <button class="btn btn-primary btn-sm" onclick="sendChatMsg()">Enviar</button>
-            </div>
-          </div>
-          <div id="pv-chat-view" style="display:none;flex-direction:column;height:100%">
-            <div style="padding:10px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-              <div class="topbar-avatar" id="pv-chat-avatar" style="width:30px;height:30px">?</div>
-              <strong id="pv-chat-name">Usuário</strong>
-              <button onclick="closePV()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3)">✕</button>
-            </div>
-            <div class="chat-messages" id="pv-chat-messages"></div>
-            <div class="chat-input-row">
-              <input type="file" id="pv-image-input" accept="image/*" style="display:none" onchange="sendPvChatImage()" />
-              <button class="btn btn-outline btn-sm" onclick="document.getElementById('pv-image-input').click()">📷</button>
-              <input type="text" id="pv-chat-input" class="input-field" placeholder="Mensagem..." style="margin:0;flex:1" />
-              <button class="btn btn-primary btn-sm" onclick="sendPvChatMsg()">Enviar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- JARVIS IA -->
-    <div id="screen-jarvis" class="screen">
-      <div style="text-align:center;margin-bottom:15px">
-        <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" alt="Jarvis" style="width:80px;height:80px;border-radius:50%;margin-bottom:10px;object-fit:cover" />
-        <h2>🧠 Jarvis IA</h2>
-        <p style="color:var(--text3);font-size:13px">Tire dúvidas e envie imagens para análise!</p>
-      </div>
-      <div class="card" style="height:calc(100vh - 280px);min-height:350px;display:flex;flex-direction:column;padding:0;overflow:hidden">
-        <div id="jarvis-messages" style="flex:1;overflow-y:auto;padding:15px">
-          <div style="text-align:center;color:var(--text3);padding:20px">
-            <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" alt="Jarvis" style="width:60px;height:60px;border-radius:50%;margin-bottom:10px;object-fit:cover" />
-            <div style="font-weight:700">Olá! Eu sou o Jarvis!</div>
-            <div style="font-size:13px">Seu assistente de estudos. Pergunte ou envie uma imagem!</div>
-          </div>
-        </div>
-        <div style="padding:10px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
-          <input type="file" id="jarvis-image-input" accept="image/*" style="display:none" onchange="sendJarvisImage()" />
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('jarvis-image-input').click()">📷</button>
-          <input type="text" id="jarvis-input" class="input-field" placeholder="Digite sua pergunta..." style="margin:0" onkeydown="if(event.key==='Enter')sendJarvisMsg()" />
-          <button class="btn btn-primary btn-sm" onclick="sendJarvisMsg()">Enviar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- PERFIL -->
-    <div id="screen-perfil" class="screen">
-      <div style="text-align:center;padding:25px;background:linear-gradient(135deg,#D1FAE5,#DBEAFE);border-radius:20px;margin-bottom:20px">
-        <div style="position:relative;display:inline-block">
-          <div class="topbar-avatar" id="perfil-avatar" style="width:85px;height:85px;font-size:35px;margin:0 auto">?</div>
-          <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadAvatar(this)" />
-          <button onclick="document.getElementById('avatar-upload').click()" style="position:absolute;bottom:0;right:0;background:#10B981;color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px">📷</button>
-        </div>
-        <h2 id="perfil-name" style="margin:10px 0 5px">--</h2>
-        <p id="perfil-email" style="color:var(--text3);font-size:13px">@usuario</p>
-        <div id="perfil-badges" style="margin:10px 0"></div>
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-          <button class="btn btn-outline btn-sm" onclick="showFollowers()">👥 <span id="count-seguidores">0</span> Seguidores</button>
-          <button class="btn btn-outline btn-sm" onclick="showFollowing()">✨ <span id="count-seguindo">0</span> Seguindo</button>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:15px">
-        <div class="section-title">⭐ Planos</div>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Plano atual: <strong id="plano-atual">Grátis</strong></p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" onclick="window.open('https://pay.kiwify.com.br/gal6jtI','_blank')">⭐ Premium</button>
-          <button class="btn btn-accent btn-sm" onclick="window.open('https://pay.kiwify.com.br/3ipsiax','_blank')">🚀 PRO</button>
-          <button class="btn btn-outline btn-sm" onclick="window.open('https://pay.kiwify.com.br/zV8YpN0','_blank')">🪙 Créditos</button>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:15px">
-        <div class="section-title">✏️ Editar</div>
-        <input type="text" id="edit-username" class="input-field" placeholder="@usuario" />
-        <textarea id="edit-bio" class="input-field" rows="2" placeholder="Sua bio..."></textarea>
-        <button class="btn btn-primary btn-full" onclick="saveProfile()">💾 Salvar</button>
-      </div>
-
-      <div class="stats-grid">
-        <div class="card" style="text-align:center"><div id="pstat-pts" style="font-size:20px;font-weight:800;color:#10B981">0</div><div style="font-size:10px;color:var(--text3)">Pontos</div></div>
-        <div class="card" style="text-align:center"><div id="pstat-quizzes" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Quizzes</div></div>
-        <div class="card" style="text-align:center"><div id="pstat-materias" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Disciplinas</div></div>
-        <div class="card" style="text-align:center"><div id="pstat-seguidores" style="font-size:20px;font-weight:800">0</div><div style="font-size:10px;color:var(--text3)">Seguidores</div></div>
-      </div>
-
-      <!-- Abas do perfil -->
-      <div style="display:flex;gap:4px;margin:15px 0;background:var(--input-bg);border-radius:12px;padding:3px">
-        <button class="btn btn-primary btn-sm" onclick="switchPerfilTab('aulas',this)" style="flex:1">📝 Aulas</button>
-        <button class="btn btn-outline btn-sm" onclick="switchPerfilTab('posts',this)" style="flex:1">💬 Posts</button>
-        <button class="btn btn-outline btn-sm" onclick="switchPerfilTab('disciplinas',this)" style="flex:1">📚 Disciplinas</button>
-      </div>
-      <div id="perfil-aulas"></div>
-      <div id="perfil-posts" style="display:none"></div>
-      <div id="perfil-disciplinas" style="display:none"></div>
-    </div>
-
-    <!-- NOTIFICAÇÕES -->
-    <div id="screen-notificacoes" class="screen">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
-        <h2 style="font-size:22px">🔔 Notificações</h2>
-        <button class="btn btn-outline btn-sm" onclick="marcarLidas()">✓ Marcar lidas</button>
-      </div>
-      <div id="notificacoes-list"></div>
-    </div>
-
-    <!-- SOBRE NÓS -->
-    <div id="screen-sobre" class="screen">
-      <div style="text-align:center;margin-bottom:20px">
-        <img src="https://i.ibb.co/fGqcL491/Gemini-Generated-Image-p9v6akp9v6akp9v6.png" alt="Sobre Nós" style="width:100%;max-width:600px;border-radius:16px;margin-bottom:15px" />
-        <h2 style="font-size:22px">ℹ️ Sobre Nós</h2>
-      </div>
-      <div class="card" id="sobre-content">
-        <p style="text-align:center;color:var(--text3)">Carregando...</p>
-      </div>
-    </div>
-
-    <!-- UPDATES -->
-    <div id="screen-updates" class="screen">
-      <div style="text-align:center;margin-bottom:20px">
-        <img src="https://i.ibb.co/PGzmcBmJ/Gemini-Generated-Image-u7ba35u7ba35u7ba.png" alt="Updates" style="width:80px;height:80px;border-radius:50%;margin-bottom:10px;object-fit:cover" />
-        <h2 style="font-size:22px">📋 Update Log</h2>
-        <p style="color:var(--text3);font-size:13px">Acompanhe as novidades do site</p>
-      </div>
-      <div id="updates-list"></div>
-    </div>
-
-    <!-- ADM -->
-    <div id="screen-adm" class="screen">
-      <h2 style="font-size:22px;margin-bottom:10px">⚙️ Painel Admin</h2>
-      <div class="stats-grid">
-        <div class="card" style="text-align:center"><div id="adm-users" style="font-size:24px;font-weight:800;color:#10B981">0</div><div style="font-size:10px;color:var(--text3)">Usuários</div></div>
-        <div class="card" style="text-align:center"><div id="adm-posts" style="font-size:24px;font-weight:800;color:#3B82F6">0</div><div style="font-size:10px;color:var(--text3)">Posts</div></div>
-      </div>
-      <div class="card" style="margin:15px 0">
-        <div style="font-weight:700;margin-bottom:8px">➕ Adicionar pontos</div>
-        <div style="display:flex;gap:8px"><input type="number" id="adm-add-pts" class="input-field" placeholder="Qtd" style="margin:0" /><button class="btn btn-primary btn-sm" onclick="admAddPts()">Adicionar</button></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" onclick="admLoad('materias',this)">Disciplinas</button>
-        <button class="btn btn-outline btn-sm" onclick="admLoad('posts',this)">Posts</button>
-        <button class="btn btn-outline btn-sm" onclick="admLoad('usuarios',this)">Usuários</button>
-      </div>
-      <div id="adm-content-list"></div>
-    </div>
-
-  </div><!-- /main-content -->
-
-  <!-- BOTTOM NAV -->
   <div class="bottom-nav">
     <div class="bnav-item" onclick="navigate('home')">🏠<br>Home</div>
-    <div class="bnav-item" onclick="navigate('tarefas')">📄<br>Tarefas</div>
     <div class="bnav-item" onclick="navigate('descobrir')">🌍<br>Feed</div>
-    <div class="bnav-item" onclick="navigate('materias')">📚<br>Disciplinas</div>
+    <div class="bnav-item" onclick="navigate('materias')">📚<br>Aulas</div>
     <div class="bnav-item" onclick="navigate('chat')">💬<br>Chat</div>
     <div class="bnav-item" onclick="navigate('perfil')">👤<br>Perfil</div>
   </div>
-</div><!-- /app -->
-
-<!-- FOOTER -->
-<footer class="site-footer" id="site-footer" style="display:none">
-  <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="footer-logo" />
-  <div class="footer-text">Sexta-Feira Studies</div>
-  <div class="footer-subtext">Aprenda. Conecte. Evolua.</div>
-  <div class="footer-links">
-    <a onclick="navigate('sobre')">Sobre Nós</a>
-    <a onclick="navigate('updates')">Updates</a>
-    <a onclick="navigate('desafios')">Desafios</a>
-    <a onclick="navigate('ranking')">Ranking</a>
-    <a href="mailto:contato@sextafeirastudies.com">Contato</a>
-  </div>
-  <div class="footer-copy">Feito com ❤️ por Sexta-Feira Studies © 2024</div>
-</footer>
-
-<!-- MODALS -->
-<div class="modal" id="modal-materia"><div class="modal-backdrop" onclick="closeModal('materia')"></div><div class="modal-box"><h3>📚 Nova Disciplina</h3><input type="text" id="nm-nome" class="input-field" placeholder="Nome da disciplina" /><textarea id="nm-desc" class="input-field" rows="3" placeholder="Descrição"></textarea><button class="btn btn-primary btn-full" onclick="criarMateria()">Criar</button></div></div>
-
-<div class="modal" id="modal-aula"><div class="modal-backdrop" onclick="closeModal('aula')"></div><div class="modal-box"><h3>📝 Nova Aula</h3><input type="text" id="nt-titulo" class="input-field" placeholder="Título" /><textarea id="nt-conteudo" class="input-field" rows="5" placeholder="Conteúdo"></textarea><button class="btn btn-primary btn-full" onclick="criarAula()">Criar</button></div></div>
-
-<div class="modal" id="modal-video"><div class="modal-backdrop" onclick="closeModal('video')"></div><div class="modal-box"><h3>🎬 Adicionar Vídeo</h3><input type="text" id="nv-titulo" class="input-field" placeholder="Título do vídeo" /><input type="url" id="nv-url" class="input-field" placeholder="Link do YouTube (ex: https://youtube.com/watch?v=...)" /><button class="btn btn-primary btn-full" onclick="adicionarVideo()">Adicionar</button></div></div>
-
-<div class="modal" id="modal-quiz-normal"><div class="modal-backdrop" onclick="closeModal('quiz-normal')"></div><div class="modal-box" style="max-width:550px"><h3>🎮 Quiz Normal</h3><input type="text" id="qn-nome" class="input-field" placeholder="Nome do quiz" /><input type="number" id="qn-tempo" class="input-field" value="30" placeholder="Tempo (s)" /><div id="qn-questoes-container"></div><button class="btn btn-outline btn-full" onclick="addQuestaoNormal()" style="margin:10px 0">+ Questão</button><button class="btn btn-primary btn-full" onclick="salvarQuizNormal()">💾 Salvar</button></div></div>
-
-<div class="modal" id="modal-quiz-cmd"><div class="modal-backdrop" onclick="closeModal('quiz-cmd')"></div><div class="modal-box"><h3>🎮 Quiz /cmd</h3><p style="font-size:11px;color:var(--text3);margin-bottom:8px">/n Nome | /q Pergunta | /a Alt | /c Correta | /f Fim | /save</p><textarea id="cmd-input" class="input-field" rows="8" style="font-family:monospace;font-size:13px"></textarea><button class="btn btn-primary btn-full" onclick="processarCmd()">💾 Processar</button></div></div>
-
-<div class="modal" id="modal-post"><div class="modal-backdrop" onclick="closeModal('post')"></div><div class="modal-box"><h3>✍️ Novo Post</h3><select id="post-tipo-modal" class="input-field"><option value="post">💬 Post</option><option value="dica">💡 Dica</option><option value="duvida">❓ Dúvida</option></select><textarea id="post-texto-modal" class="input-field" rows="4" placeholder="Conteúdo"></textarea>
-  <div id="modal-post-image-preview" style="margin-bottom:8px"></div>
-  <div style="display:flex;gap:8px">
-    <input type="file" id="modal-post-image-input" accept="image/*" style="display:none" onchange="previewModalPostImage(this)" />
-    <button class="btn btn-outline btn-full" onclick="document.getElementById('modal-post-image-input').click()">📷 Imagem</button>
-    <button class="btn btn-primary btn-full" onclick="criarPostModal()">Publicar</button>
-  </div>
-</div></div>
-
-<div class="modal" id="modal-sala"><div class="modal-backdrop" onclick="closeModal('sala')"></div><div class="modal-box"><h3>💬 Nova Sala</h3><input type="text" id="ns-nome" class="input-field" placeholder="Nome" /><input type="text" id="ns-desc" class="input-field" placeholder="Descrição" /><button class="btn btn-primary btn-full" onclick="criarSala()">Criar</button></div></div>
-
-<div class="modal" id="modal-invite"><div class="modal-backdrop" onclick="closeModal('invite')"></div><div class="modal-box"><h3>👥 Convidar</h3><input type="text" id="invite-search" class="input-field" placeholder="Buscar..." oninput="searchUsersToInvite()" /><div id="invite-users-list" style="max-height:250px;overflow-y:auto;margin:10px 0"></div><div id="invite-selected" style="background:var(--hover);padding:8px;border-radius:10px;margin-bottom:10px;font-size:12px">0 selecionados</div><button class="btn btn-primary btn-full" onclick="sendInvites()">📨 Enviar</button></div></div>
-
-<div class="modal" id="modal-username"><div class="modal-backdrop"></div><div class="modal-box" style="text-align:center"><h3>👤 Escolha seu @usuario</h3><p style="font-size:12px;color:var(--text3);margin:10px 0">Este será seu nome único na plataforma</p><input type="text" id="new-username-input" class="input-field" placeholder="@usuario" style="text-transform:lowercase" /><button class="btn btn-primary btn-full" onclick="salvarUsernameGoogle()">💾 Salvar</button></div></div>
-
-<div id="profile-fullscreen" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:250;background:var(--bg);overflow-y:auto;padding-top:56px;padding-bottom:64px">
-  <div class="topbar" style="z-index:251">
-    <button onclick="closeProfileFullscreen()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:16px">← Voltar</button>
-    <span class="topbar-brand"><img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" /> Sexta-Feira</span>
-    <button onclick="closeProfileFullscreen()" style="background:none;border:none;cursor:pointer;color:var(--text2)">✕</button>
-  </div>
-  <div id="profile-fullscreen-content" style="max-width:600px;margin:0 auto;padding:20px"></div>
 </div>
+
+<footer class="site-footer" id="site-footer" style="display:none">
+  <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
+  <div class="footer-text">Sexta-Feira Studies</div>
+  <div class="footer-copy">Feito com ❤️ © 2025</div>
+</footer>
 
 <div class="toast-container" id="toast-container"></div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
