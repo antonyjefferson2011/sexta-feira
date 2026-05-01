@@ -2,13 +2,13 @@
 // FIREBASE CONFIG - COLOQUE SUAS CREDENCIAIS
 // ============================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  authDomain: "seu-projeto.firebaseapp.com",
-  databaseURL: "https://seu-projeto-default-rtdb.firebaseio.com",
-  projectId: "seu-projeto",
-  storageBucket: "seu-projeto.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
+  apiKey: "AIzaSyC9Lcx3mYGYXavUi_b9c_tRbS3Otm9JQNk",
+  authDomain: "sexta-feira-studies.firebaseapp.com",
+  databaseURL: "https://sexta-feira-studies-default-rtdb.firebaseio.com",
+  projectId: "sexta-feira-studies",
+  storageBucket: "sexta-feira-studies.firebasestorage.app",
+  messagingSenderId: "673251857052",
+  appId: "1:673251857052:web:0ef6929ea93123f7a91359"
 };
 
 // Inicializar Firebase
