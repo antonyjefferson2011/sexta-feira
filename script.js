@@ -1,5 +1,7 @@
 'use strict';
 
+console.log('✅ SCRIPT CARREGADO!');
+
 // ========== FIREBASE ==========
 const firebaseConfig = {
   apiKey: "AIzaSyC9Lcx3mYGYXavUi_b9c_tRbS3Otm9JQNk",
