@@ -1,151 +1,270 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sexta-Feira Studies</title>
-    <link rel="icon" href="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png">
-    
-    <!-- Google Fonts: Sora -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS Customizado -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Sexta-Feira Studies</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://i.ibb.co/4nVtZpr2/Gemini-Generated-Image-vrc8thvrc8thvrc8.png">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="loading-overlay">
-        <div class="spinner"></div>
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOGIN -->
+<section id="screen-login" class="screen active">
+  <div class="login-container">
+    <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" class="logo">
+    <h1>Sexta-Feira Studies</h1>
+    <p>Estude de forma inteligente e divertida</p>
+
+    <div class="tabs">
+      <button id="tab-login">Entrar</button>
+      <button id="tab-cadastro">Cadastrar</button>
     </div>
 
-    <!-- Auth Section -->
-    <div id="auth-section" class="screen">
-        <div class="auth-container card">
-            <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="auth-logo">
-            <h1 class="text-primary">Sexta-Feira Studies</h1>
-            <p>Sua jornada gamificada começa aqui.</p>
-            
-            <div id="login-form">
-                <div class="input-group">
-                    <i class="fa fa-at"></i>
-                    <input type="text" id="login-username" placeholder="Usuário ou Email">
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-lock"></i>
-                    <input type="password" id="login-password" placeholder="Senha">
-                </div>
-                <button onclick="handleLogin()" class="btn btn-primary w-full">Entrar</button>
-                <p class="auth-switch">Não tem conta? <a href="#" onclick="switchAuth('signup')">Cadastre-se</a></p>
-                <hr>
-                <button onclick="handleGoogleLogin()" class="btn btn-google w-full">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Entrar com Google
-                </button>
-            </div>
+    <!-- LOGIN -->
+    <form id="form-login">
+      <input type="text" id="login-usuario" placeholder="@usuario">
+      <input type="password" id="login-senha" placeholder="Senha">
+      <button type="submit">Entrar</button>
+      <button type="button" id="btn-google"><i class="fab fa-google"></i> Entrar com Google</button>
+    </form>
 
-            <div id="signup-form" class="hidden">
-                <div class="input-group">
-                    <i class="fa fa-user"></i>
-                    <input type="text" id="signup-fullname" placeholder="Nome Completo">
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-at"></i>
-                    <input type="text" id="signup-username" placeholder="Nome de Usuário (@)">
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-envelope"></i>
-                    <input type="email" id="signup-email" placeholder="Email">
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-lock"></i>
-                    <input type="password" id="signup-password" placeholder="Senha">
-                </div>
-                <button onclick="handleSignup()" class="btn btn-primary w-full">Criar Conta</button>
-                <p class="auth-switch">Já tem conta? <a href="#" onclick="switchAuth('login')">Fazer Login</a></p>
-            </div>
-        </div>
+    <!-- CADASTRO -->
+    <form id="form-cadastro" class="hidden">
+      <input type="text" id="cadastro-nome" placeholder="Nome">
+      <input type="text" id="cadastro-usuario" placeholder="@usuario">
+      <input type="email" id="cadastro-email" placeholder="Email">
+      <input type="password" id="cadastro-senha" placeholder="Senha">
+      <button type="submit">Criar conta</button>
+    </form>
+
+    <a href="#" id="link-adm">Painel ADM</a>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="screen-app" class="screen">
+
+  <!-- NAVBAR -->
+  <header id="navbar">
+    <div class="nav-left">
+      <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png">
+      <span>SF Studies</span>
+    </div>
+    <div class="nav-right">
+      <button id="btn-busca"><i class="fas fa-search"></i></button>
+      <button id="btn-notificacoes">
+        <i class="fas fa-bell"></i>
+        <span id="notif-badge"></span>
+      </button>
+      <img id="avatar-navbar" class="avatar">
+    </div>
+  </header>
+
+  <!-- CONTENTS -->
+  <main>
+
+    <div id="content-home" class="content active"></div>
+    <div id="content-disciplinas" class="content"></div>
+    <div id="content-ranking" class="content"></div>
+    <div id="content-desafios" class="content"></div>
+    <div id="content-busca" class="content"></div>
+    <div id="content-notificacoes" class="content"></div>
+    <div id="content-perfil" class="content"></div>
+    <div id="content-materia" class="content"></div>
+    <div id="content-aula" class="content"></div>
+    <div id="content-quiz-play" class="content"></div>
+    <div id="content-sobre" class="content"></div>
+    <div id="content-updates" class="content"></div>
+    <div id="content-agenda" class="content"></div>
+    <div id="content-tarefas" class="content"></div>
+    <div id="content-criador-pdf" class="content"></div>
+
+    <!-- JARVIS -->
+    <div id="content-jarvis" class="content">
+      <div id="jarvis-mensagens"></div>
+      <div class="jarvis-input-area">
+        <input type="file" id="jarvis-upload">
+        <div id="jarvis-preview"></div>
+        <textarea id="jarvis-texto" placeholder="Digite sua mensagem..."></textarea>
+        <button id="jarvis-enviar"><i class="fas fa-paper-plane"></i></button>
+      </div>
     </div>
 
-    <!-- Main App Layout -->
-    <div id="app-section" class="hidden">
-        
-        <!-- Header -->
-        <header class="main-header">
-            <div class="header-left">
-                <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="mini-logo">
-                <div class="search-bar">
-                    <i class="fa fa-search"></i>
-                    <input type="text" id="global-search" placeholder="Pesquisar..." onkeyup="handleSearch(this.value)">
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="notification-icon" onclick="toggleNotifications()">
-                    <i class="fa fa-bell"></i>
-                    <span id="notif-badge" class="badge hidden">0</span>
-                </div>
-                <div class="user-pill" onclick="showSection('profile')">
-                    <img id="header-avatar" src="https://via.placeholder.com/150" alt="Avatar">
-                    <span id="header-name">Usuário</span>
-                </div>
-            </div>
-        </header>
+  </main>
 
-        <!-- Dynamic Content Area -->
-        <main id="content-area" class="container">
-            <!-- As seções serão injetadas via JS -->
-        </main>
+  <!-- BOTTOM NAV -->
+  <nav id="bottomnav">
+    <button data-target="home"><i class="fas fa-home"></i></button>
+    <button data-target="disciplinas"><i class="fas fa-book"></i></button>
+    <button data-target="desafios"><i class="fas fa-bolt"></i></button>
+    <button data-target="ranking"><i class="fas fa-trophy"></i></button>
+    <button data-target="jarvis"><img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png"></button>
+  </nav>
 
-        <!-- Navigation Bar (Mobile First) -->
-        <nav class="bottom-nav">
-            <button class="nav-item active" onclick="showSection('home')">
-                <i class="fa fa-house"></i>
-                <span>Home</span>
-            </button>
-            <button class="nav-item" onclick="showSection('disciplinas')">
-                <i class="fa fa-book"></i>
-                <span>Estudos</span>
-            </button>
-            <button class="nav-item" onclick="showSection('feed')">
-                <i class="fa fa-users"></i>
-                <span>Feed</span>
-            </button>
-            <button class="nav-item" onclick="showSection('ranking')">
-                <i class="fa fa-trophy"></i>
-                <span>Ranking</span>
-            </button>
-            <button class="nav-item btn-jarvis-nav" onclick="showSection('jarvis')">
-                <i class="fa fa-robot"></i>
-                <span>Jarvis</span>
-            </button>
-        </nav>
+</section>
 
-        <!-- Modals -->
-        <div id="modal-container" class="modal-overlay hidden">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2 id="modal-title">Título</h2>
-                    <button class="btn-close" onclick="closeModal()"><i class="fa fa-times"></i></button>
-                </div>
-                <div id="modal-content" class="modal-body"></div>
-            </div>
-        </div>
+<!-- ADMIN -->
+<section id="screen-adm" class="screen">
 
-        <!-- Toast Notifications -->
-        <div id="toast-container" class="toast-container"></div>
+  <header class="adm-navbar">
+    <h2>Painel Admin</h2>
+  </header>
+
+  <div id="adm-login">
+    <input type="password" id="adm-senha" placeholder="Senha admin">
+    <button id="adm-entrar">Acessar</button>
+  </div>
+
+  <div id="adm-panel" class="hidden">
+    <div class="adm-tabs">
+      <button>Dashboard</button>
+      <button>Usuários</button>
+      <button>Disciplinas</button>
+      <button>Quizzes</button>
+      <button>Aulas</button>
+      <button>Posts</button>
+      <button>Desafios</button>
+      <button>Sobre</button>
+      <button>Updates</button>
     </div>
+    <div id="adm-content"></div>
+  </div>
 
-    <!-- Firebase Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</section>
 
-    <!-- JS Customizado -->
-    <script src="script.js"></script>
+<!-- MODAIS -->
+
+<div id="modal-disciplina" class="modal-overlay">
+  <div class="modal">
+    <input type="text" placeholder="Ícone">
+    <input type="text" placeholder="Nome">
+    <textarea placeholder="Descrição"></textarea>
+    <button>Cancelar</button>
+    <button>Criar</button>
+  </div>
+</div>
+
+<div id="modal-aula" class="modal-overlay">
+  <div class="modal">
+    <input type="text" placeholder="Título">
+    <textarea placeholder="Conteúdo"></textarea>
+    <button>Cancelar</button>
+    <button>Criar</button>
+  </div>
+</div>
+
+<div id="modal-quiz" class="modal-overlay">
+  <div class="modal">
+    <input type="text" placeholder="Nome">
+    <input type="number" placeholder="Tempo">
+    <div id="quiz-questoes"></div>
+    <button id="add-questao">+ Questão</button>
+    <button>Cancelar</button>
+    <button>Criar</button>
+  </div>
+</div>
+
+<div id="modal-post" class="modal-overlay">
+  <div class="modal">
+    <textarea placeholder="Texto"></textarea>
+    <input type="file">
+    <div class="preview"></div>
+    <button>Cancelar</button>
+    <button>Postar</button>
+  </div>
+</div>
+
+<div id="modal-comentarios" class="modal-overlay">
+  <div class="modal">
+    <div id="comentarios-lista"></div>
+    <input type="text" placeholder="Comentário">
+    <button>Enviar</button>
+  </div>
+</div>
+
+<div id="modal-editar-perfil" class="modal-overlay">
+  <div class="modal">
+    <input type="text" placeholder="Nome">
+    <textarea placeholder="Bio"></textarea>
+    <input type="file">
+    <div class="preview"></div>
+    <button>Cancelar</button>
+    <button>Salvar</button>
+  </div>
+</div>
+
+<div id="modal-user-perfil" class="modal-overlay">
+  <div class="modal">
+    <div class="banner"></div>
+    <img class="avatar">
+    <div class="info"></div>
+    <button>Seguir</button>
+  </div>
+</div>
+
+<div id="modal-desafio-play" class="modal-overlay">
+  <div class="modal">
+    <h3>Título</h3>
+    <div class="questoes"></div>
+  </div>
+</div>
+
+<div id="modal-evento" class="modal-overlay">
+  <div class="modal">
+    <input type="text" placeholder="Título">
+    <input type="date">
+    <input type="time">
+    <select>
+      <option>Prova</option>
+      <option>Estudo</option>
+    </select>
+    <input type="text" placeholder="Disciplina">
+    <button>Cancelar</button>
+    <button>Salvar</button>
+  </div>
+</div>
+
+<div id="modal-tarefa" class="modal-overlay">
+  <div class="modal">
+    <input type="text" placeholder="Título">
+    <select>
+      <option>Baixa</option>
+      <option>Média</option>
+      <option>Alta</option>
+    </select>
+    <input type="date">
+    <button>Cancelar</button>
+    <button>Salvar</button>
+  </div>
+</div>
+
+<div id="modal-pdf-preview" class="modal-overlay">
+  <div class="modal">
+    <div id="pdf-preview"></div>
+    <button>Baixar</button>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<!-- JS -->
+<script src="script.js"></script>
+
 </body>
 </html>
