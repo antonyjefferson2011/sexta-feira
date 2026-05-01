@@ -1,4 +1,4 @@
-// Firebase Config
+// ==================== CONFIGURAÇÃO FIREBASE ====================
 const firebaseConfig = {
     apiKey: "AIzaSyC9Lcx3mYGYXavUi_b9c_tRbS3Otm9JQNk",
     authDomain: "sexta-feira-studies.firebaseapp.com",
@@ -9,23 +9,31 @@ const firebaseConfig = {
     appId: "1:673251857052:web:0ef6929ea93123f7a91359"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 const storage = firebase.storage();
 
-// API Keys
+// ==================== API KEYS ====================
 const GROQ_API_KEY = "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";
 const GEMINI_API_KEY = "AIzaSyAXrp3JQp0gEzm8S17pQtZrasMvZ4SadWY";
 const IMGBB_API_KEY = "86427cccd2a94fb42a0754ffd7f19e79";
 
-// State
+// ==================== ESTADO GLOBAL ====================
 let currentUser = null;
 let currentPage = 'home';
 let chatHistory = [];
+let modoFoco = false;
+let pomodoroInterval = null;
+let pomodoroSeconds = 25 * 60;
+let pomodoroRunning = false;
+let pomodoroMode = 'focus'; // focus, shortBreak, longBreak
 
-// Auth State Observer
+// ==================== DOM HELPERS ====================
+function $(id) { return document.getElementById(id); }
+function $$(selector) { return document.querySelectorAll(selector); }
+
+// ==================== AUTH OBSERVER ====================
 auth.onAuthStateChanged(function(user) {
     if (user) {
         carregarUsuario(user.uid);
@@ -34,81 +42,124 @@ auth.onAuthStateChanged(function(user) {
     }
 });
 
+// ==================== CARREGAR USUÁRIO ====================
 function carregarUsuario(uid) {
     try {
         db.ref('usuarios/' + uid).once('value').then(function(snapshot) {
             if (snapshot.exists()) {
                 currentUser = snapshot.val();
                 currentUser.uid = uid;
+                
+                // Atualizar lastLogin
+                db.ref('usuarios/' + uid + '/lastLogin').set(Date.now());
+                
                 mostrarTela('main-app');
                 navegar('home');
-                carregarFooter();
+                verificarNotificacoes();
+                verificarConquistas();
+            } else {
+                // Usuário Google sem cadastro
+                const googleUser = auth.currentUser;
+                if (googleUser) {
+                    const userData = {
+                        fullname: googleUser.displayName || 'Usuário',
+                        username: '@' + (googleUser.email ? googleUser.email.split('@')[0] : 'user_' + Date.now().toString(36)),
+                        email: googleUser.email || '',
+                        password: '',
+                        avatar: googleUser.photoURL || '',
+                        bio: '',
+                        points: 0,
+                        plano: 'gratis',
+                        adminLevel: 0,
+                        isProf: false,
+                        isQuizzer: false,
+                        seguidores: {},
+                        seguindo: {},
+                        conquistas: [],
+                        configuracoes: { temaCor: '#3B82F6' },
+                        createdAt: Date.now(),
+                        lastLogin: Date.now()
+                    };
+                    db.ref('usuarios/' + uid).set(userData);
+                    currentUser = userData;
+                    currentUser.uid = uid;
+                    mostrarTela('main-app');
+                    navegar('home');
+                }
             }
-        }).catch(function(error) {
-            console.error('Erro ao carregar usuário:', error);
         });
     } catch(e) {
-        console.error('Erro:', e);
+        console.error('Erro ao carregar usuário:', e);
     }
 }
 
+// ==================== TELAS ====================
 function mostrarTela(screenId) {
-    if (document.querySelectorAll('.screen')) {
-        document.querySelectorAll('.screen').forEach(function(s) {
-            s.classList.remove('active');
-        });
-        const screen = document.getElementById(screenId);
-        if (screen) screen.classList.add('active');
-    }
+    $$('.screen').forEach(function(s) { s.classList.remove('active'); });
+    const screen = $(screenId);
+    if (screen) screen.classList.add('active');
 }
 
 function navegar(page) {
     currentPage = page;
-    if (document.querySelectorAll('.page')) {
-        document.querySelectorAll('.page').forEach(function(p) {
-            p.classList.remove('active');
-        });
-    }
     
-    // Update nav active states
-    if (document.querySelectorAll('.nav-menu li')) {
-        document.querySelectorAll('.nav-menu li').forEach(function(li) {
-            li.classList.remove('active');
-        });
-        const navItem = document.querySelector(`.nav-menu li[data-page="${page}"]`);
-        if (navItem) navItem.classList.add('active');
-    }
+    // Esconder todas as páginas
+    $$('.page').forEach(function(p) { p.classList.remove('active'); });
     
-    if (document.querySelectorAll('#bottom-nav button')) {
-        document.querySelectorAll('#bottom-nav button').forEach(function(btn) {
-            btn.classList.remove('active');
-        });
-        const bottomBtn = document.querySelector(`#bottom-nav button[data-page="${page}"]`);
-        if (bottomBtn) bottomBtn.classList.add('active');
-    }
-    
-    const pageEl = document.getElementById('page-' + page);
+    // Ativar página
+    const pageEl = $('page-' + page);
     if (pageEl) pageEl.classList.add('active');
     
-    // Load page content
-    switch(page) {
-        case 'home': carregarHome(); break;
-        case 'materias': carregarMaterias(); break;
-        case 'ranking': carregarRanking(); break;
-        case 'desafios': carregarDesafios(); break;
-        case 'jarvis': carregarJarvis(); break;
-        case 'feed': carregarFeed(); break;
-        case 'perfil': carregarPerfil(); break;
-        case 'sobre': carregarSobre(); break;
-        case 'updates': carregarUpdates(); break;
+    // Atualizar nav
+    $$('.nav-menu li').forEach(function(li) { li.classList.remove('active'); });
+    const navItem = document.querySelector(`.nav-menu li[data-page="${page}"]`);
+    if (navItem) navItem.classList.add('active');
+    
+    $$('#bottom-nav button').forEach(function(btn) { btn.classList.remove('active'); });
+    const bottomBtn = document.querySelector(`#bottom-nav button[data-page="${page}"]`);
+    if (bottomBtn) bottomBtn.classList.add('active');
+    
+    // Título
+    const title = $('page-title');
+    if (title) {
+        const titles = {
+            home: 'Home', materias: 'Disciplinas', ranking: 'Ranking', desafios: 'Desafios',
+            jarvis: 'Jarvis IA', feed: 'Feed', chat: 'Chat', grupos: 'Grupos',
+            flashcards: 'Flashcards', pomodoro: 'Pomodoro', perfil: 'Perfil',
+            sobre: 'Sobre Nós', updates: 'Updates', calendario: 'Calendário',
+            notificacoes: 'Notificações'
+        };
+        title.textContent = titles[page] || page;
+    }
+    
+    // Carregar conteúdo
+    const loaders = {
+        home: carregarHome, materias: carregarMaterias, ranking: carregarRanking,
+        desafios: carregarDesafios, jarvis: carregarJarvis, feed: carregarFeed,
+        chat: carregarChat, grupos: carregarGrupos, flashcards: carregarFlashcards,
+        pomodoro: carregarPomodoro, perfil: carregarPerfil, sobre: carregarSobre,
+        updates: carregarUpdates, calendario: carregarCalendario,
+        notificacoes: carregarNotificacoes
+    };
+    
+    if (loaders[page]) loaders[page]();
+    
+    // Fechar sidebar no mobile
+    const sidebar = $('sidebar');
+    if (sidebar && window.innerWidth <= 1024) {
+        sidebar.classList.remove('open');
     }
 }
 
-// ===== AUTH FUNCTIONS =====
+function toggleSidebar() {
+    const sidebar = $('sidebar');
+    if (sidebar) sidebar.classList.toggle('open');
+}
+
+// ==================== AUTH FUNCTIONS ====================
 function fazerLogin() {
-    const username = document.getElementById('login-username');
-    const password = document.getElementById('login-password');
-    
+    const username = $('login-username');
+    const password = $('login-password');
     if (!username || !password) return;
     
     const userVal = username.value.trim();
@@ -120,7 +171,8 @@ function fazerLogin() {
     }
     
     try {
-        db.ref('usuarios').orderByChild('username').equalTo(userVal).once('value').then(function(snapshot) {
+        db.ref('usuarios').orderByChild('username').equalTo(userVal).once('value')
+        .then(function(snapshot) {
             if (snapshot.exists()) {
                 let foundUser = null;
                 let foundUid = null;
@@ -132,24 +184,22 @@ function fazerLogin() {
                 });
                 
                 if (foundUser) {
-                    auth.signInWithEmailAndPassword(foundUser.email, passVal).then(function() {
+                    auth.signInWithEmailAndPassword(foundUser.email, passVal)
+                    .then(function() {
                         currentUser = foundUser;
                         currentUser.uid = foundUid;
                         mostrarTela('main-app');
                         navegar('home');
-                        carregarFooter();
-                        toast('Bem-vindo(a), @' + foundUser.username + '!', 'success');
-                    }).catch(function(error) {
-                        // Se falhar, autentica anonimamente e atualiza
-                        auth.signInAnonymously().then(function(result) {
-                            const uid = foundUid;
-                            currentUser = foundUser;
-                            currentUser.uid = uid;
-                            mostrarTela('main-app');
-                            navegar('home');
-                            carregarFooter();
-                            toast('Bem-vindo(a), @' + foundUser.username + '!', 'success');
-                        });
+                        verificarNotificacoes();
+                        toast('Bem-vindo(a), ' + foundUser.username + '!', 'success');
+                    }).catch(function() {
+                        // Fallback: login local
+                        currentUser = foundUser;
+                        currentUser.uid = foundUid;
+                        mostrarTela('main-app');
+                        navegar('home');
+                        verificarNotificacoes();
+                        toast('Bem-vindo(a), ' + foundUser.username + '!', 'success');
                     });
                 } else {
                     toast('Senha incorreta', 'error');
@@ -159,7 +209,7 @@ function fazerLogin() {
             }
         });
     } catch(e) {
-        console.error('Erro no login:', e);
+        console.error('Erro login:', e);
         toast('Erro ao fazer login', 'error');
     }
 }
@@ -167,56 +217,32 @@ function fazerLogin() {
 function loginComGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).then(function(result) {
-        const user = result.user;
-        db.ref('usuarios/' + user.uid).once('value').then(function(snapshot) {
-            if (!snapshot.exists()) {
-                const userData = {
-                    fullname: user.displayName || 'Usuário Google',
-                    username: (user.email ? user.email.split('@')[0] : 'user_' + Date.now().toString(36)),
-                    email: user.email || '',
-                    password: '',
-                    avatar: user.photoURL || '',
-                    bio: '',
-                    points: 0,
-                    plano: 'gratis',
-                    adminLevel: 0,
-                    isProf: false,
-                    isQuizzer: false,
-                    createdAt: Date.now()
-                };
-                db.ref('usuarios/' + user.uid).set(userData);
-                currentUser = userData;
-                currentUser.uid = user.uid;
-            } else {
-                currentUser = snapshot.val();
-                currentUser.uid = user.uid;
-            }
-            mostrarTela('main-app');
-            navegar('home');
-            carregarFooter();
-            toast('Bem-vindo(a)!', 'success');
-        });
+        toast('Login com Google realizado!', 'success');
     }).catch(function(error) {
-        console.error('Erro Google login:', error);
+        console.error('Erro Google:', error);
         toast('Erro ao logar com Google', 'error');
     });
 }
 
 function mostrarRegistro() {
-    if (document.getElementById('login-form')) document.getElementById('login-form').style.display = 'none';
-    if (document.getElementById('registro-form')) document.getElementById('registro-form').style.display = 'block';
+    const loginForm = $('login-form');
+    const registroForm = $('registro-form');
+    if (loginForm) loginForm.style.display = 'none';
+    if (registroForm) registroForm.style.display = 'block';
 }
 
 function mostrarLogin() {
-    if (document.getElementById('registro-form')) document.getElementById('registro-form').style.display = 'none';
-    if (document.getElementById('login-form')) document.getElementById('login-form').style.display = 'block';
+    const loginForm = $('login-form');
+    const registroForm = $('registro-form');
+    if (registroForm) registroForm.style.display = 'none';
+    if (loginForm) loginForm.style.display = 'block';
 }
 
 function registrar() {
-    const fullname = document.getElementById('reg-fullname');
-    const username = document.getElementById('reg-username');
-    const email = document.getElementById('reg-email');
-    const password = document.getElementById('reg-password');
+    const fullname = $('reg-fullname');
+    const username = $('reg-username');
+    const email = $('reg-email');
+    const password = $('reg-password');
     
     if (!fullname || !username || !email || !password) return;
     
@@ -232,18 +258,18 @@ function registrar() {
         return;
     }
     
-    if (!data.username.startsWith('@')) {
-        data.username = '@' + data.username;
-    }
+    if (!data.username.startsWith('@')) data.username = '@' + data.username;
     
     try {
-        db.ref('usuarios').orderByChild('username').equalTo(data.username).once('value').then(function(snapshot) {
+        db.ref('usuarios').orderByChild('username').equalTo(data.username).once('value')
+        .then(function(snapshot) {
             if (snapshot.exists()) {
                 toast('Nome de usuário já existe', 'error');
                 return;
             }
             
-            auth.createUserWithEmailAndPassword(data.email, data.password).then(function(result) {
+            auth.createUserWithEmailAndPassword(data.email, data.password)
+            .then(function(result) {
                 const userData = {
                     fullname: data.fullname,
                     username: data.username,
@@ -256,28 +282,44 @@ function registrar() {
                     adminLevel: 0,
                     isProf: false,
                     isQuizzer: false,
-                    createdAt: Date.now()
+                    seguidores: {},
+                    seguindo: {},
+                    conquistas: [],
+                    configuracoes: { temaCor: '#3B82F6' },
+                    createdAt: Date.now(),
+                    lastLogin: Date.now()
                 };
                 
-                db.ref('usuarios/' + result.user.uid).set(userData).then(function() {
+                db.ref('usuarios/' + result.user.uid).set(userData)
+                .then(function() {
                     currentUser = userData;
                     currentUser.uid = result.user.uid;
                     mostrarTela('main-app');
                     navegar('home');
-                    carregarFooter();
                     toast('Conta criada com sucesso!', 'success');
                 });
             }).catch(function(error) {
                 if (error.code === 'auth/email-already-in-use') {
                     toast('Email já está em uso', 'error');
                 } else {
-                    toast('Erro ao criar conta: ' + error.message, 'error');
+                    toast('Erro: ' + error.message, 'error');
                 }
             });
         });
     } catch(e) {
-        console.error('Erro no registro:', e);
+        console.error('Erro registro:', e);
         toast('Erro ao registrar', 'error');
+    }
+}
+
+function recuperarSenha() {
+    const email = prompt('Digite seu email para recuperar a senha:');
+    if (email) {
+        auth.sendPasswordResetEmail(email).then(function() {
+            toast('Email de recuperação enviado!', 'success');
+        }).catch(function(error) {
+            toast('Erro: ' + error.message, 'error');
+        });
     }
 }
 
@@ -285,70 +327,95 @@ function logout() {
     auth.signOut().then(function() {
         currentUser = null;
         chatHistory = [];
+        clearInterval(pomodoroInterval);
         mostrarTela('login-screen');
         toast('Até logo!', 'info');
     });
 }
 
-// ===== HOME =====
+// ==================== HOME ====================
 function carregarHome() {
-    const page = document.getElementById('page-home');
+    const page = $('page-home');
     if (!page || !currentUser) return;
     
-    page.innerHTML = `
-        <h2 style="margin-bottom:20px;">Olá, ${currentUser.fullname || currentUser.username}!</h2>
+    const points = currentUser.points || 0;
+    const nivel = Math.floor(points / 100) + 1;
+    const pontosParaProximoNivel = 100 - (points % 100);
+    const progressoNivel = (points % 100);
+    
+    let html = `
+        <h2 style="margin-bottom:10px;">Olá, ${currentUser.fullname || currentUser.username}!</h2>
+        
+        <div class="card" style="margin-bottom:20px;">
+            <div class="progress-info">
+                <span>Nível ${nivel}</span>
+                <span>${progressoNivel}/100 → Nível ${nivel + 1}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:${progressoNivel}%;"></div>
+            </div>
+            <p style="font-size:12px;color:#94A3B8;margin-top:5px;">Faltam ${pontosParaProximoNivel} pontos para o próximo nível</p>
+        </div>
+        
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">⭐ Pontos</div>
-                <div class="stat-value" style="color:var(--gold);">${currentUser.points || 0}</div>
+                <div class="stat-icon">⭐</div>
+                <div class="stat-value">${points}</div>
+                <div class="stat-label">Pontos</div>
+            </div>
+            <div class="stat-card" id="home-card-materias">
+                <div class="stat-icon">📚</div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Disciplinas</div>
+            </div>
+            <div class="stat-card" id="home-card-quizzes">
+                <div class="stat-icon">📝</div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Quizzes</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">📚 Disciplinas</div>
-                <div class="stat-value" id="home-count-materias">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">✅ Quizzes</div>
-                <div class="stat-value" id="home-count-quizzes">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">🗓️ Desafios</div>
-                <div class="stat-value" id="home-count-desafios">0</div>
+                <div class="stat-icon">👥</div>
+                <div class="stat-value">${currentUser.seguidores ? Object.keys(currentUser.seguidores).length : 0}</div>
+                <div class="stat-label">Seguidores</div>
             </div>
         </div>
+        
+        <div id="home-banner-desafio"></div>
+        
         <div class="card">
             <div class="card-header">
-                <span class="card-title">📝 Feed Recente</span>
+                <span class="card-title">📰 Feed Recente</span>
+                <button class="btn-icon" onclick="navegar('feed')">Ver todos →</button>
             </div>
             <div id="home-feed"></div>
         </div>
     `;
     
+    page.innerHTML = html;
+    
+    // Carregar banner de desafio próximo
+    carregarBannerDesafio();
+    
+    // Carregar contagens
     try {
         db.ref('materias').once('value').then(function(snap) {
-            const count = snap.exists() ? snap.numChildren() : 0;
-            const el = document.getElementById('home-count-materias');
-            if (el) el.textContent = count;
+            const el = document.querySelector('#home-card-materias .stat-value');
+            if (el) el.textContent = snap.exists() ? snap.numChildren() : 0;
         });
         
         db.ref('quizzes').once('value').then(function(snap) {
             let count = 0;
             if (snap.exists()) {
-                snap.forEach(function(materiaSnap) {
-                    count += materiaSnap.numChildren();
-                });
+                snap.forEach(function(m) { count += m.numChildren(); });
             }
-            const el = document.getElementById('home-count-quizzes');
+            const el = document.querySelector('#home-card-quizzes .stat-value');
             if (el) el.textContent = count;
         });
         
-        db.ref('desafios').once('value').then(function(snap) {
-            const count = snap.exists() ? snap.numChildren() : 0;
-            const el = document.getElementById('home-count-desafios');
-            if (el) el.textContent = count;
-        });
-        
-        db.ref('posts').orderByChild('createdAt').limitToLast(5).once('value').then(function(snap) {
-            const container = document.getElementById('home-feed');
+        // Feed recente
+        db.ref('posts').orderByChild('createdAt').limitToLast(5).once('value')
+        .then(function(snap) {
+            const container = $('home-feed');
             if (!container) return;
             
             if (snap.exists()) {
@@ -359,16 +426,23 @@ function carregarHome() {
                 });
                 
                 posts.forEach(function(post) {
+                    const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+                    const viewsCount = post.views ? Object.keys(post.views).length : 0;
                     html += `
                         <div class="post-card" style="margin-bottom:10px;">
                             <div class="post-header">
                                 <img src="${post.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" class="post-avatar">
                                 <div>
                                     <span class="post-autor">${post.autorNome || 'Anônimo'}</span>
+                                    ${post.isProf ? '<span class="badge badge-prof">Prof</span>' : ''}
                                     <br><span class="post-data">${formatarData(post.createdAt)}</span>
                                 </div>
                             </div>
-                            <p>${post.texto || ''}</p>
+                            <p class="post-texto">${(post.texto || '').substring(0, 200)}${post.texto && post.texto.length > 200 ? '...' : ''}</p>
+                            <div class="post-actions">
+                                <span><i class="far fa-heart"></i> ${likesCount}</span>
+                                <span><i class="far fa-eye"></i> ${viewsCount}</span>
+                            </div>
                         </div>
                     `;
                 });
@@ -378,232 +452,264 @@ function carregarHome() {
             }
         });
     } catch(e) {
-        console.error('Erro ao carregar home:', e);
+        console.error('Erro home:', e);
     }
 }
 
-// ===== MATERIAS =====
+function carregarBannerDesafio() {
+    const container = $('home-banner-desafio');
+    if (!container) return;
+    
+    try {
+        db.ref('desafios').once('value').then(function(snap) {
+            if (snap.exists()) {
+                let desafioProximo = null;
+                const agora = Date.now();
+                
+                snap.forEach(function(child) {
+                    const d = child.val();
+                    if (d.inicio > agora && (!desafioProximo || d.inicio < desafioProximo.inicio)) {
+                        desafioProximo = {id: child.key, ...d};
+                    }
+                });
+                
+                if (desafioProximo) {
+                    const diasRestantes = Math.ceil((desafioProximo.inicio - agora) / (1000 * 60 * 60 * 24));
+                    container.innerHTML = `
+                        <div class="banner-desafio" onclick="navegar('desafios')" style="cursor:pointer;">
+                            <h3>🏆 Próximo Desafio: ${desafioProximo.titulo || 'Desafio'}</h3>
+                            <p>📅 ${new Date(desafioProximo.inicio).toLocaleDateString('pt-BR')} às ${new Date(desafioProximo.inicio).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</p>
+                            <p>🏅 Prêmio: ${desafioProximo.premio || 0} pontos</p>
+                            <p style="margin-top:8px;">📚 Estude ${desafioProximo.materia || 'a matéria'} para se preparar!</p>
+                            <div class="timer-contagem">⏰ Faltam ${diasRestantes} dia(s)</div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '';
+                }
+            }
+        });
+    } catch(e) {
+        console.error('Erro banner:', e);
+    }
+}
+
+// Continua... (devido ao tamanho, continuarei no próximo chunk)
+// ==================== MATÉRIAS/DISCIPLINAS ====================
 function carregarMaterias() {
-    const page = document.getElementById('page-materias');
+    const page = $('page-materias');
     if (!page) return;
     
     page.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div class="flex-between mb-20">
             <h2>📚 Disciplinas</h2>
-            ${(currentUser && (currentUser.isProf || currentUser.adminLevel >= 1)) ? '<button class="btn-primary" onclick="mostrarCriarMateria()" style="width:auto;">+ Nova</button>' : ''}
+            <div class="flex gap-10">
+                <select id="filtro-materias" onchange="filtrarMaterias()" style="padding:8px 12px;background:var(--bg);border:1px solid #334155;border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;">
+                    <option value="todas">Todas</option>
+                    <option value="minhas">Minhas</option>
+                </select>
+                ${(currentUser && (currentUser.isProf || currentUser.adminLevel >= 1)) ? 
+                    '<button class="btn-primary btn-sm" onclick="mostrarCriarMateria()">+ Nova</button>' : ''}
+            </div>
         </div>
         <div id="materias-list"></div>
     `;
     
+    listarMaterias('todas');
+}
+
+function listarMaterias(filtro) {
     try {
-        db.ref('materias').once('value').then(function(snap) {
-            const container = document.getElementById('materias-list');
+        const ref = filtro === 'minhas' && currentUser ? 
+            db.ref('materias').orderByChild('autorId').equalTo(currentUser.uid) :
+            db.ref('materias');
+        
+        ref.once('value').then(function(snap) {
+            const container = $('materias-list');
             if (!container) return;
             
             if (snap.exists()) {
-                let html = '';
+                let html = '<div class="stats-grid">';
                 snap.forEach(function(child) {
                     const mat = child.val();
                     html += `
-                        <div class="card" onclick="abrirMateria('${child.key}')" style="cursor:pointer;">
-                            <div style="display:flex;align-items:center;gap:15px;">
-                                <span style="font-size:40px;">${mat.icone || '📖'}</span>
-                                <div style="flex:1;">
-                                    <h3>${mat.nome || 'Sem nome'}</h3>
-                                    <p style="color:#94A3B8;font-size:13px;">${mat.descricao || ''}</p>
-                                    <span style="font-size:11px;color:#94A3B8;">Por: ${mat.autorNome || 'Anônimo'}</span>
-                                </div>
-                                <i class="fas fa-chevron-right" style="color:#94A3B8;"></i>
-                            </div>
+                        <div class="stat-card" onclick="abrirMateria('${child.key}')" style="cursor:pointer;">
+                            <div class="stat-icon">${mat.icone || '📖'}</div>
+                            <h3 style="margin:8px 0;">${mat.nome || 'Sem nome'}</h3>
+                            <p style="color:#94A3B8;font-size:12px;">${mat.descricao || ''}</p>
+                            <p style="font-size:11px;color:#64748B;">Por: ${mat.autorNome || 'Anônimo'}</p>
                         </div>
                     `;
                 });
+                html += '</div>';
                 container.innerHTML = html;
             } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-book"></i><p>Nenhuma disciplina</p></div>';
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-book"></i><p>Nenhuma disciplina encontrada</p></div>';
             }
         });
     } catch(e) {
-        console.error('Erro ao carregar matérias:', e);
+        console.error('Erro matérias:', e);
     }
+}
+
+function filtrarMaterias() {
+    const filtro = $('filtro-materias')?.value || 'todas';
+    listarMaterias(filtro);
 }
 
 function mostrarCriarMateria() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal">
-            <h3>Nova Disciplina</h3>
-            <input type="text" id="mat-nome" placeholder="Nome da disciplina">
-            <input type="text" id="mat-descricao" placeholder="Descrição">
-            <input type="text" id="mat-icone" placeholder="Ícone (emoji, ex: 📐)">
-            <div class="modal-buttons">
-                <button class="btn-danger" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary" onclick="criarMateria()">Criar</button>
-            </div>
+    const modal = criarModal('Nova Disciplina', `
+        <input type="text" id="mat-nome" placeholder="Nome da disciplina">
+        <input type="text" id="mat-descricao" placeholder="Descrição">
+        <input type="text" id="mat-icone" placeholder="Ícone (emoji)" maxlength="2">
+        <div class="modal-buttons">
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="criarMateria()">Criar</button>
         </div>
-    `;
-    document.body.appendChild(modal);
+    `);
 }
 
 function criarMateria() {
-    const nome = document.getElementById('mat-nome');
-    const descricao = document.getElementById('mat-descricao');
-    const icone = document.getElementById('mat-icone');
+    const nome = $('mat-nome')?.value?.trim();
+    const descricao = $('mat-descricao')?.value?.trim();
+    const icone = $('mat-icone')?.value?.trim() || '📖';
     
-    if (!nome || !descricao || !icone) return;
-    if (!nome.value.trim()) {
-        toast('Nome é obrigatório', 'error');
-        return;
-    }
+    if (!nome) { toast('Nome é obrigatório', 'error'); return; }
     
-    const materiaRef = db.ref('materias').push();
-    const materiaData = {
-        nome: nome.value.trim(),
-        descricao: descricao.value.trim(),
-        icone: icone.value.trim() || '📖',
+    const ref = db.ref('materias').push();
+    ref.set({
+        nome, descricao: descricao || '', icone,
         autorId: currentUser.uid,
         autorNome: currentUser.fullname || currentUser.username,
         isProf: currentUser.isProf || false,
+        aulasCount: 0,
         createdAt: Date.now()
-    };
-    
-    materiaRef.set(materiaData).then(function() {
+    }).then(function() {
         toast('Disciplina criada!', 'success');
-        document.querySelector('.modal-overlay')?.remove();
-        carregarMaterias();
-    }).catch(function(error) {
-        toast('Erro ao criar disciplina', 'error');
+        fecharModal();
+        listarMaterias('todas');
     });
 }
 
 function abrirMateria(materiaId) {
-    try {
-        db.ref('materias/' + materiaId).once('value').then(function(snap) {
-            if (!snap.exists()) return;
-            const mat = snap.val();
+    db.ref('materias/' + materiaId).once('value').then(function(snap) {
+        if (!snap.exists()) return;
+        const mat = snap.val();
+        
+        const page = $('page-materia-detalhes');
+        if (!page) return;
+        
+        $$('.page').forEach(function(p) { p.classList.remove('active'); });
+        page.classList.add('active');
+        
+        page.innerHTML = `
+            <button class="btn-primary btn-sm" onclick="navegar('materias')" style="margin-bottom:15px;">← Voltar</button>
+            <h2>${mat.icone || '📖'} ${mat.nome}</h2>
+            <p style="color:#94A3B8;margin-bottom:20px;">${mat.descricao || ''}</p>
             
-            const page = document.getElementById('page-materia-detalhes');
-            if (!page) return;
+            <div class="tabs">
+                <div class="tab active" onclick="carregarAulasMateria('${materiaId}')">📖 Aulas</div>
+                <div class="tab" onclick="carregarQuizzesMateria('${materiaId}')">📝 Quizzes</div>
+                <div class="tab" onclick="carregarVideosMateria('${materiaId}')">🎬 Vídeos</div>
+            </div>
             
-            document.querySelectorAll('.page').forEach(function(p) {
-                p.classList.remove('active');
-            });
-            page.classList.add('active');
+            <div id="materia-content"></div>
             
-            page.innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-                    <button class="btn-primary" onclick="navegar('materias')" style="width:auto;">← Voltar</button>
-                    <h2>${mat.icone || '📖'} ${mat.nome}</h2>
-                </div>
-                <p style="color:#94A3B8;margin-bottom:20px;">${mat.descricao || ''}</p>
-                
-                <div class="tabs">
-                    <div class="tab active" onclick="carregarAulasMateria('${materiaId}')">Aulas</div>
-                    <div class="tab" onclick="carregarQuizzesMateria('${materiaId}')">Quizzes</div>
-                    <div class="tab" onclick="carregarVideosMateria('${materiaId}')">Vídeos</div>
-                </div>
-                
-                <div id="materia-content"></div>
-                
-                ${(currentUser && (currentUser.isProf || currentUser.adminLevel >= 1)) ? `
-                <div style="margin-top:20px;display:flex;gap:10px;">
-                    <button class="btn-primary" onclick="mostrarCriarAula('${materiaId}')">+ Aula</button>
-                    <button class="btn-green" onclick="mostrarCriarQuiz('${materiaId}')">+ Quiz</button>
-                    <button class="btn-gold" onclick="mostrarAdicionarVideo('${materiaId}')">+ Vídeo</button>
-                </div>` : ''}
-            `;
-            
-            carregarAulasMateria(materiaId);
-        });
-    } catch(e) {
-        console.error('Erro ao abrir matéria:', e);
-    }
+            ${(currentUser && (currentUser.isProf || currentUser.adminLevel >= 1)) ? `
+            <div class="flex gap-10 mt-20" style="flex-wrap:wrap;">
+                <button class="btn-primary btn-sm" onclick="mostrarCriarAula('${materiaId}')">+ Aula</button>
+                <button class="btn-green btn-sm" onclick="mostrarCriarQuiz('${materiaId}')">+ Quiz</button>
+                <button class="btn-gold btn-sm" onclick="mostrarAdicionarVideo('${materiaId}')">+ Vídeo</button>
+                <button class="btn-primary btn-sm" onclick="gerarQuizIAMateria('${materiaId}')">🤖 Quiz IA</button>
+            </div>` : ''}
+        `;
+        
+        carregarAulasMateria(materiaId);
+    });
 }
 
 function carregarAulasMateria(materiaId) {
-    const container = document.getElementById('materia-content');
+    const container = $('materia-content');
     if (!container) return;
     
-    try {
-        db.ref('aulas/' + materiaId).once('value').then(function(snap) {
-            if (snap.exists()) {
-                let html = '';
-                snap.forEach(function(child) {
-                    const aula = child.val();
-                    const viewsCount = aula.views ? Object.keys(aula.views).length : 0;
-                    html += `
-                        <div class="card" onclick="abrirAula('${materiaId}', '${child.key}')" style="cursor:pointer;">
+    db.ref('aulas/' + materiaId).once('value').then(function(snap) {
+        if (snap.exists()) {
+            let html = '';
+            snap.forEach(function(child) {
+                const aula = child.val();
+                const viewsCount = aula.views ? Object.keys(aula.views).length : 0;
+                html += `
+                    <div class="card" onclick="abrirAula('${materiaId}', '${child.key}')" style="cursor:pointer;">
+                        <div class="flex-between">
                             <h3>${aula.titulo || 'Sem título'}</h3>
-                            <p style="color:#94A3B8;font-size:12px;">Por: ${aula.autorNome || 'Anônimo'} | 👁️ ${viewsCount} views</p>
                             ${aula.verificado ? '<span class="badge badge-verificado">✓ Verificado</span>' : ''}
                         </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-chalkboard"></i><p>Nenhuma aula</p></div>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+                        <p style="color:#94A3B8;font-size:12px;">Por: ${aula.autorNome || 'Anônimo'} | 👁️ ${viewsCount} views</p>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-chalkboard"></i><p>Nenhuma aula ainda</p></div>';
+        }
+    });
 }
 
 function carregarQuizzesMateria(materiaId) {
-    const container = document.getElementById('materia-content');
+    const container = $('materia-content');
     if (!container) return;
     
-    try {
-        db.ref('quizzes/' + materiaId).once('value').then(function(snap) {
-            if (snap.exists()) {
-                let html = '';
-                snap.forEach(function(child) {
-                    const quiz = child.val();
-                    html += `
-                        <div class="card" onclick="iniciarQuiz('${materiaId}', '${child.key}')" style="cursor:pointer;">
-                            <h3>📝 ${quiz.nome || 'Quiz'}</h3>
-                            <p style="color:#94A3B8;font-size:12px;">${quiz.questoes ? quiz.questoes.length : 0} questões</p>
-                            ${quiz.oficial ? '<span class="badge badge-verificado">Oficial</span>' : ''}
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-question-circle"></i><p>Nenhum quiz</p></div>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+    db.ref('quizzes/' + materiaId).once('value').then(function(snap) {
+        if (snap.exists()) {
+            let html = '';
+            snap.forEach(function(child) {
+                const quiz = child.val();
+                html += `
+                    <div class="card" onclick="iniciarQuiz('${materiaId}', '${child.key}')" style="cursor:pointer;">
+                        <h3>📝 ${quiz.nome || 'Quiz'}</h3>
+                        <p style="color:#94A3B8;font-size:12px;">${quiz.questoes ? quiz.questoes.length : 0} questões | ⏱️ ${quiz.tempo || 30}s</p>
+                        ${quiz.oficial ? '<span class="badge badge-verificado">Oficial</span>' : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-question-circle"></i><p>Nenhum quiz ainda</p></div>';
+        }
+    });
 }
 
 function carregarVideosMateria(materiaId) {
-    const container = document.getElementById('materia-content');
+    const container = $('materia-content');
     if (!container) return;
     
-    try {
-        db.ref('videos/' + materiaId).once('value').then(function(snap) {
-            if (snap.exists()) {
-                let html = '';
-                snap.forEach(function(child) {
-                    const video = child.val();
-                    const videoId = extrairYouTubeID(video.url);
-                    html += `
-                        <div class="card">
-                            <h3>${video.titulo || 'Vídeo'}</h3>
-                            ${videoId ? `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe>` : ''}
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-video"></i><p>Nenhum vídeo</p></div>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+    db.ref('videos/' + materiaId).once('value').then(function(snap) {
+        if (snap.exists()) {
+            let html = '';
+            snap.forEach(function(child) {
+                const video = child.val();
+                const videoId = extrairYouTubeID(video.url);
+                html += `
+                    <div class="card">
+                        <h3>${video.titulo || 'Vídeo'}</h3>
+                        <p style="color:#94A3B8;font-size:11px;">Por: ${video.autorNome || 'Anônimo'}</p>
+                        ${videoId ? `
+                            <iframe width="100%" height="250" src="https://www.youtube.com/embed/${videoId}" 
+                                frameborder="0" allowfullscreen style="border-radius:12px;margin-top:10px;"></iframe>
+                        ` : video.url ? `
+                            <video controls style="width:100%;max-height:400px;border-radius:12px;margin-top:10px;">
+                                <source src="${video.url}" type="video/mp4">
+                                Seu navegador não suporta vídeo.
+                            </video>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-video"></i><p>Nenhum vídeo ainda</p></div>';
+        }
+    });
 }
 
 function extrairYouTubeID(url) {
@@ -612,79 +718,60 @@ function extrairYouTubeID(url) {
     return match ? match[1] : null;
 }
 
+// ==================== AULAS ====================
 function mostrarCriarAula(materiaId) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal">
-            <h3>Nova Aula</h3>
-            <input type="text" id="aula-titulo" placeholder="Título da aula">
-            <textarea id="aula-conteudo" placeholder="Conteúdo (ou gere com IA)"></textarea>
-            <div class="modal-buttons">
-                <button class="btn-gold" onclick="gerarAulaIA('${materiaId}')">Gerar com IA</button>
-                <button class="btn-danger" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary" onclick="criarAula('${materiaId}')">Criar</button>
-            </div>
+    criarModal('Nova Aula', `
+        <input type="text" id="aula-titulo" placeholder="Título da aula">
+        <textarea id="aula-conteudo" placeholder="Conteúdo da aula (você pode usar IA para gerar)"></textarea>
+        <div class="modal-buttons">
+            <button class="btn-gold" onclick="gerarAulaIA('${materiaId}')">🤖 Gerar com IA</button>
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="criarAula('${materiaId}')">Criar Aula</button>
         </div>
-    `;
-    document.body.appendChild(modal);
+    `);
 }
 
 function gerarAulaIA(materiaId) {
-    const titulo = document.getElementById('aula-titulo');
-    if (!titulo || !titulo.value) {
-        toast('Digite um título primeiro', 'error');
-        return;
-    }
+    const titulo = $('aula-titulo')?.value;
+    if (!titulo) { toast('Digite um título primeiro', 'error'); return; }
     
-    const conteudoEl = document.getElementById('aula-conteudo');
+    const conteudoEl = $('aula-conteudo');
     if (conteudoEl) conteudoEl.value = 'Gerando com IA...';
     
-    try {
-        fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + GROQ_API_KEY
-            },
-            body: JSON.stringify({
-                model: 'llama-3.1-8b-instant',
-                messages: [{
-                    role: 'user',
-                    content: `Crie uma aula detalhada sobre: ${titulo.value}. Formate com tópicos e explicações claras. Use linguagem educativa.`
-                }],
-                max_tokens: 2000
-            })
-        }).then(function(res) {
-            return res.json();
-        }).then(function(data) {
-            if (conteudoEl && data.choices && data.choices[0]) {
-                conteudoEl.value = data.choices[0].message.content;
-                toast('Aula gerada!', 'success');
-            }
-        }).catch(function(error) {
-            console.error('Erro IA:', error);
-            if (conteudoEl) conteudoEl.value = 'Erro ao gerar. Tente novamente.';
-            toast('Erro na IA', 'error');
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+    fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + GROQ_API_KEY
+        },
+        body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [{
+                role: 'user',
+                content: `Crie uma aula completa e detalhada sobre: "${titulo}". Inclua introdução, tópicos principais, exemplos e conclusão. Formate com parágrafos claros.`
+            }],
+            max_tokens: 2000
+        })
+    }).then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (conteudoEl && data.choices?.[0]) {
+            conteudoEl.value = data.choices[0].message.content;
+            toast('Aula gerada com IA!', 'success');
+        }
+    }).catch(function(e) {
+        if (conteudoEl) conteudoEl.value = 'Erro ao gerar. Tente novamente.';
+        console.error(e);
+    });
 }
 
 function criarAula(materiaId) {
-    const titulo = document.getElementById('aula-titulo');
-    const conteudo = document.getElementById('aula-conteudo');
+    const titulo = $('aula-titulo')?.value?.trim();
+    const conteudo = $('aula-conteudo')?.value?.trim();
     
-    if (!titulo || !conteudo || !titulo.value.trim() || !conteudo.value.trim()) {
-        toast('Preencha todos os campos', 'error');
-        return;
-    }
+    if (!titulo || !conteudo) { toast('Preencha todos os campos', 'error'); return; }
     
-    const aulaRef = db.ref('aulas/' + materiaId).push();
-    aulaRef.set({
-        titulo: titulo.value.trim(),
-        conteudo: conteudo.value.trim(),
+    db.ref('aulas/' + materiaId).push().set({
+        titulo, conteudo,
         autorId: currentUser.uid,
         autorNome: currentUser.fullname || currentUser.username,
         isProf: currentUser.isProf || false,
@@ -692,141 +779,218 @@ function criarAula(materiaId) {
         views: {},
         createdAt: Date.now()
     }).then(function() {
+        db.ref('materias/' + materiaId + '/aulasCount').transaction(function(count) {
+            return (count || 0) + 1;
+        });
         toast('Aula criada!', 'success');
-        document.querySelector('.modal-overlay')?.remove();
+        fecharModal();
         carregarAulasMateria(materiaId);
-    }).catch(function(error) {
-        toast('Erro ao criar aula', 'error');
     });
 }
 
 function abrirAula(materiaId, aulaId) {
-    try {
-        db.ref('aulas/' + materiaId + '/' + aulaId).once('value').then(function(snap) {
-            if (!snap.exists()) return;
-            const aula = snap.val();
+    db.ref('aulas/' + materiaId + '/' + aulaId).once('value').then(function(snap) {
+        if (!snap.exists()) return;
+        const aula = snap.val();
+        
+        // Registrar view
+        if (currentUser?.uid) {
+            db.ref('aulas/' + materiaId + '/' + aulaId + '/views/' + currentUser.uid).set(Date.now());
+        }
+        
+        const page = $('page-aula');
+        if (!page) return;
+        
+        $$('.page').forEach(function(p) { p.classList.remove('active'); });
+        page.classList.add('active');
+        
+        page.innerHTML = `
+            <button class="btn-primary btn-sm" onclick="abrirMateria('${materiaId}')" style="margin-bottom:20px;">← Voltar</button>
+            <h2>${aula.titulo || 'Aula'}</h2>
+            <p style="color:#94A3B8;margin-bottom:15px;">
+                Por: ${aula.autorNome || 'Anônimo'} 
+                ${aula.isProf ? '<span class="badge badge-prof">Professor</span>' : ''}
+                ${aula.verificado ? '<span class="badge badge-verificado">Verificado</span>' : ''}
+            </p>
+            <div class="card" style="white-space:pre-wrap;line-height:1.9;font-size:15px;">${aula.conteudo || ''}</div>
             
-            if (currentUser && currentUser.uid) {
-                db.ref('aulas/' + materiaId + '/' + aulaId + '/views/' + currentUser.uid).set(Date.now());
-            }
-            
-            const page = document.getElementById('page-aula');
-            if (!page) return;
-            
-            document.querySelectorAll('.page').forEach(function(p) {
-                p.classList.remove('active');
-            });
-            page.classList.add('active');
-            
-            page.innerHTML = `
-                <button class="btn-primary" onclick="abrirMateria('${materiaId}')" style="width:auto;margin-bottom:20px;">← Voltar</button>
-                <h2>${aula.titulo || 'Aula'}</h2>
-                <p style="color:#94A3B8;margin-bottom:20px;">Por: ${aula.autorNome}</p>
-                <div class="card" style="white-space:pre-wrap;line-height:1.8;">${aula.conteudo || ''}</div>
-                <div class="card" style="margin-top:20px;">
-                    <h3>💬 Comentários</h3>
-                    <div id="aula-comentarios"></div>
-                    <div style="display:flex;gap:10px;margin-top:15px;">
-                        <input type="text" id="comentario-texto" placeholder="Adicione um comentário..." style="flex:1;padding:10px;background:var(--bg);border:1px solid #334155;border-radius:10px;color:var(--text);">
-                        <button class="btn-primary" onclick="enviarComentario('${materiaId}', '${aulaId}')" style="width:auto;">Enviar</button>
-                    </div>
+            <div class="card mt-20">
+                <h3>💬 Comentários</h3>
+                <div id="aula-comentarios"></div>
+                <div class="flex gap-10 mt-15">
+                    <input type="text" id="comentario-texto" placeholder="Adicione um comentário..." 
+                        style="flex:1;padding:12px;background:var(--bg);border:1px solid #334155;border-radius:10px;color:var(--text);font-family:'Sora',sans-serif;">
+                    <button class="btn-primary btn-sm" onclick="enviarComentarioAula('${materiaId}', '${aulaId}')">Enviar</button>
                 </div>
-            `;
+            </div>
             
-            carregarComentarios(materiaId, aulaId);
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+            ${(currentUser?.adminLevel >= 1 && !aula.verificado) ? 
+                `<button class="btn-green mt-10" onclick="verificarAula('${materiaId}', '${aulaId}')">✓ Verificar Aula</button>` : ''}
+        `;
+        
+        carregarComentariosAula(materiaId, aulaId);
+    });
 }
 
-function carregarComentarios(materiaId, aulaId) {
-    const container = document.getElementById('aula-comentarios');
+function carregarComentariosAula(materiaId, aulaId) {
+    const container = $('aula-comentarios');
     if (!container) return;
     
-    try {
-        db.ref('comentarios/' + materiaId + '/' + aulaId).once('value').then(function(snap) {
-            if (snap.exists()) {
-                let html = '';
-                snap.forEach(function(child) {
-                    const c = child.val();
-                    html += `
-                        <div style="padding:10px;margin-bottom:10px;background:var(--bg);border-radius:10px;">
-                            <strong>${c.autorNome || 'Anônimo'}</strong>
-                            <span style="color:#94A3B8;font-size:11px;"> • ${formatarData(c.createdAt)}</span>
-                            ${c.isProf ? '<span class="badge badge-prof">Prof</span>' : ''}
-                            <p style="margin-top:5px;">${c.texto || ''}</p>
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<p style="color:#94A3B8;">Nenhum comentário</p>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+    db.ref('comentarios/aulas/' + aulaId).once('value').then(function(snap) {
+        if (snap.exists()) {
+            let html = '';
+            snap.forEach(function(child) {
+                const c = child.val();
+                html += `
+                    <div style="padding:12px;margin-bottom:8px;background:var(--bg);border-radius:10px;">
+                        <strong>${c.autorNome || 'Anônimo'}</strong>
+                        ${c.isProf ? '<span class="badge badge-prof">Prof</span>' : ''}
+                        <span style="color:#64748B;font-size:10px;"> • ${formatarData(c.createdAt)}</span>
+                        <p style="margin-top:5px;">${c.texto || ''}</p>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p style="color:#94A3B8;">Nenhum comentário ainda</p>';
+        }
+    });
 }
 
-function enviarComentario(materiaId, aulaId) {
-    const texto = document.getElementById('comentario-texto');
-    if (!texto || !texto.value.trim()) return;
+function enviarComentarioAula(materiaId, aulaId) {
+    const texto = $('comentario-texto')?.value?.trim();
+    if (!texto) return;
     
-    const ref = db.ref('comentarios/' + materiaId + '/' + aulaId).push();
-    ref.set({
-        texto: texto.value.trim(),
+    db.ref('comentarios/aulas/' + aulaId).push().set({
+        texto,
         autorId: currentUser.uid,
         autorNome: currentUser.fullname || currentUser.username,
         isProf: currentUser.isProf || false,
         createdAt: Date.now()
     }).then(function() {
-        texto.value = '';
-        carregarComentarios(materiaId, aulaId);
+        if ($('comentario-texto')) $('comentario-texto').value = '';
+        carregarComentariosAula(materiaId, aulaId);
         toast('Comentário enviado!', 'success');
     });
 }
 
-function mostrarCriarQuiz(materiaId) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal">
-            <h3>Novo Quiz</h3>
-            <input type="text" id="quiz-nome" placeholder="Nome do quiz">
-            <input type="number" id="quiz-tempo" placeholder="Tempo por questão (segundos)" value="30">
-            <div id="quiz-questoes"></div>
-            <button class="btn-green" onclick="adicionarQuestaoQuiz()" style="width:auto;">+ Questão</button>
-            <div class="modal-buttons">
-                <button class="btn-gold" onclick="gerarQuizIA('${materiaId}')">Gerar com IA</button>
-                <button class="btn-danger" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary" onclick="criarQuiz('${materiaId}')">Criar</button>
-            </div>
+function verificarAula(materiaId, aulaId) {
+    db.ref('aulas/' + materiaId + '/' + aulaId + '/verificado').set(true).then(function() {
+        toast('Aula verificada!', 'success');
+        abrirAula(materiaId, aulaId);
+    });
+}
+
+// ==================== VÍDEOS ====================
+function mostrarAdicionarVideo(materiaId) {
+    criarModal('Adicionar Vídeo', `
+        <input type="text" id="video-titulo" placeholder="Título do vídeo">
+        <input type="text" id="video-url" placeholder="URL do YouTube ou link do vídeo">
+        <select id="video-tipo">
+            <option value="youtube">YouTube</option>
+            <option value="upload">Upload Próprio</option>
+        </select>
+        <input type="file" id="video-file" accept="video/*" style="display:none;">
+        <div class="modal-buttons">
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="adicionarVideo('${materiaId}')">Adicionar</button>
         </div>
-    `;
-    document.body.appendChild(modal);
+    `);
+    
+    $('video-tipo').addEventListener('change', function() {
+        if (this.value === 'upload') {
+            $('video-url').style.display = 'none';
+            $('video-file').style.display = 'block';
+        } else {
+            $('video-url').style.display = 'block';
+            $('video-file').style.display = 'none';
+        }
+    });
+}
+
+function adicionarVideo(materiaId) {
+    const titulo = $('video-titulo')?.value?.trim();
+    const tipo = $('video-tipo')?.value;
+    const url = $('video-url')?.value?.trim();
+    const file = $('video-file')?.files[0];
+    
+    if (!titulo) { toast('Digite um título', 'error'); return; }
+    
+    if (tipo === 'upload' && file) {
+        const formData = new FormData();
+        formData.append('video', file);
+        
+        // Upload para Firebase Storage
+        const ref = storage.ref('videos/' + Date.now() + '_' + file.name);
+        ref.put(file).then(function(snapshot) {
+            return snapshot.ref.getDownloadURL();
+        }).then(function(downloadURL) {
+            salvarVideo(materiaId, titulo, downloadURL, 'upload');
+        }).catch(function() {
+            toast('Erro no upload. Use links do YouTube.', 'error');
+        });
+    } else if (url) {
+        salvarVideo(materiaId, titulo, url, tipo);
+    } else {
+        toast('Forneça URL ou arquivo', 'error');
+    }
+}
+
+function salvarVideo(materiaId, titulo, url, tipo) {
+    db.ref('videos/' + materiaId).push().set({
+        titulo, url, tipo,
+        autorId: currentUser.uid,
+        autorNome: currentUser.fullname || currentUser.username,
+        createdAt: Date.now()
+    }).then(function() {
+        toast('Vídeo adicionado!', 'success');
+        fecharModal();
+        carregarVideosMateria(materiaId);
+    });
+}
+
+// ==================== QUIZZES ====================
+let quizState = {
+    materiaId: null, quizId: null, questoes: [],
+    questaoAtual: 0, pontuacao: 0, timer: null, segundos: 30
+};
+
+function mostrarCriarQuiz(materiaId) {
+    criarModal('Novo Quiz', `
+        <input type="text" id="quiz-nome" placeholder="Nome do quiz">
+        <input type="number" id="quiz-tempo" placeholder="Tempo por questão (segundos)" value="30">
+        <div id="quiz-questoes"></div>
+        <button class="btn-green btn-sm" onclick="adicionarQuestaoQuiz()">+ Adicionar Questão</button>
+        <p style="font-size:11px;color:#94A3B8;margin-top:5px;">Use /cmd no título para comandos rápidos</p>
+        <div class="modal-buttons">
+            <button class="btn-gold" onclick="gerarQuizIA('${materiaId}')">🤖 Gerar com IA</button>
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="criarQuiz('${materiaId}')">Criar Quiz</button>
+        </div>
+    `);
     adicionarQuestaoQuiz();
 }
 
 function adicionarQuestaoQuiz() {
-    const container = document.getElementById('quiz-questoes');
+    const container = $('quiz-questoes');
     if (!container) return;
     
     const idx = container.children.length;
     const div = document.createElement('div');
-    div.style.cssText = 'background:var(--bg);padding:15px;border-radius:10px;margin-bottom:10px;';
+    div.style.cssText = 'background:var(--bg);padding:15px;border-radius:10px;margin-bottom:10px;border:1px solid #334155;';
     div.innerHTML = `
-        <strong>Questão ${idx + 1}</strong>
+        <strong style="color:var(--gold);">Questão ${idx + 1}</strong>
+        <button class="btn-danger btn-sm" onclick="this.parentElement.remove()" style="float:right;font-size:10px;">X</button>
         <input type="text" class="q-pergunta" placeholder="Pergunta" style="width:100%;margin-top:10px;">
         <input type="text" class="q-alt1" placeholder="Alternativa A" style="width:100%;">
         <input type="text" class="q-alt2" placeholder="Alternativa B" style="width:100%;">
         <input type="text" class="q-alt3" placeholder="Alternativa C" style="width:100%;">
         <input type="text" class="q-alt4" placeholder="Alternativa D" style="width:100%;">
         <select class="q-correta" style="width:100%;">
-            <option value="0">Alternativa correta: A</option>
-            <option value="1">Alternativa correta: B</option>
-            <option value="2">Alternativa correta: C</option>
-            <option value="3">Alternativa correta: D</option>
+            <option value="0">Correta: A</option>
+            <option value="1">Correta: B</option>
+            <option value="2">Correta: C</option>
+            <option value="3">Correta: D</option>
         </select>
     `;
     container.appendChild(div);
@@ -834,62 +998,48 @@ function adicionarQuestaoQuiz() {
 
 function montarQuestoesDoForm() {
     const questoes = [];
-    const containers = document.querySelectorAll('#quiz-questoes > div');
-    containers.forEach(function(div) {
-        const pergunta = div.querySelector('.q-pergunta')?.value;
+    $$('#quiz-questoes > div').forEach(function(div) {
+        const pergunta = div.querySelector('.q-pergunta')?.value?.trim();
         const alts = [
-            div.querySelector('.q-alt1')?.value || '',
-            div.querySelector('.q-alt2')?.value || '',
-            div.querySelector('.q-alt3')?.value || '',
-            div.querySelector('.q-alt4')?.value || ''
+            div.querySelector('.q-alt1')?.value?.trim() || '',
+            div.querySelector('.q-alt2')?.value?.trim() || '',
+            div.querySelector('.q-alt3')?.value?.trim() || '',
+            div.querySelector('.q-alt4')?.value?.trim() || ''
         ];
         const correta = parseInt(div.querySelector('.q-correta')?.value || '0');
-        
         if (pergunta && alts[0] && alts[1]) {
-            questoes.push({
-                pergunta: pergunta,
-                alternativas: alts,
-                correta: correta
-            });
+            questoes.push({ pergunta, alternativas: alts, correta });
         }
     });
     return questoes;
 }
 
 function criarQuiz(materiaId) {
-    const nome = document.getElementById('quiz-nome');
-    const tempo = document.getElementById('quiz-tempo');
-    
-    if (!nome || !tempo) return;
+    const nome = $('quiz-nome')?.value?.trim();
+    const tempo = parseInt($('quiz-tempo')?.value || '30');
     const questoes = montarQuestoesDoForm();
     
-    if (!nome.value.trim() || questoes.length === 0) {
-        toast('Preencha nome e pelo menos 1 questão', 'error');
+    if (!nome || questoes.length === 0) {
+        toast('Nome e pelo menos 1 questão são obrigatórios', 'error');
         return;
     }
     
-    const ref = db.ref('quizzes/' + materiaId).push();
-    ref.set({
-        nome: nome.value.trim(),
-        tempo: parseInt(tempo.value) || 30,
-        questoes: questoes,
+    db.ref('quizzes/' + materiaId).push().set({
+        nome, tempo, questoes,
         oficial: currentUser.adminLevel >= 1,
         isProf: currentUser.isProf || false,
         views: {},
         createdAt: Date.now()
     }).then(function() {
         toast('Quiz criado!', 'success');
-        document.querySelector('.modal-overlay')?.remove();
+        fecharModal();
         carregarQuizzesMateria(materiaId);
     });
 }
 
 function gerarQuizIA(materiaId) {
-    const nome = document.getElementById('quiz-nome');
-    if (!nome || !nome.value) {
-        toast('Digite um nome para o quiz', 'error');
-        return;
-    }
+    const nome = $('quiz-nome')?.value?.trim();
+    if (!nome) { toast('Digite um nome para o quiz', 'error'); return; }
     
     toast('Gerando quiz com IA...', 'info');
     
@@ -903,36 +1053,35 @@ function gerarQuizIA(materiaId) {
             model: 'llama-3.1-8b-instant',
             messages: [{
                 role: 'user',
-                content: `Crie um quiz de 5 questões sobre "${nome.value}". Retorne APENAS um JSON válido neste formato: {"questoes":[{"pergunta":"...","alternativas":["A) ...","B) ...","C) ...","D) ..."],"correta":0}]} onde correta é o índice 0-3 da alternativa correta.`
+                content: `Crie um quiz de 5 questões sobre "${nome}". Retorne APENAS JSON: {"questoes":[{"pergunta":"...","alternativas":["A) ...","B) ...","C) ...","D) ..."],"correta":0}]}`
             }],
             max_tokens: 1500
         })
-    }).then(function(res) {
-        return res.json();
-    }).then(function(data) {
-        if (data.choices && data.choices[0]) {
+    }).then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.choices?.[0]) {
             try {
-                const conteudo = data.choices[0].message.content;
-                const jsonMatch = conteudo.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const quizData = JSON.parse(jsonMatch[0]);
-                    const container = document.getElementById('quiz-questoes');
+                const match = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+                if (match) {
+                    const quizData = JSON.parse(match[0]);
+                    const container = $('quiz-questoes');
                     if (container && quizData.questoes) {
                         container.innerHTML = '';
-                        quizData.questoes.forEach(function(q) {
+                        quizData.questoes.forEach(function(q, i) {
                             const div = document.createElement('div');
-                            div.style.cssText = 'background:var(--bg);padding:15px;border-radius:10px;margin-bottom:10px;';
+                            div.style.cssText = 'background:var(--bg);padding:15px;border-radius:10px;margin-bottom:10px;border:1px solid #334155;';
                             div.innerHTML = `
-                                <input type="text" class="q-pergunta" value="${q.pergunta || ''}" style="width:100%;">
+                                <strong style="color:var(--gold);">Questão ${i+1}</strong>
+                                <input type="text" class="q-pergunta" value="${q.pergunta || ''}" style="width:100%;margin-top:10px;">
                                 <input type="text" class="q-alt1" value="${q.alternativas[0] || ''}" style="width:100%;">
                                 <input type="text" class="q-alt2" value="${q.alternativas[1] || ''}" style="width:100%;">
                                 <input type="text" class="q-alt3" value="${q.alternativas[2] || ''}" style="width:100%;">
                                 <input type="text" class="q-alt4" value="${q.alternativas[3] || ''}" style="width:100%;">
                                 <select class="q-correta" style="width:100%;">
-                                    <option value="0" ${q.correta === 0 ? 'selected' : ''}>A</option>
-                                    <option value="1" ${q.correta === 1 ? 'selected' : ''}>B</option>
-                                    <option value="2" ${q.correta === 2 ? 'selected' : ''}>C</option>
-                                    <option value="3" ${q.correta === 3 ? 'selected' : ''}>D</option>
+                                    <option value="0" ${q.correta===0?'selected':''}>A</option>
+                                    <option value="1" ${q.correta===1?'selected':''}>B</option>
+                                    <option value="2" ${q.correta===2?'selected':''}>C</option>
+                                    <option value="3" ${q.correta===3?'selected':''}>D</option>
                                 </select>
                             `;
                             container.appendChild(div);
@@ -941,60 +1090,109 @@ function gerarQuizIA(materiaId) {
                     }
                 }
             } catch(e) {
-                console.error('Erro ao parsear quiz IA:', e);
+                console.error('Parse erro:', e);
                 toast('Erro ao gerar quiz', 'error');
             }
         }
-    }).catch(function(error) {
-        console.error('Erro IA:', error);
+    }).catch(function(e) {
+        console.error(e);
         toast('Erro na IA', 'error');
     });
 }
 
-// ===== QUIZ GAME =====
-let quizState = {
-    materiaId: null,
-    quizId: null,
-    questoes: [],
-    questaoAtual: 0,
-    pontuacao: 0,
-    timer: null,
-    segundos: 0
-};
-
-function iniciarQuiz(materiaId, quizId) {
-    try {
-        db.ref('quizzes/' + materiaId + '/' + quizId).once('value').then(function(snap) {
-            if (!snap.exists()) return;
-            const quiz = snap.val();
+function gerarQuizIAMateria(materiaId) {
+    db.ref('materias/' + materiaId).once('value').then(function(snap) {
+        if (snap.exists()) {
+            const nome = snap.val().nome;
+            criarModal('Quiz IA - ' + nome, `
+                <p style="margin-bottom:15px;">Gerando quiz sobre <strong>${nome}</strong>...</p>
+                <div id="quiz-ia-questoes"></div>
+                <div class="modal-buttons">
+                    <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+                    <button class="btn-primary" onclick="salvarQuizIA('${materiaId}')">Salvar Quiz</button>
+                </div>
+            `);
             
-            quizState = {
-                materiaId: materiaId,
-                quizId: quizId,
-                questoes: quiz.questoes || [],
-                questaoAtual: 0,
-                pontuacao: 0,
-                timer: null,
-                segundos: quiz.tempo || 30
-            };
-            
-            const page = document.getElementById('page-quiz');
-            if (!page) return;
-            
-            document.querySelectorAll('.page').forEach(function(p) {
-                p.classList.remove('active');
+            fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + GROQ_API_KEY
+                },
+                body: JSON.stringify({
+                    model: 'llama-3.1-8b-instant',
+                    messages: [{
+                        role: 'user',
+                        content: `Crie um quiz de 5 questões sobre "${nome}". JSON: {"questoes":[{"pergunta":"...","alternativas":["A) ...","B) ...","C) ...","D) ..."],"correta":0}]}`
+                    }],
+                    max_tokens: 1500
+                })
+            }).then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.choices?.[0]) {
+                    const match = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+                    if (match) {
+                        window._quizIAData = JSON.parse(match[0]);
+                        const container = $('quiz-ia-questoes');
+                        if (container) {
+                            container.innerHTML = '<p style="color:var(--green);">Quiz gerado! Clique em Salvar.</p>' +
+                                '<p style="color:#94A3B8;">Questões: ' + (window._quizIAData.questoes?.length || 0) + '</p>';
+                        }
+                    }
+                }
             });
-            page.classList.add('active');
-            
-            renderizarQuestao();
-        });
-    } catch(e) {
-        console.error('Erro:', e);
+        }
+    });
+}
+
+function salvarQuizIA(materiaId) {
+    if (!window._quizIAData?.questoes) {
+        toast('Gere o quiz primeiro', 'error');
+        return;
     }
+    
+    db.ref('quizzes/' + materiaId).push().set({
+        nome: 'Quiz IA - ' + new Date().toLocaleDateString(),
+        tempo: 30,
+        questoes: window._quizIAData.questoes,
+        oficial: true,
+        isProf: true,
+        views: {},
+        createdAt: Date.now()
+    }).then(function() {
+        toast('Quiz salvo!', 'success');
+        fecharModal();
+        carregarQuizzesMateria(materiaId);
+    });
+}
+
+// ==================== JOGAR QUIZ ====================
+function iniciarQuiz(materiaId, quizId) {
+    db.ref('quizzes/' + materiaId + '/' + quizId).once('value').then(function(snap) {
+        if (!snap.exists()) return;
+        const quiz = snap.val();
+        
+        quizState = {
+            materiaId, quizId,
+            questoes: quiz.questoes || [],
+            questaoAtual: 0,
+            pontuacao: 0,
+            timer: null,
+            segundos: quiz.tempo || 30
+        };
+        
+        const page = $('page-quiz');
+        if (!page) return;
+        
+        $$('.page').forEach(function(p) { p.classList.remove('active'); });
+        page.classList.add('active');
+        
+        renderizarQuestao();
+    });
 }
 
 function renderizarQuestao() {
-    const page = document.getElementById('page-quiz');
+    const page = $('page-quiz');
     if (!page) return;
     
     if (quizState.questaoAtual >= quizState.questoes.length) {
@@ -1007,9 +1205,9 @@ function renderizarQuestao() {
     
     page.innerHTML = `
         <div class="quiz-container">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <span>Questão ${quizState.questaoAtual + 1}/${quizState.questoes.length}</span>
-                <span style="color:var(--gold);">⭐ ${quizState.pontuacao}</span>
+            <div class="quiz-header">
+                <span class="quiz-progress">Questão ${quizState.questaoAtual + 1}/${quizState.questoes.length}</span>
+                <span class="quiz-pontuacao">⭐ ${quizState.pontuacao}</span>
             </div>
             <div class="quiz-timer" id="quiz-timer">${quizState.segundos}s</div>
             <p class="question-text">${questao.pergunta}</p>
@@ -1021,22 +1219,19 @@ function renderizarQuestao() {
         </div>
     `;
     
-    iniciarTimer();
+    iniciarTimerQuiz();
 }
 
-function iniciarTimer() {
+function iniciarTimerQuiz() {
     clearInterval(quizState.timer);
-    const timerEl = document.getElementById('quiz-timer');
+    const timerEl = $('quiz-timer');
     
     quizState.timer = setInterval(function() {
         quizState.segundos--;
         if (timerEl) {
             timerEl.textContent = quizState.segundos + 's';
-            if (quizState.segundos <= 5) {
-                timerEl.classList.add('warning');
-            }
+            if (quizState.segundos <= 5) timerEl.classList.add('warning');
         }
-        
         if (quizState.segundos <= 0) {
             clearInterval(quizState.timer);
             responderQuiz(-1);
@@ -1049,23 +1244,15 @@ function responderQuiz(resposta) {
     
     const questao = quizState.questoes[quizState.questaoAtual];
     const correta = questao.correta;
-    const botoes = document.querySelectorAll('#alternativas-list button');
+    const botoes = $$('#alternativas-list button');
     
-    if (botoes.length > 0) {
-        botoes.forEach(function(btn, i) {
-            btn.style.pointerEvents = 'none';
-            if (i === correta) {
-                btn.classList.add('correct');
-            }
-            if (i === resposta && i !== correta) {
-                btn.classList.add('wrong');
-            }
-        });
-    }
+    botoes.forEach(function(btn, i) {
+        btn.disabled = true;
+        if (i === correta) btn.classList.add('correct');
+        if (i === resposta && i !== correta) btn.classList.add('wrong');
+    });
     
-    if (resposta === correta) {
-        quizState.pontuacao += 10;
-    }
+    if (resposta === correta) quizState.pontuacao += 10;
     
     setTimeout(function() {
         quizState.questaoAtual++;
@@ -1075,7 +1262,7 @@ function responderQuiz(resposta) {
 
 function finalizarQuiz() {
     clearInterval(quizState.timer);
-    const page = document.getElementById('page-quiz');
+    const page = $('page-quiz');
     if (!page) return;
     
     const total = quizState.questoes.length;
@@ -1083,561 +1270,178 @@ function finalizarQuiz() {
     const porcentagem = total > 0 ? Math.round((acertos / total) * 100) : 0;
     
     // Atualizar pontos
-    if (currentUser && currentUser.uid) {
+    if (currentUser?.uid) {
         const novosPontos = (currentUser.points || 0) + quizState.pontuacao;
         db.ref('usuarios/' + currentUser.uid + '/points').set(novosPontos);
         currentUser.points = novosPontos;
+        
+        // Salvar histórico
+        db.ref('usuarios/' + currentUser.uid + '/historico_quizzes').push().set({
+            quizId: quizState.quizId,
+            materiaId: quizState.materiaId,
+            pontuacao: quizState.pontuacao,
+            acertos, total,
+            data: Date.now()
+        });
     }
     
     page.innerHTML = `
-        <div class="quiz-container text-center">
+        <div class="quiz-container quiz-resultado">
             <h2>Quiz Finalizado!</h2>
-            <div style="font-size:64px;margin:20px 0;">${porcentagem >= 70 ? '🎉' : porcentagem >= 40 ? '👍' : '💪'}</div>
-            <div class="stat-card" style="margin:20px 0;">
-                <div class="stat-value" style="color:var(--gold);">${quizState.pontuacao}</div>
-                <div class="stat-label">Pontos ganhos</div>
-            </div>
-            <p>Acertos: ${acertos}/${total} (${porcentagem}%)</p>
-            <button class="btn-primary" onclick="navegar('materias')" style="margin-top:20px;">Voltar às Disciplinas</button>
-        </div>
-    `;
-}
-
-// ===== RANKING =====
-function carregarRanking() {
-    const page = document.getElementById('page-ranking');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <h2 style="margin-bottom:20px;">🏆 Ranking</h2>
-        <div class="tabs">
-            <div class="tab active" onclick="carregarRankingTipo('alunos')">Alunos</div>
-            <div class="tab" onclick="carregarRankingTipo('professores')">Professores</div>
-        </div>
-        <div id="ranking-podio"></div>
-        <div id="ranking-lista"></div>
-    `;
-    
-    carregarRankingTipo('alunos');
-}
-
-function carregarRankingTipo(tipo) {
-    try {
-        let query = db.ref('usuarios').orderByChild('points');
-        
-        query.once('value').then(function(snap) {
-            if (snap.exists()) {
-                const usuarios = [];
-                snap.forEach(function(child) {
-                    const u = child.val();
-                    if (tipo === 'professores' && u.isProf) {
-                        usuarios.push({id: child.key, ...u});
-                    } else if (tipo === 'alunos' && !u.isProf) {
-                        usuarios.push({id: child.key, ...u});
-                    }
-                });
-                
-                usuarios.sort(function(a, b) {
-                    return (b.points || 0) - (a.points || 0);
-                });
-                
-                const top50 = usuarios.slice(0, 50);
-                const top3 = top50.slice(0, 3);
-                
-                // Pódio
-                const podio = document.getElementById('ranking-podio');
-                if (podio) {
-                    podio.innerHTML = `
-                        <div class="podio-container">
-                            ${top3[1] ? `
-                            <div class="podio-item segundo">
-                                <img src="${top3[1].avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" class="podio-avatar">
-                                <div class="podio-username">${top3[1].username || '---'}</div>
-                                <div class="podio-points">${top3[1].points || 0}</div>
-                                <div>🥈 2° Lugar</div>
-                            </div>` : ''}
-                            ${top3[0] ? `
-                            <div class="podio-item primeiro">
-                                <img src="${top3[0].avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" class="podio-avatar">
-                                <div class="podio-username">${top3[0].username || '---'}</div>
-                                <div class="podio-points">${top3[0].points || 0}</div>
-                                <div>👑 1° Lugar</div>
-                            </div>` : ''}
-                            ${top3[2] ? `
-                            <div class="podio-item terceiro">
-                                <img src="${top3[2].avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" class="podio-avatar">
-                                <div class="podio-username">${top3[2].username || '---'}</div>
-                                <div class="podio-points">${top3[2].points || 0}</div>
-                                <div>🥉 3° Lugar</div>
-                            </div>` : ''}
-                        </div>
-                    `;
-                }
-                
-                // Lista
-                const lista = document.getElementById('ranking-lista');
-                if (lista) {
-                    let html = '<h3 style="margin:20px 0;">Top 50</h3>';
-                    top50.forEach(function(u, i) {
-                        html += `
-                            <div class="card" style="display:flex;align-items:center;gap:15px;">
-                                <span style="font-weight:800;font-size:18px;width:30px;">#${i + 1}</span>
-                                <img src="${u.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" style="width:40px;height:40px;border-radius:50%;">
-                                <div style="flex:1;">
-                                    <strong>${u.username || 'Anônimo'}</strong>
-                                    ${u.isProf ? '<span class="badge badge-prof">Prof</span>' : ''}
-                                    ${u.adminLevel >= 1 ? '<img src="https://i.ibb.co/v42HP4Q4/Gemini-Generated-Image-w47123w47123w471.png" class="selo-icon">' : ''}
-                                    ${u.plano === 'premium' || u.plano === 'pro' ? '<img src="https://i.ibb.co/21pxMCWt/Gemini-Generated-Image-ipjg3xipjg3xipjg.png" class="selo-icon">' : ''}
-                                </div>
-                                <span style="color:var(--gold);font-weight:700;">⭐ ${u.points || 0}</span>
-                            </div>
-                        `;
-                    });
-                    lista.innerHTML = html;
-                }
-            }
-        });
-    } catch(e) {
-        console.error('Erro ranking:', e);
-    }
-}
-
-// ===== DESAFIOS =====
-function carregarDesafios() {
-    const page = document.getElementById('page-desafios');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h2>🗓️ Desafios</h2>
-            ${(currentUser && currentUser.adminLevel >= 1) ? '<button class="btn-primary" onclick="mostrarCriarDesafio()" style="width:auto;">+ Novo</button>' : ''}
-        </div>
-        <div id="desafios-list"></div>
-    `;
-    
-    try {
-        db.ref('desafios').once('value').then(function(snap) {
-            const container = document.getElementById('desafios-list');
-            if (!container) return;
-            
-            if (snap.exists()) {
-                let html = '';
-                snap.forEach(function(child) {
-                    const d = child.val();
-                    const agora = Date.now();
-                    const status = agora < d.inicio ? '⏳ Em breve' : agora > d.fim ? '🔒 Encerrado' : '🔥 Ativo';
-                    
-                    html += `
-                        <div class="card">
-                            ${d.banner ? `<img src="${d.banner}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:15px;">` : ''}
-                            <h3>${d.titulo || 'Desafio'}</h3>
-                            <p style="color:#94A3B8;">${d.descricao || ''}</p>
-                            <div style="display:flex;gap:20px;margin:10px 0;font-size:12px;">
-                                <span>📅 ${new Date(d.inicio).toLocaleDateString()} - ${new Date(d.fim).toLocaleDateString()}</span>
-                                <span>🏆 Prêmio: ${d.premio || 0} pontos</span>
-                            </div>
-                            <span class="badge ${status.includes('Ativo') ? 'badge-verificado' : ''}">${status}</span>
-                            ${status.includes('Ativo') ? `<button class="btn-primary" onclick="participarDesafio('${child.key}')" style="margin-top:10px;">Participar</button>` : ''}
-                        </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-flag"></i><p>Nenhum desafio disponível</p></div>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
-}
-
-function mostrarCriarDesafio() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal">
-            <h3>Novo Desafio</h3>
-            <input type="text" id="desafio-titulo" placeholder="Título">
-            <textarea id="desafio-descricao" placeholder="Descrição"></textarea>
-            <input type="text" id="desafio-materia" placeholder="Matéria (ex: Matemática)">
-            <input type="text" id="desafio-banner" placeholder="URL do banner">
-            <input type="datetime-local" id="desafio-inicio" placeholder="Início">
-            <input type="datetime-local" id="desafio-fim" placeholder="Fim">
-            <input type="number" id="desafio-premio" placeholder="Prêmio em pontos" value="100">
-            <div id="desafio-questoes"></div>
-            <button class="btn-green" onclick="adicionarQuestaoDesafio()" style="width:auto;">+ Questão</button>
-            <div class="modal-buttons">
-                <button class="btn-danger" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary" onclick="criarDesafio()">Criar</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    adicionarQuestaoDesafio();
-}
-
-function adicionarQuestaoDesafio() {
-    const container = document.getElementById('desafio-questoes');
-    if (!container) return;
-    
-    const idx = container.children.length;
-    const div = document.createElement('div');
-    div.style.cssText = 'background:var(--bg);padding:15px;border-radius:10px;margin-bottom:10px;';
-    div.innerHTML = `
-        <strong>Questão ${idx + 1}</strong>
-        <input type="text" class="dq-pergunta" placeholder="Pergunta" style="width:100%;margin-top:10px;">
-        <input type="text" class="dq-alt1" placeholder="Alternativa A" style="width:100%;">
-        <input type="text" class="dq-alt2" placeholder="Alternativa B" style="width:100%;">
-        <input type="text" class="dq-alt3" placeholder="Alternativa C" style="width:100%;">
-        <input type="text" class="dq-alt4" placeholder="Alternativa D" style="width:100%;">
-        <select class="dq-correta" style="width:100%;">
-            <option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
-        </select>
-    `;
-    container.appendChild(div);
-}
-
-function criarDesafio() {
-    const titulo = document.getElementById('desafio-titulo')?.value;
-    const descricao = document.getElementById('desafio-descricao')?.value;
-    const materia = document.getElementById('desafio-materia')?.value;
-    const banner = document.getElementById('desafio-banner')?.value;
-    const inicio = document.getElementById('desafio-inicio')?.value;
-    const fim = document.getElementById('desafio-fim')?.value;
-    const premio = parseInt(document.getElementById('desafio-premio')?.value || '100');
-    
-    if (!titulo || !inicio || !fim) {
-        toast('Preencha título, início e fim', 'error');
-        return;
-    }
-    
-    const questoes = [];
-    document.querySelectorAll('#desafio-questoes > div').forEach(function(div) {
-        const pergunta = div.querySelector('.dq-pergunta')?.value;
-        const alts = [
-            div.querySelector('.dq-alt1')?.value || '',
-            div.querySelector('.dq-alt2')?.value || '',
-            div.querySelector('.dq-alt3')?.value || '',
-            div.querySelector('.dq-alt4')?.value || ''
-        ];
-        const correta = parseInt(div.querySelector('.dq-correta')?.value || '0');
-        if (pergunta && alts[0]) {
-            questoes.push({pergunta, alternativas: alts, correta});
-        }
-    });
-    
-    db.ref('desafios').push().set({
-        titulo, descricao: descricao || '', materia: materia || '',
-        banner: banner || '', premio, questoes,
-        inicio: new Date(inicio).getTime(),
-        fim: new Date(fim).getTime(),
-        criadoPor: currentUser.uid,
-        participantes: {},
-        createdAt: Date.now()
-    }).then(function() {
-        toast('Desafio criado!', 'success');
-        document.querySelector('.modal-overlay')?.remove();
-        carregarDesafios();
-    });
-}
-
-function participarDesafio(desafioId) {
-    if (!currentUser) return;
-    
-    db.ref('desafios/' + desafioId).once('value').then(function(snap) {
-        if (!snap.exists()) return;
-        const desafio = snap.val();
-        
-        if (desafio.questoes && desafio.questoes.length > 0) {
-            const questaoAleatoria = desafio.questoes[Math.floor(Math.random() * desafio.questoes.length)];
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal">
-                    <h3>Desafio: ${desafio.titulo}</h3>
-                    <p>${questaoAleatoria.pergunta}</p>
-                    ${questaoAleatoria.alternativas.map(function(alt, i) {
-                        return `<button class="btn-primary" style="margin:5px;display:block;width:100%;text-align:left;" onclick="responderDesafio('${desafioId}', ${i}, ${questaoAleatoria.correta}, ${desafio.premio || 0}, this)">${alt}</button>`;
-                    }).join('')}
+            <div class="quiz-resultado-emoji">${porcentagem >= 80 ? '🏆' : porcentagem >= 50 ? '👍' : '💪'}</div>
+            <div class="quiz-resultado-stats">
+                <div class="quiz-resultado-stat">
+                    <div class="valor" style="color:var(--gold);">${quizState.pontuacao}</div>
+                    <div class="label">Pontos</div>
                 </div>
-            `;
-            document.body.appendChild(modal);
-        }
-    });
-}
-
-function responderDesafio(desafioId, resposta, correta, premio, btn) {
-    if (resposta === correta) {
-        const novosPontos = (currentUser.points || 0) + premio;
-        db.ref('usuarios/' + currentUser.uid + '/points').set(novosPontos);
-        currentUser.points = novosPontos;
-        toast(`🎉 Correto! +${premio} pontos!`, 'success');
-    } else {
-        toast('Resposta incorreta!', 'error');
-    }
-    
-    db.ref('desafios/' + desafioId + '/participantes/' + currentUser.uid).set(true);
-    document.querySelector('.modal-overlay')?.remove();
-}
-
-// ===== JARVIS IA =====
-function carregarJarvis() {
-    const page = document.getElementById('page-jarvis');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <h2 style="margin-bottom:20px;">🤖 Jarvis IA</h2>
-        <div class="chat-container">
-            <div class="chat-messages" id="chat-messages">
-                <div class="message ai">
-                    <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" style="width:30px;height:30px;border-radius:50%;">
-                    <div class="message-content">Olá! Sou o Jarvis, seu assistente de estudos. Como posso ajudar?</div>
+                <div class="quiz-resultado-stat">
+                    <div class="valor">${acertos}/${total}</div>
+                    <div class="label">Acertos</div>
+                </div>
+                <div class="quiz-resultado-stat">
+                    <div class="valor" style="color:${porcentagem >= 70 ? 'var(--green)' : 'var(--red)'};">${porcentagem}%</div>
+                    <div class="label">Aproveitamento</div>
                 </div>
             </div>
-            <div class="chat-input-area">
-                <input type="file" id="jarvis-image" accept="image/*" style="display:none;" onchange="analisarImagemJarvis()">
-                <button onclick="document.getElementById('jarvis-image').click()" title="Enviar imagem"><i class="fas fa-image"></i></button>
-                <input type="text" id="jarvis-input" placeholder="Digite sua mensagem...">
-                <button onclick="enviarMensagemJarvis()"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
-    `;
-}
-
-function enviarMensagemJarvis() {
-    const input = document.getElementById('jarvis-input');
-    const messages = document.getElementById('chat-messages');
-    if (!input || !messages) return;
-    
-    const texto = input.value.trim();
-    if (!texto) return;
-    
-    // Adicionar mensagem do usuário
-    messages.innerHTML += `
-        <div class="message user">
-            <div class="message-content">${texto}</div>
-        </div>
-    `;
-    input.value = '';
-    messages.scrollTop = messages.scrollHeight;
-    
-    // Adicionar placeholder
-    const placeholderId = 'msg-placeholder-' + Date.now();
-    messages.innerHTML += `
-        <div class="message ai" id="${placeholderId}">
-            <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" style="width:30px;height:30px;border-radius:50%;">
-            <div class="message-content">Pensando...</div>
+            <button class="btn-primary mt-20" onclick="navegar('materias')">Voltar às Disciplinas</button>
         </div>
     `;
     
-    chatHistory.push({role: 'user', content: texto});
-    
-    try {
-        fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + GROQ_API_KEY
-            },
-            body: JSON.stringify({
-                model: 'llama-3.1-8b-instant',
-                messages: [
-                    {role: 'system', content: 'Você é Jarvis, assistente de estudos da Sexta-Feira Studies. Seja prestativo e educativo.'},
-                    ...chatHistory.slice(-10)
-                ],
-                max_tokens: 1000
-            })
-        }).then(function(res) {
-            return res.json();
-        }).then(function(data) {
-            const placeholder = document.getElementById(placeholderId);
-            if (placeholder && data.choices && data.choices[0]) {
-                const resposta = data.choices[0].message.content;
-                placeholder.querySelector('.message-content').textContent = resposta;
-                chatHistory.push({role: 'assistant', content: resposta});
-            } else if (placeholder) {
-                placeholder.querySelector('.message-content').textContent = 'Desculpe, ocorreu um erro.';
-            }
-            messages.scrollTop = messages.scrollHeight;
-        }).catch(function(error) {
-            const placeholder = document.getElementById(placeholderId);
-            if (placeholder) {
-                placeholder.querySelector('.message-content').textContent = 'Erro de conexão. Tente novamente.';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+    verificarConquistas();
 }
 
-function analisarImagemJarvis() {
-    const fileInput = document.getElementById('jarvis-image');
-    if (!fileInput || !fileInput.files[0]) return;
-    
-    const file = fileInput.files[0];
-    const messages = document.getElementById('chat-messages');
-    
-    toast('Analisando imagem...', 'info');
-    
-    const formData = new FormData();
-    formData.append('image', file);
-    
-    try {
-        fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_API_KEY, {
-            method: 'POST',
-            body: formData
-        }).then(function(res) {
-            return res.json();
-        }).then(function(data) {
-            if (data.success) {
-                const imageUrl = data.data.url;
-                
-                messages.innerHTML += `
-                    <div class="message user">
-                        <div class="message-content">
-                            <img src="${imageUrl}" style="max-width:200px;border-radius:10px;">
-                            <p>Analise esta imagem</p>
-                        </div>
-                    </div>
-                `;
-                
-                // Análise com Gemini
-                fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=' + GEMINI_API_KEY, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                {text: 'Analise esta imagem em detalhes. O que você vê?'},
-                                {inlineData: {mimeType: 'image/jpeg', data: ''}} // Simplificado
-                            ]
-                        }]
-                    })
-                }).then(function(res) {
-                    return res.json();
-                }).then(function(geminiData) {
-                    const resposta = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'Imagem enviada! Use o chat para perguntar sobre ela.';
-                    messages.innerHTML += `
-                        <div class="message ai">
-                            <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" style="width:30px;height:30px;border-radius:50%;">
-                            <div class="message-content">${resposta}</div>
-                        </div>
-                    `;
-                    messages.scrollTop = messages.scrollHeight;
-                }).catch(function() {
-                    messages.innerHTML += `
-                        <div class="message ai">
-                            <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" style="width:30px;height:30px;border-radius:50%;">
-                            <div class="message-content">Imagem recebida! Faça perguntas sobre ela no chat.</div>
-                        </div>
-                    `;
-                });
-            }
-        });
-    } catch(e) {
-        console.error('Erro upload:', e);
-    }
-}
 
-// ===== FEED =====
+// ==================== FEED ====================
 function carregarFeed() {
-    const page = document.getElementById('page-feed');
+    const page = $('page-feed');
     if (!page) return;
     
     page.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div class="flex-between mb-20">
             <h2>📰 Feed</h2>
-            <button class="btn-primary" onclick="mostrarCriarPost()" style="width:auto;">+ Post</button>
+            <button class="btn-primary btn-sm" onclick="mostrarCriarPost()">+ Post</button>
         </div>
         <div id="feed-list"></div>
     `;
     
-    try {
-        db.ref('posts').orderByChild('createdAt').once('value').then(function(snap) {
-            const container = document.getElementById('feed-list');
-            if (!container) return;
+    carregarPosts();
+}
+
+function carregarPosts() {
+    db.ref('posts').orderByChild('createdAt').once('value').then(function(snap) {
+        const container = $('feed-list');
+        if (!container) return;
+        
+        if (snap.exists()) {
+            let html = '';
+            const posts = [];
+            snap.forEach(function(child) {
+                posts.unshift({id: child.key, ...child.val()});
+            });
             
-            if (snap.exists()) {
-                let html = '';
-                const posts = [];
-                snap.forEach(function(child) {
-                    posts.unshift({id: child.key, ...child.val()});
-                });
+            // Separar posts de professores
+            const postsProf = posts.filter(function(p) { return p.isProf; });
+            const postsNormais = posts.filter(function(p) { return !p.isProf; });
+            const todosPosts = [...postsProf, ...postsNormais];
+            
+            todosPosts.forEach(function(post) {
+                const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+                const viewsCount = post.views ? Object.keys(post.views).length : 0;
+                const isLiked = post.likes && currentUser && post.likes[currentUser.uid];
+                const comentariosCount = 0; // Simplificado
                 
-                posts.forEach(function(post) {
-                    const likesCount = post.likes ? Object.keys(post.likes).length : 0;
-                    const isLiked = post.likes && currentUser && post.likes[currentUser.uid];
-                    
-                    html += `
-                        <div class="post-card">
-                            <div class="post-header">
-                                <img src="${post.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" class="post-avatar">
-                                <div>
-                                    <span class="post-autor">${post.autorNome || 'Anônimo'}</span>
-                                    ${post.isProf ? '<span class="badge badge-prof">Prof</span>' : ''}
-                                    <br><span class="post-data">${formatarData(post.createdAt)}</span>
-                                </div>
-                                <span class="badge" style="margin-left:auto;">${post.tipo === 'dica' ? '💡 Dica' : post.tipo === 'duvida' ? '❓ Dúvida' : '📝 Post'}</span>
+                html += `
+                    <div class="post-card" id="post-${post.id}">
+                        <div class="post-header">
+                            <img src="${post.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" class="post-avatar">
+                            <div style="flex:1;">
+                                <span class="post-autor">${post.autorNome || 'Anônimo'}</span>
+                                ${post.isProf ? '<img src="https://i.ibb.co/7xBb9jQg/Gemini-Generated-Image-m0np5jm0np5jm0np.png" class="selo-icon" title="Professor">' : ''}
+                                <br><span class="post-data">${formatarData(post.createdAt)}</span>
                             </div>
-                            <p class="post-texto">${post.texto || ''}</p>
-                            ${post.imagem ? `<img src="${post.imagem}" class="post-imagem">` : ''}
-                            <div class="post-actions">
-                                <button class="${isLiked ? 'liked' : ''}" onclick="curtirPost('${post.id}')">
-                                    <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i> ${likesCount}
-                                </button>
-                                <button>
-                                    <i class="far fa-eye"></i> ${post.views ? Object.keys(post.views).length : 0}
-                                </button>
-                            </div>
+                            <span class="badge" style="background:#334155;">${post.tipo === 'dica' ? '💡 Dica' : post.tipo === 'duvida' ? '❓ Dúvida' : '📝 Post'}</span>
                         </div>
-                    `;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>Nenhum post no feed</p></div>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro feed:', e);
-    }
+                        <p class="post-texto">${post.texto || ''}</p>
+                        ${post.imagem ? `<img src="${post.imagem}" class="post-imagem" onclick="window.open('${post.imagem}')">` : ''}
+                        <div class="post-actions">
+                            <button class="${isLiked ? 'liked' : ''}" onclick="curtirPost('${post.id}')">
+                                <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i> ${likesCount}
+                            </button>
+                            <button onclick="mostrarComentariosPost('${post.id}')">
+                                <i class="far fa-comment"></i> ${comentariosCount}
+                            </button>
+                            <button>
+                                <i class="far fa-eye"></i> ${viewsCount}
+                            </button>
+                            <button onclick="compartilharPost('${post.id}')">
+                                <i class="fas fa-share"></i>
+                            </button>
+                            <button onclick="denunciarPost('${post.id}')" style="color:var(--red);">
+                                <i class="fas fa-flag"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>Nenhum post no feed</p></div>';
+        }
+    });
 }
 
 function mostrarCriarPost() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal">
-            <h3>Novo Post</h3>
-            <select id="post-tipo">
-                <option value="post">Post normal</option>
-                <option value="dica">Dica</option>
-                <option value="duvida">Dúvida</option>
-            </select>
-            <textarea id="post-texto" placeholder="O que você quer compartilhar?"></textarea>
-            <input type="file" id="post-imagem" accept="image/*">
-            <div class="modal-buttons">
-                <button class="btn-danger" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary" onclick="criarPost()">Publicar</button>
-            </div>
+    criarModal('Novo Post', `
+        <select id="post-tipo">
+            <option value="post">📝 Post Normal</option>
+            <option value="dica">💡 Dica</option>
+            <option value="duvida">❓ Dúvida</option>
+        </select>
+        <textarea id="post-texto" placeholder="O que você quer compartilhar?"></textarea>
+        <input type="file" id="post-imagem-input" accept="image/*" onchange="previewImagemPost()">
+        <div id="post-imagem-preview" style="margin:10px 0;"></div>
+        <div class="modal-buttons">
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="criarPost()">Publicar</button>
         </div>
-    `;
-    document.body.appendChild(modal);
+    `);
+}
+
+function previewImagemPost() {
+    const file = $('post-imagem-input')?.files[0];
+    const preview = $('post-imagem-preview');
+    if (!file || !preview) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `
+            <div class="image-preview-container">
+                <img src="${e.target.result}" alt="Preview">
+                <span class="remove-image" onclick="removerPreviewImagem()">×</span>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerPreviewImagem() {
+    const preview = $('post-imagem-preview');
+    const input = $('post-imagem-input');
+    if (preview) preview.innerHTML = '';
+    if (input) input.value = '';
+    window._postImageFile = null;
 }
 
 function criarPost() {
-    const texto = document.getElementById('post-texto')?.value;
-    const tipo = document.getElementById('post-tipo')?.value || 'post';
-    const imagemFile = document.getElementById('post-imagem')?.files[0];
+    const texto = $('post-texto')?.value?.trim();
+    const tipo = $('post-tipo')?.value || 'post';
+    const file = $('post-imagem-input')?.files[0];
     
-    if (!texto || !texto.trim()) {
-        toast('Escreva algo', 'error');
-        return;
-    }
+    if (!texto && !file) { toast('Escreva algo ou adicione imagem', 'error'); return; }
     
     const postData = {
-        texto: texto.trim(),
-        tipo: tipo,
+        texto: texto || '',
+        tipo,
         autorId: currentUser.uid,
         autorNome: currentUser.fullname || currentUser.username,
         avatar: currentUser.avatar || '',
@@ -1647,33 +1451,30 @@ function criarPost() {
         createdAt: Date.now()
     };
     
-    if (imagemFile) {
+    if (file) {
         const formData = new FormData();
-        formData.append('image', imagemFile);
+        formData.append('image', file);
         
         fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_API_KEY, {
             method: 'POST',
             body: formData
-        }).then(function(res) {
-            return res.json();
-        }).then(function(data) {
-            if (data.success) {
-                postData.imagem = data.data.url;
-            }
-            salvarPost(postData);
+        }).then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) postData.imagem = data.data.url;
+            salvarPostFinal(postData);
         }).catch(function() {
-            salvarPost(postData);
+            salvarPostFinal(postData);
         });
     } else {
-        salvarPost(postData);
+        salvarPostFinal(postData);
     }
 }
 
-function salvarPost(postData) {
+function salvarPostFinal(postData) {
     db.ref('posts').push().set(postData).then(function() {
         toast('Post publicado!', 'success');
-        document.querySelector('.modal-overlay')?.remove();
-        carregarFeed();
+        fecharModal();
+        carregarPosts();
     });
 }
 
@@ -1686,220 +1487,1069 @@ function curtirPost(postId) {
             ref.remove();
         } else {
             ref.set(true);
+            // Notificar autor
+            db.ref('posts/' + postId).once('value').then(function(postSnap) {
+                const post = postSnap.val();
+                if (post && post.autorId !== currentUser.uid) {
+                    enviarNotificacao(post.autorId, currentUser.username + ' curtiu seu post', 'like', 'feed');
+                }
+            });
         }
-        carregarFeed();
+        carregarPosts();
     });
 }
 
-// ===== PERFIL =====
-function carregarPerfil() {
-    const page = document.getElementById('page-perfil');
-    if (!page || !currentUser) return;
+function compartilharPost(postId) {
+    const url = window.location.origin + '?post=' + postId;
+    navigator.clipboard.writeText(url).then(function() {
+        toast('Link copiado!', 'success');
+    });
+}
+
+function denunciarPost(postId) {
+    const motivo = prompt('Motivo da denúncia:');
+    if (motivo) {
+        db.ref('config/denuncias').push().set({
+            tipo: 'post',
+            itemId: postId,
+            motivo,
+            denuncianteId: currentUser.uid,
+            status: 'pendente',
+            createdAt: Date.now()
+        }).then(function() {
+            toast('Denúncia enviada!', 'info');
+        });
+    }
+}
+
+function mostrarComentariosPost(postId) {
+    // Implementação simplificada
+    toast('Comentários em breve!', 'info');
+}
+
+// ==================== RANKING ====================
+function carregarRanking() {
+    const page = $('page-ranking');
+    if (!page) return;
     
     page.innerHTML = `
-        <div class="text-center" style="margin-bottom:20px;">
-            <img src="${currentUser.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" style="width:100px;height:100px;border-radius:50%;margin-bottom:10px;">
-            <h2>${currentUser.fullname || currentUser.username}</h2>
-            <p style="color:#94A3B8;">${currentUser.username || ''}</p>
-            <p>${currentUser.bio || 'Sem bio'}</p>
-            <div style="margin:10px 0;">
-                ${currentUser.adminLevel >= 1 ? '<img src="https://i.ibb.co/v42HP4Q4/Gemini-Generated-Image-w47123w47123w471.png" class="selo-icon" title="Admin">' : ''}
-                ${currentUser.isProf ? '<img src="https://i.ibb.co/7xBb9jQg/Gemini-Generated-Image-m0np5jm0np5jm0np.png" class="selo-icon" title="Professor">' : ''}
-                ${currentUser.plano === 'premium' || currentUser.plano === 'pro' ? '<img src="https://i.ibb.co/21pxMCWt/Gemini-Generated-Image-ipjg3xipjg3xipjg.png" class="selo-icon" title="Premium">' : ''}
-                ${currentUser.isQuizzer ? '<img src="https://i.ibb.co/zHNssTm0/Gemini-Generated-Image-3mtg9a3mtg9a3mtg.png" class="selo-icon" title="Quizzer">' : ''}
-                <img src="https://i.ibb.co/nXKFP0C/Gemini-Generated-Image-175dza175dza175d.png" class="selo-icon" title="Verificado">
+        <h2 class="mb-20">🏆 Ranking</h2>
+        <div class="tabs">
+            <div class="tab active" onclick="carregarRankingTipo('alunos')">👨‍🎓 Alunos</div>
+            <div class="tab" onclick="carregarRankingTipo('professores')">👨‍🏫 Professores</div>
+        </div>
+        <div id="ranking-podio"></div>
+        <div id="ranking-lista"></div>
+        <div id="ranking-minha-posicao" class="card mt-20"></div>
+    `;
+    
+    carregarRankingTipo('alunos');
+}
+
+function carregarRankingTipo(tipo) {
+    db.ref('usuarios').orderByChild('points').once('value').then(function(snap) {
+        if (!snap.exists()) return;
+        
+        const usuarios = [];
+        snap.forEach(function(child) {
+            const u = child.val();
+            if (tipo === 'professores' && u.isProf) usuarios.push({id: child.key, ...u});
+            else if (tipo === 'alunos' && !u.isProf) usuarios.push({id: child.key, ...u});
+        });
+        
+        usuarios.sort(function(a, b) { return (b.points || 0) - (a.points || 0); });
+        const top50 = usuarios.slice(0, 50);
+        const top3 = top50.slice(0, 3);
+        
+        // Pódio
+        const podio = $('ranking-podio');
+        if (podio) {
+            podio.innerHTML = `<div class="podio-container">
+                ${top3[1] ? criarPodioItem(top3[1], '🥈', 'segundo', '2° Lugar') : ''}
+                ${top3[0] ? criarPodioItem(top3[0], '👑', 'primeiro', '1° Lugar') : ''}
+                ${top3[2] ? criarPodioItem(top3[2], '🥉', 'terceiro', '3° Lugar') : ''}
+            </div>`;
+        }
+        
+        // Lista
+        const lista = $('ranking-lista');
+        if (lista) {
+            let html = '<h3 style="margin:20px 0;">Top 50</h3>';
+            top50.forEach(function(u, i) {
+                html += `
+                    <div class="card flex" style="align-items:center;gap:15px;">
+                        <span style="font-weight:800;font-size:18px;width:35px;">#${i+1}</span>
+                        <img src="${u.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" style="width:44px;height:44px;border-radius:50%;">
+                        <div style="flex:1;">
+                            <strong>${u.username || 'Anônimo'}</strong>
+                            ${u.isProf ? '<span class="badge badge-prof">Prof</span>' : ''}
+                            ${u.adminLevel >= 1 ? '<img src="https://i.ibb.co/v42HP4Q4/Gemini-Generated-Image-w47123w47123w471.png" class="selo-icon">' : ''}
+                        </div>
+                        <span style="color:var(--gold);font-weight:700;">⭐ ${u.points || 0}</span>
+                        <button class="btn-sm btn-primary" onclick="seguirUsuario('${u.id}')">${currentUser?.seguindo?.[u.id] ? 'Seguindo' : 'Seguir'}</button>
+                    </div>
+                `;
+            });
+            lista.innerHTML = html;
+        }
+        
+        // Minha posição
+        if (currentUser) {
+            const minhaPos = usuarios.findIndex(function(u) { return u.id === currentUser.uid; });
+            const posEl = $('ranking-minha-posicao');
+            if (posEl) {
+                posEl.innerHTML = `<strong>Sua posição:</strong> #${minhaPos >= 0 ? minhaPos + 1 : '---'} | ⭐ ${currentUser.points || 0} pontos`;
+            }
+        }
+    });
+}
+
+function criarPodioItem(user, emoji, classe, lugar) {
+    return `
+        <div class="podio-item ${classe}">
+            <div class="podio-medal">${emoji}</div>
+            <img src="${user.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" class="podio-avatar">
+            <div class="podio-username">${user.username || '---'}</div>
+            <div class="podio-points">⭐ ${user.points || 0}</div>
+            <div style="font-size:11px;">${lugar}</div>
+        </div>
+    `;
+}
+
+// ==================== DESAFIOS ====================
+function carregarDesafios() {
+    const page = $('page-desafios');
+    if (!page) return;
+    
+    page.innerHTML = `
+        <div class="flex-between mb-20">
+            <h2>🗓️ Desafios</h2>
+            ${currentUser?.adminLevel >= 1 ? '<button class="btn-primary btn-sm" onclick="mostrarCriarDesafio()">+ Novo</button>' : ''}
+        </div>
+        <div id="desafios-list"></div>
+    `;
+    
+    carregarListaDesafios();
+}
+
+function carregarListaDesafios() {
+    db.ref('desafios').once('value').then(function(snap) {
+        const container = $('desafios-list');
+        if (!container) return;
+        
+        if (snap.exists()) {
+            let html = '';
+            const agora = Date.now();
+            snap.forEach(function(child) {
+                const d = child.val();
+                const ativo = agora >= d.inicio && agora <= d.fim;
+                const status = agora < d.inicio ? '⏳ Em breve' : agora > d.fim ? '🔒 Encerrado' : '🔥 Ativo';
+                const participantes = d.participantes ? Object.keys(d.participantes).length : 0;
+                
+                html += `
+                    <div class="card">
+                        ${d.banner ? `<img src="${d.banner}" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:15px;">` : ''}
+                        <h3>${d.titulo || 'Desafio'}</h3>
+                        <p style="color:#94A3B8;">${d.descricao || ''}</p>
+                        <div class="flex gap-15 mt-10" style="font-size:12px;color:#94A3B8;">
+                            <span>📅 ${new Date(d.inicio).toLocaleDateString('pt-BR')} - ${new Date(d.fim).toLocaleDateString('pt-BR')}</span>
+                            <span>🏆 ${d.premio || 0} pts</span>
+                            <span>👥 ${participantes} participantes</span>
+                        </div>
+                        <span class="badge ${ativo ? 'badge-verificado' : ''}" style="margin-top:10px;">${status}</span>
+                        ${ativo ? `<button class="btn-primary btn-sm mt-10" onclick="participarDesafio('${child.key}')">Participar</button>` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-flag"></i><p>Nenhum desafio disponível</p></div>';
+        }
+    });
+}
+
+function mostrarCriarDesafio() {
+    criarModal('Novo Desafio', `
+        <input type="text" id="desafio-titulo" placeholder="Título">
+        <textarea id="desafio-descricao" placeholder="Descrição"></textarea>
+        <input type="text" id="desafio-materia" placeholder="Matéria">
+        <input type="text" id="desafio-banner" placeholder="URL do banner">
+        <label>Início:</label>
+        <input type="datetime-local" id="desafio-inicio">
+        <label>Fim:</label>
+        <input type="datetime-local" id="desafio-fim">
+        <input type="number" id="desafio-premio" placeholder="Prêmio (pontos)" value="100">
+        <div id="desafio-questoes"></div>
+        <button class="btn-green btn-sm" onclick="adicionarQuestaoDesafio()">+ Questão</button>
+        <button class="btn-gold btn-sm" onclick="gerarQuestoesDesafioIA()">🤖 Gerar com IA</button>
+        <div class="modal-buttons">
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="criarDesafio()">Criar</button>
+        </div>
+    `);
+    adicionarQuestaoDesafio();
+}
+
+function adicionarQuestaoDesafio() {
+    const container = $('desafio-questoes');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--bg);padding:15px;border-radius:10px;margin-bottom:10px;border:1px solid #334155;';
+    div.innerHTML = `
+        <input type="text" class="dq-pergunta" placeholder="Pergunta" style="width:100%;margin-bottom:5px;">
+        <input type="text" class="dq-alt1" placeholder="Alternativa A" style="width:100%;">
+        <input type="text" class="dq-alt2" placeholder="Alternativa B" style="width:100%;">
+        <input type="text" class="dq-alt3" placeholder="Alternativa C" style="width:100%;">
+        <input type="text" class="dq-alt4" placeholder="Alternativa D" style="width:100%;">
+        <select class="dq-correta" style="width:100%;margin-top:5px;">
+            <option value="0">Correta: A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option>
+        </select>
+        <button class="btn-danger btn-sm" onclick="this.parentElement.remove()">Remover</button>
+    `;
+    container.appendChild(div);
+}
+
+function criarDesafio() {
+    const titulo = $('desafio-titulo')?.value?.trim();
+    const inicio = $('desafio-inicio')?.value;
+    const fim = $('desafio-fim')?.value;
+    
+    if (!titulo || !inicio || !fim) { toast('Preencha título, início e fim', 'error'); return; }
+    
+    const questoes = [];
+    $$('#desafio-questoes > div').forEach(function(div) {
+        const pergunta = div.querySelector('.dq-pergunta')?.value?.trim();
+        const alts = [
+            div.querySelector('.dq-alt1')?.value?.trim() || '',
+            div.querySelector('.dq-alt2')?.value?.trim() || '',
+            div.querySelector('.dq-alt3')?.value?.trim() || '',
+            div.querySelector('.dq-alt4')?.value?.trim() || ''
+        ];
+        const correta = parseInt(div.querySelector('.dq-correta')?.value || '0');
+        if (pergunta && alts[0]) questoes.push({pergunta, alternativas: alts, correta});
+    });
+    
+    db.ref('desafios').push().set({
+        titulo,
+        descricao: $('desafio-descricao')?.value?.trim() || '',
+        materia: $('desafio-materia')?.value?.trim() || '',
+        banner: $('desafio-banner')?.value?.trim() || '',
+        premio: parseInt($('desafio-premio')?.value || '100'),
+        questoes,
+        inicio: new Date(inicio).getTime(),
+        fim: new Date(fim).getTime(),
+        criadoPor: currentUser.uid,
+        participantes: {},
+        createdAt: Date.now()
+    }).then(function() {
+        toast('Desafio criado!', 'success');
+        fecharModal();
+        carregarListaDesafios();
+    });
+}
+
+function participarDesafio(desafioId) {
+    db.ref('desafios/' + desafioId).once('value').then(function(snap) {
+        if (!snap.exists()) return;
+        const desafio = snap.val();
+        
+        if (desafio.questoes?.length > 0) {
+            const q = desafio.questoes[Math.floor(Math.random() * desafio.questoes.length)];
+            
+            criarModal('Desafio: ' + desafio.titulo, `
+                <p><strong>${q.pergunta}</strong></p>
+                ${q.alternativas.map(function(alt, i) {
+                    return `<button class="btn-primary" style="display:block;width:100%;text-align:left;margin:5px 0;" 
+                        onclick="responderDesafioQuestao('${desafioId}', ${i}, ${q.correta}, ${desafio.premio || 0})">${alt}</button>`;
+                }).join('')}
+            `);
+        }
+    });
+}
+
+function responderDesafioQuestao(desafioId, resposta, correta, premio) {
+    if (resposta === correta) {
+        const novosPontos = (currentUser.points || 0) + premio;
+        db.ref('usuarios/' + currentUser.uid + '/points').set(novosPontos);
+        currentUser.points = novosPontos;
+        toast(`🎉 Correto! +${premio} pontos!`, 'success');
+    } else {
+        toast('❌ Incorreto! Continue estudando.', 'error');
+    }
+    
+    db.ref('desafios/' + desafioId + '/participantes/' + currentUser.uid).set(true);
+    fecharModal();
+}
+
+// ==================== JARVIS IA ====================
+function carregarJarvis() {
+    const page = $('page-jarvis');
+    if (!page) return;
+    
+    page.innerHTML = `
+        <h2 class="mb-20">🤖 Jarvis IA</h2>
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="message ai">
+                    <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" class="message-avatar">
+                    <div class="message-content">Olá! Sou o Jarvis, seu assistente de estudos. Posso analisar imagens e responder dúvidas. Como posso ajudar?</div>
+                </div>
             </div>
-            <p style="color:var(--gold);font-size:24px;font-weight:800;">⭐ ${currentUser.points || 0}</p>
-            <button class="btn-primary" onclick="mostrarEditarPerfil()" style="width:auto;">Editar Perfil</button>
-            <button class="btn-danger" onclick="logout()" style="width:auto;margin-left:10px;">Sair</button>
+            <div class="chat-input-area">
+                <div id="jarvis-image-preview" style="margin-right:10px;"></div>
+                <input type="file" id="jarvis-image-input" accept="image/*" style="display:none;" onchange="previewImagemJarvis()">
+                <button class="btn-icon" onclick="$('jarvis-image-input').click()" title="Enviar imagem"><i class="fas fa-image"></i></button>
+                <input type="text" id="jarvis-input" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter')enviarMensagemJarvis()">
+                <button class="btn-primary btn-sm" onclick="enviarMensagemJarvis()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    `;
+    
+    window._jarvisImageData = null;
+}
+
+function previewImagemJarvis() {
+    const file = $('jarvis-image-input')?.files[0];
+    const preview = $('jarvis-image-preview');
+    if (!file || !preview) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `
+            <div class="image-preview-container" style="margin:0;">
+                <img src="${e.target.result}" style="width:40px;height:40px;border-radius:8px;">
+                <span class="remove-image" onclick="removerImagemJarvis()" style="width:20px;height:20px;font-size:10px;">×</span>
+            </div>
+        `;
+        window._jarvisImageData = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerImagemJarvis() {
+    $('jarvis-image-preview').innerHTML = '';
+    $('jarvis-image-input').value = '';
+    window._jarvisImageData = null;
+}
+
+function enviarMensagemJarvis() {
+    const input = $('jarvis-input');
+    const messages = $('chat-messages');
+    if (!input || !messages) return;
+    
+    const texto = input.value.trim();
+    const imagemData = window._jarvisImageData;
+    
+    if (!texto && !imagemData) return;
+    
+    // Mensagem do usuário
+    let userHTML = '';
+    if (imagemData) {
+        userHTML += `<img src="${imagemData}" style="max-width:180px;border-radius:10px;"><br>`;
+    }
+    userHTML += texto || 'Analise esta imagem';
+    
+    messages.innerHTML += `
+        <div class="message user">
+            <div class="message-content">${userHTML}</div>
+        </div>
+    `;
+    input.value = '';
+    removerImagemJarvis();
+    messages.scrollTop = messages.scrollHeight;
+    
+    // Placeholder resposta
+    const placeholderId = 'msg-' + Date.now();
+    messages.innerHTML += `
+        <div class="message ai" id="${placeholderId}">
+            <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" class="message-avatar">
+            <div class="message-content">Pensando...</div>
+        </div>
+    `;
+    messages.scrollTop = messages.scrollHeight;
+    
+    if (imagemData) {
+        // Usar Gemini 1.5 Flash para visão
+        analisarComGemini(texto || 'Descreva esta imagem', imagemData, placeholderId);
+    } else {
+        // Usar Groq para texto
+        chatHistory.push({role: 'user', content: texto});
+        
+        fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + GROQ_API_KEY
+            },
+            body: JSON.stringify({
+                model: 'llama-3.1-8b-instant',
+                messages: [
+                    {role: 'system', content: 'Você é Jarvis, assistente de estudos. Responda em português, de forma educativa e amigável.'},
+                    ...chatHistory.slice(-10)
+                ],
+                max_tokens: 1000
+            })
+        }).then(function(r) { return r.json(); })
+        .then(function(data) {
+            atualizarRespostaJarvis(placeholderId, data.choices?.[0]?.message?.content || 'Erro na resposta');
+        }).catch(function() {
+            atualizarRespostaJarvis(placeholderId, 'Erro de conexão. Tente novamente.');
+        });
+    }
+}
+
+function analisarComGemini(texto, imagemData, placeholderId) {
+    // Extrair base64
+    const base64 = imagemData.split(',')[1];
+    
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            contents: [{
+                parts: [
+                    {text: texto},
+                    {inlineData: {mimeType: 'image/jpeg', data: base64}}
+                ]
+            }]
+        })
+    }).then(function(r) { return r.json(); })
+    .then(function(data) {
+        const resposta = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Não consegui analisar a imagem.';
+        atualizarRespostaJarvis(placeholderId, resposta);
+        chatHistory.push({role: 'assistant', content: resposta});
+    }).catch(function() {
+        atualizarRespostaJarvis(placeholderId, 'Erro ao analisar imagem. Tente novamente.');
+    });
+}
+
+function atualizarRespostaJarvis(placeholderId, resposta) {
+    const el = $(placeholderId);
+    if (el) {
+        el.querySelector('.message-content').textContent = resposta;
+        const messages = $('chat-messages');
+        if (messages) messages.scrollTop = messages.scrollHeight;
+    }
+}
+
+// ==================== PERFIL ====================
+function carregarPerfil() {
+    const page = $('page-perfil');
+    if (!page || !currentUser) return;
+    
+    const seguidoresCount = currentUser.seguidores ? Object.keys(currentUser.seguidores).length : 0;
+    const seguindoCount = currentUser.seguindo ? Object.keys(currentUser.seguindo).length : 0;
+    
+    page.innerHTML = `
+        <div class="text-center mb-20">
+            <img src="${currentUser.avatar || 'https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png'}" 
+                style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);">
+            <h2 style="margin-top:10px;">${currentUser.fullname || currentUser.username}</h2>
+            <p style="color:#94A3B8;">${currentUser.username || ''}</p>
+            <p style="margin:8px 0;">${currentUser.bio || 'Sem bio'}</p>
+            <div style="margin:10px 0;">
+                ${currentUser.adminLevel >= 1 ? '<img src="https://i.ibb.co/v42HP4Q4/Gemini-Generated-Image-w47123w47123w471.png" class="selo-icon">' : ''}
+                ${currentUser.isProf ? '<img src="https://i.ibb.co/7xBb9jQg/Gemini-Generated-Image-m0np5jm0np5jm0np.png" class="selo-icon">' : ''}
+                ${currentUser.plano !== 'gratis' ? '<img src="https://i.ibb.co/21pxMCWt/Gemini-Generated-Image-ipjg3xipjg3xipjg.png" class="selo-icon">' : ''}
+                ${currentUser.isQuizzer ? '<img src="https://i.ibb.co/zHNssTm0/Gemini-Generated-Image-3mtg9a3mtg9a3mtg.png" class="selo-icon">' : ''}
+                <img src="https://i.ibb.co/nXKFP0C/Gemini-Generated-Image-175dza175dza175d.png" class="selo-icon">
+            </div>
+            <div class="flex-center gap-15 mb-15">
+                <span><strong>${seguidoresCount}</strong> Seguidores</span>
+                <span><strong>${seguindoCount}</strong> Seguindo</span>
+                <span style="color:var(--gold);font-size:20px;">⭐ ${currentUser.points || 0}</span>
+            </div>
+            <div class="flex-center gap-10">
+                <button class="btn-primary btn-sm" onclick="mostrarEditarPerfil()">Editar Perfil</button>
+                <button class="btn-danger btn-sm" onclick="logout()">Sair</button>
+            </div>
         </div>
         
         <div class="tabs">
-            <div class="tab active" onclick="carregarPerfilAulas()">Aulas</div>
-            <div class="tab" onclick="carregarPerfilPosts()">Posts</div>
-            <div class="tab" onclick="carregarPerfilMaterias()">Disciplinas</div>
+            <div class="tab active" onclick="carregarPerfilTab('aulas')">📖 Aulas</div>
+            <div class="tab" onclick="carregarPerfilTab('posts')">📰 Posts</div>
+            <div class="tab" onclick="carregarPerfilTab('materias')">📚 Disciplinas</div>
+            <div class="tab" onclick="carregarPerfilTab('conquistas')">🏅 Conquistas</div>
+            <div class="tab" onclick="carregarPerfilTab('quizzes')">📝 Histórico</div>
         </div>
         <div id="perfil-content"></div>
     `;
     
-    carregarPerfilAulas();
+    carregarPerfilTab('aulas');
 }
 
-function carregarPerfilAulas() {
-    const container = document.getElementById('perfil-content');
-    if (!container) return;
-    container.innerHTML = '<p style="color:#94A3B8;">Carregando...</p>';
-    // Implementação simplificada
-    container.innerHTML = '<div class="empty-state"><i class="fas fa-chalkboard"></i><p>Em breve</p></div>';
-}
-
-function carregarPerfilPosts() {
-    const container = document.getElementById('perfil-content');
+function carregarPerfilTab(tab) {
+    const container = $('perfil-content');
     if (!container) return;
     
-    try {
-        db.ref('posts').orderByChild('autorId').equalTo(currentUser.uid).once('value').then(function(snap) {
-            if (snap.exists()) {
-                let html = '';
-                snap.forEach(function(child) {
-                    const post = child.val();
-                    html += `<div class="post-card"><p>${post.texto || ''}</p><span class="post-data">${formatarData(post.createdAt)}</span></div>`;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>Nenhum post</p></div>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
+    // Atualizar tabs ativas
+    $$('#page-perfil .tab').forEach(function(t) { t.classList.remove('active'); });
+    
+    switch(tab) {
+        case 'posts':
+            db.ref('posts').orderByChild('autorId').equalTo(currentUser.uid).once('value')
+            .then(function(snap) {
+                if (snap.exists()) {
+                    let html = '';
+                    snap.forEach(function(child) {
+                        const p = child.val();
+                        html += `<div class="post-card"><p>${p.texto || ''}</p><span class="post-data">${formatarData(p.createdAt)}</span></div>`;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>Nenhum post</p></div>';
+                }
+            });
+            break;
+        case 'materias':
+            db.ref('materias').orderByChild('autorId').equalTo(currentUser.uid).once('value')
+            .then(function(snap) {
+                if (snap.exists()) {
+                    let html = '';
+                    snap.forEach(function(child) {
+                        const m = child.val();
+                        html += `<div class="card"><strong>${m.icone||''} ${m.nome||''}</strong><p style="color:#94A3B8;">${m.descricao||''}</p></div>`;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-book"></i><p>Nenhuma disciplina</p></div>';
+                }
+            });
+            break;
+        case 'conquistas':
+            carregarConquistasPerfil(container);
+            break;
+        case 'quizzes':
+            db.ref('usuarios/' + currentUser.uid + '/historico_quizzes').once('value')
+            .then(function(snap) {
+                if (snap.exists()) {
+                    let html = '';
+                    snap.forEach(function(child) {
+                        const h = child.val();
+                        html += `<div class="card"><strong>Quiz</strong> | ⭐ ${h.pontuacao} pts | ${h.acertos}/${h.total} acertos | ${formatarData(h.data)}</div>`;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Nenhum quiz realizado</p></div>';
+                }
+            });
+            break;
+        default:
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-chalkboard"></i><p>Em breve</p></div>';
     }
 }
 
-function carregarPerfilMaterias() {
-    const container = document.getElementById('perfil-content');
-    if (!container) return;
+function carregarConquistasPerfil(container) {
+    const conquistas = [
+        {id: 'primeiro_quiz', nome: 'Primeiro Quiz', icone: '📝', desc: 'Completar seu primeiro quiz', cond: function(u) { return u.points >= 10; }},
+        {id: '10_quizzes', nome: 'Quizzer', icone: '🏅', desc: 'Completar 10 quizzes', cond: function(u) { return u.points >= 100; }},
+        {id: '1000_pontos', nome: 'Estudioso', icone: '⭐', desc: 'Alcançar 1000 pontos', cond: function(u) { return u.points >= 1000; }},
+        {id: 'primeiro_post', nome: 'Social', icone: '📰', desc: 'Fazer primeiro post', cond: function() { return true; }},
+        {id: 'seguidor_10', nome: 'Popular', icone: '👥', desc: 'Ter 10 seguidores', cond: function(u) { return (u.seguidores ? Object.keys(u.seguidores).length : 0) >= 10; }}
+    ];
     
-    try {
-        db.ref('materias').orderByChild('autorId').equalTo(currentUser.uid).once('value').then(function(snap) {
-            if (snap.exists()) {
-                let html = '';
-                snap.forEach(function(child) {
-                    const mat = child.val();
-                    html += `<div class="card"><strong>${mat.icone || ''} ${mat.nome || ''}</strong><p style="color:#94A3B8;">${mat.descricao || ''}</p></div>`;
-                });
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-book"></i><p>Nenhuma disciplina</p></div>';
-            }
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+    let html = '';
+    conquistas.forEach(function(c) {
+        const desbloqueada = c.cond(currentUser);
+        html += `
+            <div class="conquista-card ${!desbloqueada ? 'conquista-bloqueada' : ''}">
+                <div class="conquista-icone">${c.icone}</div>
+                <div class="conquista-info">
+                    <h4>${c.nome} ${desbloqueada ? '✅' : '🔒'}</h4>
+                    <p>${c.desc}</p>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
 }
 
 function mostrarEditarPerfil() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal">
-            <h3>Editar Perfil</h3>
-            <input type="text" id="edit-bio" placeholder="Bio" value="${currentUser.bio || ''}">
-            <input type="file" id="edit-avatar" accept="image/*">
-            ${currentUser.avatar ? `<img src="${currentUser.avatar}" style="width:50px;height:50px;border-radius:50%;margin:10px 0;">` : ''}
-            <div class="modal-buttons">
-                <button class="btn-danger" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary" onclick="salvarPerfil()">Salvar</button>
-            </div>
+    criarModal('Editar Perfil', `
+        <input type="text" id="edit-bio" placeholder="Bio" value="${currentUser.bio || ''}">
+        <input type="file" id="edit-avatar" accept="image/*" onchange="previewAvatar()">
+        <div id="avatar-preview" style="margin:10px 0;">
+            ${currentUser.avatar ? `<img src="${currentUser.avatar}" style="width:60px;height:60px;border-radius:50%;">` : ''}
         </div>
-    `;
-    document.body.appendChild(modal);
+        <div class="modal-buttons">
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="salvarPerfil()">Salvar</button>
+        </div>
+    `);
+}
+
+function previewAvatar() {
+    const file = $('edit-avatar')?.files[0];
+    const preview = $('avatar-preview');
+    if (!file || !preview) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" style="width:60px;height:60px;border-radius:50%;">`;
+    };
+    reader.readAsDataURL(file);
+    window._avatarFile = file;
 }
 
 function salvarPerfil() {
-    const bio = document.getElementById('edit-bio')?.value || '';
-    const avatarFile = document.getElementById('edit-avatar')?.files[0];
+    const bio = $('edit-bio')?.value?.trim() || '';
     
-    if (avatarFile) {
+    if (window._avatarFile) {
         const formData = new FormData();
-        formData.append('image', avatarFile);
+        formData.append('image', window._avatarFile);
         
         fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_API_KEY, {
-            method: 'POST',
-            body: formData
-        }).then(function(res) {
-            return res.json();
-        }).then(function(data) {
+            method: 'POST', body: formData
+        }).then(function(r) { return r.json(); })
+        .then(function(data) {
             if (data.success) {
-                db.ref('usuarios/' + currentUser.uid).update({
-                    bio: bio,
-                    avatar: data.data.url
-                }).then(function() {
-                    currentUser.bio = bio;
-                    currentUser.avatar = data.data.url;
-                    toast('Perfil atualizado!', 'success');
-                    document.querySelector('.modal-overlay')?.remove();
-                    carregarPerfil();
-                });
+                db.ref('usuarios/' + currentUser.uid).update({bio, avatar: data.data.url})
+                .then(atualizarPerfilLocal(bio, data.data.url));
             }
-        }).catch(function() {
-            atualizarBio(bio);
         });
     } else {
-        atualizarBio(bio);
+        db.ref('usuarios/' + currentUser.uid).update({bio}).then(atualizarPerfilLocal(bio, currentUser.avatar));
     }
 }
 
-function atualizarBio(bio) {
-    db.ref('usuarios/' + currentUser.uid).update({bio: bio}).then(function() {
-        currentUser.bio = bio;
-        toast('Bio atualizada!', 'success');
-        document.querySelector('.modal-overlay')?.remove();
-        carregarPerfil();
+function atualizarPerfilLocal(bio, avatar) {
+    currentUser.bio = bio;
+    currentUser.avatar = avatar;
+    toast('Perfil atualizado!', 'success');
+    fecharModal();
+    carregarPerfil();
+}
+
+// ==================== SEGUIDORES ====================
+function seguirUsuario(uid) {
+    if (!currentUser || uid === currentUser.uid) return;
+    
+    const seguindoRef = db.ref('seguindo/' + currentUser.uid + '/' + uid);
+    const seguidorRef = db.ref('seguidores/' + uid + '/' + currentUser.uid);
+    
+    seguindoRef.once('value').then(function(snap) {
+        if (snap.exists()) {
+            // Deixar de seguir
+            seguindoRef.remove();
+            seguidorRef.remove();
+            toast('Deixou de seguir', 'info');
+        } else {
+            // Seguir
+            seguindoRef.set(true);
+            seguidorRef.set(true);
+            toast('Seguindo!', 'success');
+            enviarNotificacao(uid, currentUser.username + ' começou a seguir você', 'follow', 'perfil');
+        }
     });
 }
 
-// ===== SOBRE =====
-function carregarSobre() {
-    const page = document.getElementById('page-sobre');
+// ==================== NOTIFICAÇÕES ====================
+function verificarNotificacoes() {
+    if (!currentUser) return;
+    
+    db.ref('notificacoes/' + currentUser.uid).orderByChild('lida').equalTo(false).once('value')
+    .then(function(snap) {
+        const badge = $('notif-badge');
+        const count = snap.exists() ? snap.numChildren() : 0;
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+    });
+}
+
+function enviarNotificacao(uid, mensagem, tipo, link) {
+    db.ref('notificacoes/' + uid).push().set({
+        mensagem, tipo, link, lida: false, createdAt: Date.now()
+    });
+}
+
+function carregarNotificacoes() {
+    const page = $('page-notificacoes');
     if (!page) return;
     
-    try {
-        db.ref('config/sobre').once('value').then(function(snap) {
-            const texto = snap.exists() ? snap.val() : 'Sexta-Feira Studies - A rede social de estudos gamificada.';
-            page.innerHTML = `
-                <h2 style="margin-bottom:20px;">ℹ️ Sobre Nós</h2>
-                <div class="card" style="white-space:pre-wrap;">${texto}</div>
-                <div class="text-center" style="margin-top:20px;color:#94A3B8;">
-                    <p>Feito com ❤️ por Sexta-Feira Studies</p>
-                </div>
-            `;
-        });
-    } catch(e) {
-        console.error('Erro:', e);
+    page.innerHTML = '<h2 class="mb-20">🔔 Notificações</h2><div id="notif-lista"></div>';
+    
+    db.ref('notificacoes/' + currentUser.uid).once('value').then(function(snap) {
+        const container = $('notif-lista');
+        if (!container) return;
+        
+        if (snap.exists()) {
+            let html = '';
+            const notifs = [];
+            snap.forEach(function(child) {
+                notifs.unshift({id: child.key, ...child.val()});
+            });
+            
+            notifs.forEach(function(n) {
+                html += `
+                    <div class="card" style="cursor:pointer;${n.lida ? 'opacity:0.6;' : ''}" onclick="marcarNotifLida('${n.id}')">
+                        <p>${n.mensagem}</p>
+                        <span style="font-size:10px;color:#64748B;">${formatarData(n.createdAt)}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-bell"></i><p>Nenhuma notificação</p></div>';
+        }
+    });
+}
+
+function marcarNotifLida(notifId) {
+    db.ref('notificacoes/' + currentUser.uid + '/' + notifId + '/lida').set(true);
+    verificarNotificacoes();
+}
+
+// ==================== CHAT ====================
+function carregarChat() {
+    const page = $('page-chat');
+    if (!page) return;
+    
+    page.innerHTML = `
+        <h2 class="mb-20">💬 Chat</h2>
+        <div id="chat-lista-contatos"></div>
+        <div id="chat-area" style="display:none;"></div>
+    `;
+    
+    carregarContatos();
+}
+
+function carregarContatos() {
+    // Simplificado - listar conversas
+    const container = $('chat-lista-contatos');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Chat em desenvolvimento</p></div>';
+}
+
+// ==================== GRUPOS ====================
+function carregarGrupos() {
+    const page = $('page-grupos');
+    if (!page) return;
+    
+    page.innerHTML = `
+        <div class="flex-between mb-20">
+            <h2>👥 Grupos de Estudo</h2>
+            <button class="btn-primary btn-sm" onclick="mostrarCriarGrupo()">+ Grupo</button>
+        </div>
+        <div id="grupos-lista"></div>
+    `;
+    
+    db.ref('grupos').once('value').then(function(snap) {
+        const container = $('grupos-lista');
+        if (!container) return;
+        
+        if (snap.exists()) {
+            let html = '';
+            snap.forEach(function(child) {
+                const g = child.val();
+                html += `
+                    <div class="card">
+                        <h3>${g.nome || 'Grupo'}</h3>
+                        <p style="color:#94A3B8;">${g.descricao || ''}</p>
+                        <button class="btn-primary btn-sm mt-10">Entrar</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>Nenhum grupo</p></div>';
+        }
+    });
+}
+
+function mostrarCriarGrupo() {
+    criarModal('Novo Grupo', `
+        <input type="text" id="grupo-nome" placeholder="Nome do grupo">
+        <textarea id="grupo-descricao" placeholder="Descrição"></textarea>
+        <div class="modal-buttons">
+            <button class="btn-danger" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-primary" onclick="criarGrupo()">Criar</button>
+        </div>
+    `);
+}
+
+function criarGrupo() {
+    const nome = $('grupo-nome')?.value?.trim();
+    if (!nome) return;
+    
+    db.ref('grupos').push().set({
+        nome,
+        descricao: $('grupo-descricao')?.value?.trim() || '',
+        criadorId: currentUser.uid,
+        membros: {[currentUser.uid]: true},
+        createdAt: Date.now()
+    }).then(function() {
+        toast('Grupo criado!', 'success');
+        fecharModal();
+        carregarGrupos();
+    });
+}
+
+// ==================== FLASHCARDS ====================
+function carregarFlashcards() {
+    const page = $('page-flashcards');
+    if (!page) return;
+    
+    page.innerHTML = `
+        <h2 class="mb-20">🃏 Flashcards</h2>
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+            <div class="flashcard-inner">
+                <div class="flashcard-front">Frente do Card<br><small style="color:#94A3B8;">Clique para virar</small></div>
+                <div class="flashcard-back">Verso do Card</div>
+            </div>
+        </div>
+        <div class="text-center mt-20">
+            <button class="btn-primary btn-sm">Criar Baralho</button>
+            <button class="btn-green btn-sm">Marcar Revisado</button>
+        </div>
+    `;
+}
+
+// ==================== POMODORO ====================
+function carregarPomodoro() {
+    const page = $('page-pomodoro');
+    if (!page) return;
+    
+    pomodoroMode = 'focus';
+    pomodoroSeconds = 25 * 60;
+    pomodoroRunning = false;
+    clearInterval(pomodoroInterval);
+    
+    page.innerHTML = `
+        <div class="pomodoro-container">
+            <h2>🍅 Pomodoro</h2>
+            <div class="pomodoro-mode mt-20">
+                <button class="btn-sm ${pomodoroMode==='focus'?'btn-primary':'btn-icon'}" onclick="mudarModoPomodoro('focus')">Foco 25min</button>
+                <button class="btn-sm ${pomodoroMode==='shortBreak'?'btn-primary':'btn-icon'}" onclick="mudarModoPomodoro('shortBreak')">Pausa 5min</button>
+                <button class="btn-sm ${pomodoroMode==='longBreak'?'btn-primary':'btn-icon'}" onclick="mudarModoPomodoro('longBreak')">Pausa 15min</button>
+            </div>
+            <div class="pomodoro-timer" id="pomodoro-timer">${formatarTempo(pomodoroSeconds)}</div>
+            <div class="pomodoro-controls">
+                <button id="pomodoro-btn" class="btn-primary" onclick="togglePomodoro()">▶ Iniciar</button>
+                <button class="btn-danger btn-sm" onclick="resetPomodoro()">↺ Reset</button>
+            </div>
+        </div>
+    `;
+}
+
+function mudarModoPomodoro(mode) {
+    pomodoroMode = mode;
+    clearInterval(pomodoroInterval);
+    pomodoroRunning = false;
+    
+    switch(mode) {
+        case 'focus': pomodoroSeconds = 25 * 60; break;
+        case 'shortBreak': pomodoroSeconds = 5 * 60; break;
+        case 'longBreak': pomodoroSeconds = 15 * 60; break;
+    }
+    
+    atualizarDisplayPomodoro();
+    const btn = $('pomodoro-btn');
+    if (btn) btn.textContent = '▶ Iniciar';
+    carregarPomodoro();
+}
+
+function togglePomodoro() {
+    if (pomodoroRunning) {
+        clearInterval(pomodoroInterval);
+        pomodoroRunning = false;
+        $('pomodoro-btn').textContent = '▶ Continuar';
+    } else {
+        pomodoroRunning = true;
+        $('pomodoro-btn').textContent = '⏸ Pausar';
+        pomodoroInterval = setInterval(function() {
+            pomodoroSeconds--;
+            atualizarDisplayPomodoro();
+            if (pomodoroSeconds <= 0) {
+                clearInterval(pomodoroInterval);
+                pomodoroRunning = false;
+                toast('Pomodoro concluído! 🎉', 'success');
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('Pomodoro concluído!');
+                }
+            }
+        }, 1000);
     }
 }
 
-// ===== UPDATES =====
-function carregarUpdates() {
-    const page = document.getElementById('page-updates');
+function resetPomodoro() {
+    clearInterval(pomodoroInterval);
+    pomodoroRunning = false;
+    mudarModoPomodoro(pomodoroMode);
+}
+
+function atualizarDisplayPomodoro() {
+    const el = $('pomodoro-timer');
+    if (el) el.textContent = formatarTempo(pomodoroSeconds);
+}
+
+function formatarTempo(segundos) {
+    const min = Math.floor(segundos / 60);
+    const sec = segundos % 60;
+    return String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+}
+
+// ==================== MODO FOCO ====================
+function toggleModoFoco() {
+    modoFoco = !modoFoco;
+    const btn = $('foco-btn');
+    if (btn) {
+        btn.innerHTML = modoFoco ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+    toast(modoFoco ? 'Modo foco ativado! Notificações silenciadas.' : 'Modo foco desativado.', 'info');
+}
+
+// ==================== BUSCA GLOBAL ====================
+function buscaGlobal() {
+    const termo = $('global-search')?.value?.trim()?.toLowerCase();
+    if (!termo || termo.length < 2) return;
+    
+    // Buscar em usuários, matérias, posts
+    Promise.all([
+        db.ref('usuarios').once('value'),
+        db.ref('materias').once('value')
+    ]).then(function([usersSnap, materiasSnap]) {
+        const resultados = [];
+        
+        if (usersSnap.exists()) {
+            usersSnap.forEach(function(child) {
+                const u = child.val();
+                if (u.username?.toLowerCase().includes(termo) || u.fullname?.toLowerCase().includes(termo)) {
+                    resultados.push({tipo: 'user', nome: u.username, id: child.key});
+                }
+            });
+        }
+        
+        if (materiasSnap.exists()) {
+            materiasSnap.forEach(function(child) {
+                const m = child.val();
+                if (m.nome?.toLowerCase().includes(termo)) {
+                    resultados.push({tipo: 'materia', nome: m.nome, id: child.key});
+                }
+            });
+        }
+        
+        // Mostrar resultados (simplificado)
+        if (resultados.length > 0) {
+            console.log('Resultados:', resultados.slice(0, 10));
+        }
+    });
+}
+
+// ==================== VERIFICAR CONQUISTAS ====================
+function verificarConquistas() {
+    if (!currentUser) return;
+    
+    const conquistasDesbloqueadas = currentUser.conquistas || [];
+    const novasConquistas = [];
+    
+    if (!conquistasDesbloqueadas.includes('primeiro_quiz') && currentUser.points >= 10) {
+        novasConquistas.push('primeiro_quiz');
+    }
+    if (!conquistasDesbloqueadas.includes('1000_pontos') && currentUser.points >= 1000) {
+        novasConquistas.push('1000_pontos');
+    }
+    
+    if (novasConquistas.length > 0) {
+        const todas = [...conquistasDesbloqueadas, ...novasConquistas];
+        db.ref('usuarios/' + currentUser.uid + '/conquistas').set(todas);
+        currentUser.conquistas = todas;
+        toast('🏅 Nova conquista desbloqueada!', 'success');
+    }
+}
+
+// ==================== SOBRE / UPDATES / CALENDÁRIO ====================
+function carregarSobre() {
+    const page = $('page-sobre');
     if (!page) return;
     
-    try {
-        db.ref('config/updates').once('value').then(function(snap) {
-            let html = '<h2 style="margin-bottom:20px;">📋 Update Log</h2>';
+    db.ref('config/sobre').once('value').then(function(snap) {
+        const texto = snap.exists() ? snap.val() : 'Sexta-Feira Studies - Rede social de estudos gamificada.';
+        page.innerHTML = `
+            <h2 class="mb-20">ℹ️ Sobre Nós</h2>
+            <div class="card" style="white-space:pre-wrap;line-height:1.8;">${texto}</div>
+            <div class="text-center mt-20" style="color:#94A3B8;">
+                <p>Feito com ❤️ por Sexta-Feira Studies</p>
+            </div>
+        `;
+    });
+}
+
+function carregarUpdates() {
+    const page = $('page-updates');
+    if (!page) return;
+    
+    db.ref('config/updates').once('value').then(function(snap) {
+        let html = '<h2 class="mb-20">📋 Update Log</h2>';
+        
+        if (snap.exists()) {
+            const updates = [];
+            snap.forEach(function(child) {
+                updates.unshift({id: child.key, ...child.val()});
+            });
             
-            if (snap.exists()) {
-                const updates = [];
-                snap.forEach(function(child) {
-                    updates.unshift({id: child.key, ...child.val()});
-                });
-                
-                updates.forEach(function(up) {
+            updates.forEach(function(u) {
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">${u.titulo || 'Update'}</span>
+                            <span class="badge badge-verificado">v${u.versao || '1.0'}</span>
+                        </div>
+                        <p style="white-space:pre-wrap;">${u.descricao || ''}</p>
+                        <span style="font-size:11px;color:#64748B;">${u.data || ''}</span>
+                    </div>
+                `;
+            });
+        } else {
+            html += '<div class="empty-state"><i class="fas fa-sync-alt"></i><p>Nenhum update</p></div>';
+        }
+        
+        page.innerHTML = html;
+    });
+}
+
+function carregarCalendario() {
+    const page = $('page-calendario');
+    if (!page) return;
+    
+    page.innerHTML = `
+        <h2 class="mb-20">📅 Calendário</h2>
+        <div class="card">
+            <h3>Próximos Desafios</h3>
+            <div id="calendario-desafios"></div>
+        </div>
+    `;
+    
+    db.ref('desafios').once('value').then(function(snap) {
+        const container = $('calendario-desafios');
+        if (!container) return;
+        
+        if (snap.exists()) {
+            let html = '';
+            const agora = Date.now();
+            snap.forEach(function(child) {
+                const d = child.val();
+                if (d.inicio > agora) {
                     html += `
                         <div class="card">
-                            <div class="card-header">
-                                <span class="card-title">${up.titulo || 'Update'}</span>
-                                <span class="badge badge-verificado">v${up.versao || '1.0'}</span>
-                            </div>
-                            <p style="white-space:pre-wrap;">${up.descricao || ''}</p>
-                            <span style="font-size:11px;color:#94A3B8;">${up.data || ''}</span>
+                            <strong>${d.titulo}</strong>
+                            <p>📅 ${new Date(d.inicio).toLocaleDateString('pt-BR')} às ${new Date(d.inicio).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</p>
                         </div>
                     `;
-                });
-            } else {
-                html += '<div class="empty-state"><i class="fas fa-sync-alt"></i><p>Nenhum update registrado</p></div>';
-            }
-            
-            page.innerHTML = html;
-        });
-    } catch(e) {
-        console.error('Erro:', e);
-    }
+                }
+            });
+            container.innerHTML = html || '<p style="color:#94A3B8;">Nenhum desafio agendado</p>';
+        } else {
+            container.innerHTML = '<p style="color:#94A3B8;">Nenhum desafio</p>';
+        }
+    });
 }
 
-// ===== UTILS =====
+// ==================== UTILITÁRIOS ====================
 function toast(msg, type) {
-    const container = document.getElementById('toast-container');
+    const container = $('toast-container');
     if (!container) return;
     
     const toast = document.createElement('div');
@@ -1910,10 +2560,8 @@ function toast(msg, type) {
     setTimeout(function() {
         toast.style.opacity = '0';
         toast.style.transition = 'opacity 0.3s';
-        setTimeout(function() {
-            toast.remove();
-        }, 300);
-    }, 3000);
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3500);
 }
 
 function formatarData(timestamp) {
@@ -1922,66 +2570,55 @@ function formatarData(timestamp) {
     const agora = new Date();
     const diff = agora - data;
     
-    if (diff < 60000) return 'Agora';
-    if (diff < 3600000) return Math.floor(diff / 60000) + 'min atrás';
-    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h atrás';
+    if (diff < 60000) return 'Agora mesmo';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'min';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + 'h';
+    if (diff < 604800000) return Math.floor(diff / 86400000) + 'd';
     
     return data.toLocaleDateString('pt-BR');
 }
 
-function carregarFooter() {
-    const footer = document.getElementById('sidebar-footer');
-    if (footer) {
-        footer.innerHTML = 'Feito com ❤️ por<br>Sexta-Feira Studies';
-    }
-}
-
-// Mostrar vídeos do YouTube
-function mostrarAdicionarVideo(materiaId) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
+function criarModal(titulo, conteudo) {
+    fecharModal();
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'modal-overlay';
+    overlay.innerHTML = `
         <div class="modal">
-            <h3>Adicionar Vídeo</h3>
-            <input type="text" id="video-titulo" placeholder="Título do vídeo">
-            <input type="text" id="video-url" placeholder="URL do YouTube">
-            <div class="modal-buttons">
-                <button class="btn-danger" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                <button class="btn-primary" onclick="adicionarVideo('${materiaId}')">Adicionar</button>
-            </div>
+            <h3>${titulo}</h3>
+            ${conteudo}
         </div>
     `;
-    document.body.appendChild(modal);
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) fecharModal();
+    });
+    document.body.appendChild(overlay);
 }
 
-function adicionarVideo(materiaId) {
-    const titulo = document.getElementById('video-titulo')?.value;
-    const url = document.getElementById('video-url')?.value;
-    
-    if (!titulo || !url) {
-        toast('Preencha todos os campos', 'error');
-        return;
+function fecharModal() {
+    const modal = $('modal-overlay');
+    if (modal) modal.remove();
+}
+
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Solicitar permissão para notificações
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
     }
     
-    db.ref('videos/' + materiaId).push().set({
-        titulo: titulo,
-        url: url,
-        autorId: currentUser.uid,
-        autorNome: currentUser.fullname || currentUser.username,
-        createdAt: Date.now()
-    }).then(function() {
-        toast('Vídeo adicionado!', 'success');
-        document.querySelector('.modal-overlay')?.remove();
-        carregarVideosMateria(materiaId);
+    // Fechar sidebar ao clicar fora
+    document.addEventListener('click', function(e) {
+        const sidebar = $('sidebar');
+        if (sidebar && sidebar.classList.contains('open') && window.innerWidth <= 1024) {
+            if (!sidebar.contains(e.target) && e.target.id !== 'menu-toggle') {
+                sidebar.classList.remove('open');
+            }
+        }
     });
-}
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar se já tem usuário autenticado
+    
+    // Verificar auth
     if (auth.currentUser) {
         carregarUsuario(auth.currentUser.uid);
-    } else {
-        mostrarTela('login-screen');
     }
 });
