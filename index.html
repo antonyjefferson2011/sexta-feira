@@ -2,306 +2,628 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#10B981" />
+  <meta name="description" content="Sexta-Feira Studies - Rede social de estudos gamificada. Aprenda, conecte-se e evolua!" />
   <title>Sexta-Feira Studies</title>
-  <link rel="icon" href="https://i.ibb.co/4nVtZpr2/Gemini-Generated-Image-vrc8thvrc8thvrc8.png" />
-  <link rel="stylesheet" href="./style.css" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="https://i.ibb.co/4nVtZpr2/Gemini-Generated-Image-vrc8thvrc8thvrc8.png" />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ===== TOAST ===== -->
-<div id="toast-container"></div>
+  <!-- ═══════════════════════ TOAST CONTAINER ═══════════════════════ -->
+  <div class="toast-container" id="toast-container"></div>
 
-<!-- ===== TELA: LOGIN ===== -->
-<div id="tela-login" class="tela auth-bg">
-  <div class="auth-center">
-    <div class="auth-logo">
-      <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
+  <!-- ═══════════════════════ LOGIN SCREEN ═══════════════════════ -->
+  <div id="login-screen" class="screen active">
+    <div class="login-box">
+      <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" class="login-logo" />
       <h1>Sexta-Feira Studies</h1>
-      <p>Sua rede social de estudos</p>
-    </div>
-    <div class="card">
-      <h2>Entrar</h2>
-      <div class="form-group">
-        <label>@usuário</label>
-        <input id="login-username" type="text" placeholder="@seuusuario" />
+      <p class="subtitle">Aprenda. Conecte. Evolua.</p>
+      
+      <!-- Tabs -->
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="switchLoginTab('login')">🔑 Entrar</button>
+        <button class="login-tab" onclick="switchLoginTab('cadastro')">✨ Cadastrar</button>
       </div>
-      <div class="form-group">
-        <label>Senha</label>
-        <input id="login-password" type="password" placeholder="••••••••" />
-      </div>
-      <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
-      <div class="divider"><span>ou</span></div>
-      <button class="btn-google" onclick="loginGoogle()">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continuar com Google
-      </button>
-      <p class="auth-link">Não tem conta? <a onclick="mostrarTela('tela-cadastro')">Cadastre-se</a></p>
-    </div>
-  </div>
-</div>
-
-<!-- ===== TELA: CADASTRO ===== -->
-<div id="tela-cadastro" class="tela auth-bg oculto">
-  <div class="auth-center">
-    <div class="auth-logo">
-      <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
-      <h1>Criar conta</h1>
-      <p>Junte-se à comunidade</p>
-    </div>
-    <div class="card">
-      <div class="form-group"><label>Nome completo</label><input id="cad-nome" type="text" placeholder="Seu nome" /></div>
-      <div class="form-group"><label>@usuário</label><input id="cad-username" type="text" placeholder="seuusuario" /></div>
-      <div class="form-group"><label>Email</label><input id="cad-email" type="email" placeholder="seu@email.com" /></div>
-      <div class="form-group"><label>Senha</label><input id="cad-senha" type="password" placeholder="••••••••" /></div>
-      <button class="btn-primary" onclick="fazerCadastro()">Criar conta</button>
-      <p class="auth-link">Já tem conta? <a onclick="mostrarTela('tela-login')">Entrar</a></p>
-    </div>
-  </div>
-</div>
-
-<!-- ===== APP ===== -->
-<div id="app" class="oculto">
-
-  <header id="header">
-    <button class="header-logo" onclick="irHome()">
-      <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
-      <span>Sexta-Feira Studies</span>
-    </button>
-    <div class="header-right">
-      <button class="avatar-btn" onclick="mostrarTelaApp('tela-perfil')">
-        <div id="header-avatar" class="avatar-mini">U</div>
-        <span id="header-nome"></span>
-      </button>
-      <button class="btn-sair" onclick="fazerLogout()">Sair</button>
-    </div>
-  </header>
-
-  <nav id="nav-lateral">
-    <button class="nav-item" onclick="irHome()"><span>🏠</span> Home</button>
-    <button class="nav-item" onclick="mostrarTelaApp('tela-disciplinas')"><span>📚</span> Disciplinas</button>
-    <button class="nav-item" onclick="mostrarTelaApp('tela-ranking')"><span>🏆</span> Ranking</button>
-    <button class="nav-item" onclick="mostrarTelaApp('tela-desafios')"><span>⚡</span> Desafios</button>
-    <button class="nav-item" onclick="mostrarTelaApp('tela-jarvis')"><span>🤖</span> Jarvis IA</button>
-    <button class="nav-item" onclick="mostrarTelaApp('tela-perfil')"><span>👤</span> Perfil</button>
-  </nav>
-
-  <main id="conteudo">
-
-    <!-- HOME -->
-    <div id="tela-home" class="tela-interna">
-      <h1 id="saudacao">Olá!</h1>
-      <p class="subtitulo">Pronto para estudar hoje?</p>
-      <div class="grid-2">
-        <div class="card-stat"><div class="stat-num green" id="stat-pontos">0</div><div class="stat-label">Pontos totais</div></div>
-        <div class="card-stat"><div class="stat-num white" id="stat-quizzes">0</div><div class="stat-label">Quizzes jogados</div></div>
-      </div>
-      <h2 class="secao-titulo">Acesso rápido</h2>
-      <div class="grid-2">
-        <button class="card-acao" onclick="mostrarTelaApp('tela-disciplinas')"><div class="card-icon">📚</div><div class="card-acao-nome">Disciplinas</div><div class="card-acao-desc">Explore matérias e aulas</div></button>
-        <button class="card-acao" onclick="mostrarTelaApp('tela-ranking')"><div class="card-icon">🏆</div><div class="card-acao-nome">Ranking</div><div class="card-acao-desc">Veja os melhores alunos</div></button>
-        <button class="card-acao" onclick="mostrarTelaApp('tela-desafios')"><div class="card-icon">⚡</div><div class="card-acao-nome">Desafios</div><div class="card-acao-desc">Participe e ganhe pontos</div></button>
-        <button class="card-acao" onclick="mostrarTelaApp('tela-jarvis')"><div class="card-icon">🤖</div><div class="card-acao-nome">Jarvis IA</div><div class="card-acao-desc">Tire suas dúvidas com IA</div></button>
-      </div>
-      <p class="footer-txt">Feito com ❤️ por Sexta-Feira Studies</p>
-    </div>
-
-    <!-- DISCIPLINAS -->
-    <div id="tela-disciplinas" class="tela-interna oculto">
-      <div class="tela-header">
-        <div><h1>Disciplinas</h1><p class="subtitulo" id="disc-count"></p></div>
-        <button class="btn-primary sm" onclick="abrirModal('modal-disciplina')">+ Nova</button>
-      </div>
-      <div id="lista-disciplinas" class="grid-disc"><div class="loading">Carregando...</div></div>
-    </div>
-
-    <!-- DETALHE DISCIPLINA -->
-    <div id="tela-disciplina-detalhe" class="tela-interna oculto">
-      <button class="btn-voltar" onclick="mostrarTelaApp('tela-disciplinas')">← Voltar</button>
-      <div class="disc-header">
-        <div id="disc-icone" class="disc-icone-grande">📚</div>
-        <div><h1 id="disc-nome-titulo"></h1><p class="subtitulo" id="disc-desc-titulo"></p></div>
-      </div>
-      <div class="tabs">
-        <button class="tab ativo" id="tab-aulas" onclick="mudarTab('aulas')">Aulas</button>
-        <button class="tab" id="tab-quizzes" onclick="mudarTab('quizzes')">Quizzes</button>
-      </div>
-      <div id="conteudo-aulas">
-        <button class="btn-dashed" onclick="abrirModal('modal-aula')">+ Adicionar Aula</button>
-        <div id="lista-aulas"></div>
-      </div>
-      <div id="conteudo-quizzes" class="oculto"><div id="lista-quizzes-disc"></div></div>
-    </div>
-
-    <!-- AULA -->
-    <div id="tela-aula" class="tela-interna oculto">
-      <button class="btn-voltar" onclick="mostrarTelaApp('tela-disciplina-detalhe')">← Voltar</button>
-      <h1 id="aula-titulo"></h1>
-      <div class="card" id="aula-conteudo" style="white-space:pre-wrap;line-height:1.7;color:#CBD5E1"></div>
-    </div>
-
-    <!-- QUIZ -->
-    <div id="tela-quiz" class="tela-interna oculto">
-      <div class="quiz-header">
-        <button onclick="mostrarTelaApp('tela-disciplinas')" class="quiz-sair">✕ Sair</button>
-        <span id="quiz-progresso" class="quiz-prog-txt"></span>
-        <div class="timer-badge" id="timer-badge">30s</div>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="quiz-progress-fill"></div></div>
-      <div class="timer-ring" id="timer-ring">30</div>
-      <div class="card quiz-card" id="quiz-pergunta-texto"></div>
-      <div id="quiz-opcoes" class="quiz-opcoes"></div>
-    </div>
-
-    <!-- QUIZ RESULTADO -->
-    <div id="tela-quiz-resultado" class="tela-interna oculto">
-      <div class="card resultado-card">
-        <div id="resultado-emoji" class="resultado-emoji">🎉</div>
-        <h2>Quiz finalizado!</h2>
-        <p class="subtitulo" id="resultado-quiz-titulo"></p>
-        <div class="grid-3">
-          <div class="stat-mini"><div id="res-acertos" class="stat-num green">0</div><div class="stat-label">Acertos</div></div>
-          <div class="stat-mini"><div id="res-erros" class="stat-num white">0</div><div class="stat-label">Erros</div></div>
-          <div class="stat-mini"><div id="res-bonus" class="stat-num yellow">+0</div><div class="stat-label">Pontos</div></div>
+      
+      <!-- Form Login -->
+      <div id="form-login">
+        <div class="form-group">
+          <label>@usuario</label>
+          <input type="text" class="input-field" id="login-user" placeholder="@seuusuario" autocomplete="username" />
         </div>
-        <div class="resultado-pct" id="resultado-pct">0%</div>
-        <p class="subtitulo">de acerto</p>
-        <div class="flex-gap">
-          <button class="btn-secondary" onclick="jogarNovamente()">Jogar novamente</button>
-          <button class="btn-primary" onclick="mostrarTelaApp('tela-disciplinas')">Disciplinas</button>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" class="input-field" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
         </div>
-      </div>
-    </div>
-
-    <!-- RANKING -->
-    <div id="tela-ranking" class="tela-interna oculto">
-      <h1>Ranking</h1>
-      <p class="subtitulo">Top estudantes por pontuação</p>
-      <div id="minha-posicao" class="minha-posicao oculto"></div>
-      <div id="lista-ranking"><div class="loading">Carregando...</div></div>
-    </div>
-
-    <!-- DESAFIOS -->
-    <div id="tela-desafios" class="tela-interna oculto">
-      <h1>Desafios</h1>
-      <p class="subtitulo">Participe e ganhe pontos extras</p>
-      <div id="lista-desafios"><div class="loading">Carregando...</div></div>
-    </div>
-
-    <!-- DESAFIO QUIZ -->
-    <div id="tela-desafio-quiz" class="tela-interna oculto">
-      <div class="quiz-header">
-        <button onclick="mostrarTelaApp('tela-desafios')" class="quiz-sair">✕ Sair</button>
-        <span id="desafio-quiz-prog" class="quiz-prog-txt"></span>
-        <div></div>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="desafio-progress-fill"></div></div>
-      <div class="card quiz-card" id="desafio-pergunta-texto"></div>
-      <div id="desafio-opcoes" class="quiz-opcoes"></div>
-    </div>
-
-    <!-- DESAFIO RESULTADO -->
-    <div id="tela-desafio-resultado" class="tela-interna oculto">
-      <div class="card resultado-card">
-        <div class="resultado-emoji">🏆</div>
-        <h2>Desafio concluído!</h2>
-        <div class="resultado-pct" id="desafio-res-pts" style="color:#10B981">+0</div>
-        <p class="subtitulo">pontos ganhos</p>
-        <button class="btn-primary" onclick="mostrarTelaApp('tela-desafios')" style="margin-top:16px">Ver outros desafios</button>
-      </div>
-    </div>
-
-    <!-- JARVIS -->
-    <div id="tela-jarvis" class="tela-interna jarvis-tela oculto">
-      <div class="jarvis-header">
-        <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" alt="Jarvis" class="jarvis-avatar-header" />
-        <div>
-          <div class="jarvis-nome">Jarvis IA</div>
-          <div class="jarvis-status"><span class="dot-verde"></span> Sempre disponível</div>
+        <button class="btn btn-primary btn-full" onclick="doLogin()">
+          <i class="fas fa-sign-in-alt"></i> Entrar
+        </button>
+        <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text3);font-size:12px;">
+          <span style="flex:1;height:1px;background:var(--border);"></span>
+          <span>ou</span>
+          <span style="flex:1;height:1px;background:var(--border);"></span>
         </div>
-      </div>
-      <div id="jarvis-mensagens" class="jarvis-mensagens">
-        <div class="msg-jarvis">
-          <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" alt="Jarvis" class="msg-avatar" />
-          <div class="msg-balao jarvis">Olá! Sou o Jarvis, seu assistente de estudos. Como posso ajudar você hoje?</div>
-        </div>
-      </div>
-      <div class="jarvis-input-area">
-        <input id="jarvis-input" type="text" placeholder="Pergunte algo ao Jarvis..." onkeydown="if(event.key==='Enter')enviarJarvis()" />
-        <button class="btn-send" onclick="enviarJarvis()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        <button class="btn-google" onclick="loginGoogle()">
+          <i class="fab fa-google"></i> Continuar com Google
         </button>
       </div>
-    </div>
-
-    <!-- PERFIL -->
-    <div id="tela-perfil" class="tela-interna oculto">
-      <h1>Perfil</h1>
-      <div class="perfil-centro">
-        <div class="perfil-avatar-wrap">
-          <label for="upload-avatar">
-            <div id="perfil-avatar" class="avatar-grande">U</div>
-            <div class="upload-badge">📷</div>
-          </label>
-          <input type="file" id="upload-avatar" accept="image/*" style="display:none" onchange="uploadAvatar(this)" />
+      
+      <!-- Form Cadastro -->
+      <div id="form-cadastro" style="display:none;">
+        <div class="form-group">
+          <label>Nome completo</label>
+          <input type="text" class="input-field" id="reg-name" placeholder="Seu nome completo" autocomplete="name" />
         </div>
-        <div id="perfil-nome" class="perfil-nome"></div>
-        <div id="perfil-username" class="perfil-user"></div>
-        <div id="perfil-selos" class="selos-container"></div>
-      </div>
-      <div class="grid-2" style="margin-bottom:16px">
-        <div class="card-stat"><div class="stat-num green" id="perfil-pontos">0</div><div class="stat-label">Pontos</div></div>
-        <div class="card-stat"><div class="stat-num white" id="perfil-quizzes">0</div><div class="stat-label">Quizzes</div></div>
-      </div>
-      <div class="card">
-        <div class="bio-header">
-          <span class="secao-titulo" style="margin:0">Bio</span>
-          <button class="btn-link" onclick="toggleEditarBio()">Editar</button>
+        <div class="form-group">
+          <label>@usuario</label>
+          <input type="text" class="input-field" id="reg-user" placeholder="@seuusuario" style="text-transform:lowercase" autocomplete="off" />
         </div>
-        <p id="bio-texto" class="bio-texto">Nenhuma bio ainda.</p>
-        <div id="bio-editor" class="oculto">
-          <textarea id="bio-input" rows="3" placeholder="Conte sobre você..."></textarea>
-          <button class="btn-primary sm" onclick="salvarBio()" style="margin-top:8px">Salvar</button>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="input-field" id="reg-email" placeholder="email@exemplo.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Senha (mínimo 6 caracteres)</label>
+          <input type="password" class="input-field" id="reg-pass" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doRegister()">
+          <i class="fas fa-user-plus"></i> Criar Conta
+        </button>
+        <div style="display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text3);font-size:12px;">
+          <span style="flex:1;height:1px;background:var(--border);"></span>
+          <span>ou</span>
+          <span style="flex:1;height:1px;background:var(--border);"></span>
+        </div>
+        <button class="btn-google" onclick="loginGoogle()">
+          <i class="fab fa-google"></i> Continuar com Google
+        </button>
+      </div>
+      
+      <p style="text-align:center;margin-top:12px;font-size:11px;color:var(--text3);">
+        <a href="#" onclick="document.getElementById('painel-screen')?.scrollIntoView()" style="color:var(--primary);font-weight:600;">Acesso Admin</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ MAIN APP ═══════════════════════ -->
+  <div id="app" style="display:none;">
+    
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-brand" onclick="navigate('home')">
+        <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
+        <span>SF Studies</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" onclick="navigate('busca')" title="Buscar">
+          <i class="fas fa-search"></i>
+        </button>
+        <button class="topbar-btn" onclick="navigate('notificacoes')" title="Notificações">
+          <i class="fas fa-bell"></i>
+          <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+        </button>
+        <div class="topbar-avatar" id="nav-avatar" onclick="navigate('perfil')" title="Perfil">
+          ?
         </div>
       </div>
-    </div>
+    </header>
 
-  </main>
-
-  <nav id="nav-mobile">
-    <button onclick="irHome()"><span>🏠</span><small>Home</small></button>
-    <button onclick="mostrarTelaApp('tela-disciplinas')"><span>📚</span><small>Disciplinas</small></button>
-    <button onclick="mostrarTelaApp('tela-ranking')"><span>🏆</span><small>Ranking</small></button>
-    <button onclick="mostrarTelaApp('tela-desafios')"><span>⚡</span><small>Desafios</small></button>
-    <button onclick="mostrarTelaApp('tela-jarvis')"><span>🤖</span><small>Jarvis</small></button>
-  </nav>
-</div>
-
-<!-- MODAIS -->
-<div id="modal-overlay" class="modal-overlay oculto" onclick="fecharModais()">
-  <div onclick="event.stopPropagation()">
-    <div id="modal-disciplina" class="modal oculto">
-      <h3>Nova Disciplina</h3>
-      <div class="form-group"><label>Nome</label><input id="modal-disc-nome" type="text" placeholder="Ex: Matemática" /></div>
-      <div class="form-group"><label>Descrição</label><input id="modal-disc-desc" type="text" placeholder="Breve descrição" /></div>
-      <div class="flex-gap">
-        <button class="btn-secondary" onclick="fecharModais()">Cancelar</button>
-        <button class="btn-primary" onclick="criarDisciplina()">Criar</button>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <!-- ═══════════ HOME ═══════════ -->
+      <div id="screen-home" class="screen active">
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:5px;" id="home-greeting">Olá! 👋</h2>
+        <p style="color:var(--text2);font-size:13px;margin-bottom:20px;">Continue sua jornada de estudos</p>
+        
+        <div class="stats-grid">
+          <div class="stat-card" onclick="navigate('perfil')">
+            <div class="stat-icon green">⭐</div>
+            <div>
+              <div class="stat-value" id="home-points">0</div>
+              <div class="stat-label">Pontos XP</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">🎮</div>
+            <div>
+              <div class="stat-value" id="home-quizzes">0</div>
+              <div class="stat-label">Quizzes</div>
+            </div>
+          </div>
+          <div class="stat-card" onclick="navigate('ranking')">
+            <div class="stat-icon gold">🏆</div>
+            <div>
+              <div class="stat-value" id="home-rank">--</div>
+              <div class="stat-label">Ranking</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">📚</div>
+            <div>
+              <div class="stat-value" id="home-disciplinas">0</div>
+              <div class="stat-label">Disciplinas</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Progresso -->
+        <div class="card" style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;font-weight:600;">
+            <span>📈 Progresso</span>
+            <span id="progress-text">0/100 pts</span>
+          </div>
+          <div class="progress">
+            <div class="progress-fill" id="progress-fill" style="width:0%;"></div>
+          </div>
+        </div>
+        
+        <!-- Botões rápidos -->
+        <div class="section-title">⚡ Ações Rápidas</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
+          <button class="btn btn-primary" onclick="navigate('materias')"><i class="fas fa-book"></i> Disciplinas</button>
+          <button class="btn btn-outline" onclick="navigate('ranking')"><i class="fas fa-trophy"></i> Ranking</button>
+          <button class="btn btn-outline" onclick="navigate('desafios')"><i class="fas fa-swords"></i> Desafios</button>
+          <button class="btn btn-outline" onclick="navigate('jarvis')"><i class="fas fa-robot"></i> Jarvis IA</button>
+        </div>
+        
+        <!-- Desafio do Dia -->
+        <div id="home-desafio" style="margin-bottom:20px;"></div>
+        
+        <!-- Feed -->
+        <div class="section-title">📰 Feed Recente</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-post')" style="margin-bottom:12px;">
+          <i class="fas fa-plus"></i> Novo Post
+        </button>
+        <div id="feed-list"></div>
       </div>
+
+      <!-- ═══════════ DISCIPLINAS ═══════════ -->
+      <div id="screen-materias" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h2 style="font-size:22px;">📚 Disciplinas</h2>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-materia')">
+            <i class="fas fa-plus"></i> Nova
+          </button>
+        </div>
+        <div class="materia-grid" id="materias-list"></div>
+      </div>
+
+      <!-- ═══════════ DETALHE DISCIPLINA ═══════════ -->
+      <div id="screen-materia-detalhe" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('materias')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <div class="card card-gradient" style="text-align:center;padding:30px;margin-bottom:20px;">
+          <span style="font-size:50px;" id="mat-icone">📚</span>
+          <h2 style="font-size:20px;margin:10px 0 5px;" id="mat-nome">Disciplina</h2>
+          <p style="font-size:13px;opacity:0.9;" id="mat-desc">Carregando...</p>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-aula')"><i class="fas fa-plus"></i> Aula</button>
+          <button class="btn btn-accent btn-sm" onclick="openModal('modal-quiz')"><i class="fas fa-plus"></i> Quiz</button>
+          <button class="btn btn-outline btn-sm" onclick="openModal('modal-video')"><i class="fas fa-video"></i> Vídeo</button>
+        </div>
+        <div class="section-title">📝 Aulas</div>
+        <div id="aulas-list"></div>
+        <div class="section-title">🎮 Quizzes</div>
+        <div id="quizzes-list"></div>
+        <div class="section-title">🎬 Vídeos</div>
+        <div id="videos-list"></div>
+      </div>
+
+      <!-- ═══════════ AULA ═══════════ -->
+      <div id="screen-aula" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="voltarMateria()" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <div class="card">
+          <h2 id="aula-titulo" style="font-size:20px;margin-bottom:10px;"></h2>
+          <div id="aula-meta" style="font-size:11px;color:var(--text3);margin-bottom:15px;"></div>
+          <div id="aula-conteudo" style="line-height:1.8;font-size:14px;"></div>
+        </div>
+        <div class="section-title">💬 Comentários</div>
+        <div id="aula-comentarios"></div>
+        <div style="display:flex;gap:8px;margin-top:15px;">
+          <input type="text" class="input-field" id="aula-comment-input" placeholder="Seu comentário..." style="flex:1;margin:0;" />
+          <button class="btn btn-primary btn-sm" onclick="enviarComentarioAula()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+
+      <!-- ═══════════ QUIZ GAME ═══════════ -->
+      <div id="screen-quiz" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="sairQuiz()" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Sair
+        </button>
+        <div class="quiz-header">
+          <span class="quiz-progress-text" id="quiz-counter">Questão 1/10</span>
+          <span class="quiz-timer" id="quiz-timer">30s</span>
+        </div>
+        <div class="quiz-question" id="quiz-question">Carregando...</div>
+        <div class="quiz-options" id="quiz-options"></div>
+        <div id="quiz-result" class="quiz-result" style="display:none;">
+          <div class="quiz-result-icon" id="result-icon">🎉</div>
+          <h3 class="quiz-result-title" id="result-title">Parabéns!</h3>
+          <p class="quiz-result-text" id="result-text"></p>
+          <div class="quiz-result-points" id="result-points">+0 XP</div>
+          <button class="btn btn-primary" onclick="navigate('materia-detalhe')">Voltar</button>
+        </div>
+      </div>
+
+      <!-- ═══════════ RANKING ═══════════ -->
+      <div id="screen-ranking" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <h2 style="font-size:22px;margin-bottom:16px;">🏆 Ranking</h2>
+        <div class="podium" id="podium" style="display:none;"></div>
+        <div id="ranking-list"></div>
+      </div>
+
+      <!-- ═══════════ DESAFIOS ═══════════ -->
+      <div id="screen-desafios" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <h2 style="font-size:22px;margin-bottom:16px;">⚔️ Desafios</h2>
+        <div id="desafios-list"></div>
+      </div>
+
+      <!-- ═══════════ JARVIS IA ═══════════ -->
+      <div id="screen-jarvis" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <div class="jarvis-container">
+          <div class="jarvis-header">
+            <img src="https://i.ibb.co/WQpBG05/Gemini-Generated-Image-xwcu3fxwcu3fxwcu.png" alt="Jarvis" class="jarvis-avatar" />
+            <div>
+              <h3 style="font-size:16px;">🧠 Jarvis IA</h3>
+              <p style="font-size:11px;color:var(--text2);">Assistente de Estudos</p>
+            </div>
+          </div>
+          <div class="jarvis-messages" id="jarvis-messages">
+            <div class="jarvis-message bot">
+              <div class="jarvis-bubble">
+                👋 Olá! Eu sou o <strong>Jarvis</strong>, seu assistente de estudos!<br>
+                Pergunte qualquer coisa ou envie uma imagem para análise!
+              </div>
+            </div>
+          </div>
+          <div class="jarvis-input-area">
+            <label for="jarvis-img-input" style="cursor:pointer;padding:8px;color:var(--text2);font-size:20px;" title="Enviar imagem">
+              <i class="fas fa-image"></i>
+            </label>
+            <input type="file" id="jarvis-img-input" accept="image/*" style="display:none;" onchange="jarvisImageSelected(this)" />
+            <div id="jarvis-image-preview" class="image-preview-container" style="display:none;">
+              <img id="jarvis-preview-img" class="image-preview" src="" alt="Preview" />
+              <button class="image-preview-remove" onclick="removerImagemJarvis()">✕</button>
+            </div>
+            <input type="text" class="input-field" id="jarvis-input" placeholder="Digite sua pergunta..." style="flex:1;margin:0;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendJarvis();}" />
+            <button class="btn btn-primary btn-sm" onclick="sendJarvis()"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ PERFIL ═══════════ -->
+      <div id="screen-perfil" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <div class="profile-banner"></div>
+        <div class="profile-avatar-wrapper">
+          <img id="perfil-avatar-img" class="profile-avatar" src="" alt="Avatar" />
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">
+            <span id="perfil-nome">---</span>
+            <img src="https://i.ibb.co/v42HP4Q4/Gemini-Generated-Image-w47123w47123w471.png" class="selo" id="selo-admin" style="display:none;" title="Admin" />
+            <img src="https://i.ibb.co/7xBb9jQg/Gemini-Generated-Image-m0np5jm0np5jm0np.png" class="selo" id="selo-prof" style="display:none;" title="Professor" />
+          </div>
+          <div class="profile-username" id="perfil-user">@---</div>
+          <div class="profile-bio" id="perfil-bio" style="margin-top:8px;"></div>
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <div class="profile-stat-number" id="perfil-pts">0</div>
+              <div class="profile-stat-label">Pontos</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-number" id="perfil-quizzes">0</div>
+              <div class="profile-stat-label">Quizzes</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-number" id="perfil-seguidores">0</div>
+              <div class="profile-stat-label">Seguidores</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-number" id="perfil-seguindo">0</div>
+              <div class="profile-stat-label">Seguindo</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-editar-perfil')"><i class="fas fa-edit"></i> Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:20px;">📝 Atividade Recente</div>
+        <div id="perfil-historico"></div>
+      </div>
+
+      <!-- ═══════════ NOTIFICAÇÕES ═══════════ -->
+      <div id="screen-notificacoes" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h2 style="font-size:22px;">🔔 Notificações</h2>
+          <button class="btn btn-outline btn-sm" onclick="marcarTodasLidas()">Marcar todas</button>
+        </div>
+        <div id="notificacoes-list"></div>
+      </div>
+
+      <!-- ═══════════ BUSCA ═══════════ -->
+      <div id="screen-busca" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <h2 style="font-size:22px;margin-bottom:16px;">🔍 Buscar</h2>
+        <input type="text" class="input-field" id="busca-input" placeholder="Buscar usuários, disciplinas..." oninput="doBusca(this.value)" />
+        <div id="busca-results" style="margin-top:12px;"></div>
+      </div>
+
+      <!-- ═══════════ SOBRE ═══════════ -->
+      <div id="screen-sobre" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <h2 style="font-size:22px;margin-bottom:16px;">ℹ️ Sobre Nós</h2>
+        <div class="card" id="sobre-content">
+          <p style="color:var(--text2);text-align:center;">Carregando...</p>
+        </div>
+      </div>
+
+      <!-- ═══════════ UPDATES ═══════════ -->
+      <div id="screen-updates" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <h2 style="font-size:22px;margin-bottom:16px;">📋 Update Log</h2>
+        <div id="updates-list"></div>
+      </div>
+
+      <!-- ═══════════ CRIADOR PDF ═══════════ -->
+      <div id="screen-criador-pdf" class="screen">
+        <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:12px;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <h2 style="font-size:22px;margin-bottom:16px;">📄 Criador de Tarefas</h2>
+        <div class="card">
+          <div class="form-group"><label>Título da Tarefa</label><input type="text" class="input-field" id="pdf-titulo" placeholder="Ex: Lista de Exercícios - Matemática" /></div>
+          <div class="form-group"><label>Disciplina</label><input type="text" class="input-field" id="pdf-disciplina" placeholder="Matemática" /></div>
+          <div class="form-group"><label>Professor(a)</label><input type="text" class="input-field" id="pdf-professor" placeholder="Nome do professor" /></div>
+          <div class="form-group">
+            <label>Questões (cole aqui ou gere com IA)</label>
+            <textarea class="input-field" id="pdf-questoes" rows="8" placeholder="Digite as questões...&#10;&#10;Use formato:&#10;1. Qual a capital do Brasil?&#10;a) Rio&#10;b) SP&#10;c) Brasília&#10;d) Salvador"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-accent" onclick="gerarQuestoesPDF()" style="flex:1;"><i class="fas fa-robot"></i> Gerar com IA</button>
+            <button class="btn btn-primary" onclick="previewPDF()" style="flex:1;"><i class="fas fa-eye"></i> Visualizar</button>
+          </div>
+        </div>
+        <div class="card" id="pdf-preview-card" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3>📄 Pré-visualização</h3>
+            <button class="btn btn-primary btn-sm" onclick="baixarPDF()"><i class="fas fa-download"></i> Baixar PDF</button>
+          </div>
+          <div id="pdf-preview-content" style="background:white;color:#1E293B;padding:20px;border-radius:8px;line-height:1.8;font-size:14px;font-family:Arial,sans-serif;"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="bnav-item active" onclick="navigate('home')"><i class="fas fa-home"></i><span>Home</span></button>
+      <button class="bnav-item" onclick="navigate('materias')"><i class="fas fa-book"></i><span>Disciplinas</span></button>
+      <button class="bnav-item" onclick="navigate('desafios')"><i class="fas fa-swords"></i><span>Desafios</span></button>
+      <button class="bnav-item" onclick="navigate('ranking')"><i class="fas fa-trophy"></i><span>Ranking</span></button>
+      <button class="bnav-item" onclick="navigate('jarvis')"><i class="fas fa-robot"></i><span>Jarvis</span></button>
+    </nav>
+
+  </div>
+
+  <!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+  <footer class="site-footer" id="site-footer" style="display:none;">
+    <img src="https://i.ibb.co/TqNkvPMT/Gemini-Generated-Image-vetlw0vetlw0vetl.png" alt="Logo" />
+    <div class="footer-text">Sexta-Feira Studies</div>
+    <div class="footer-subtext">Aprenda. Conecte. Evolua.</div>
+    <div class="footer-links">
+      <a onclick="navigate('sobre')">Sobre Nós</a>
+      <a onclick="navigate('updates')">Updates</a>
+      <a onclick="navigate('criador-pdf')">Criar Tarefa</a>
+      <a href="painel.html">Painel Admin</a>
     </div>
-    <div id="modal-aula" class="modal oculto">
-      <h3>Nova Aula</h3>
-      <div class="form-group"><label>Título</label><input id="modal-aula-titulo" type="text" placeholder="Título da aula" /></div>
-      <div class="form-group"><label>Conteúdo</label><textarea id="modal-aula-conteudo" rows="5" placeholder="Conteúdo da aula..."></textarea></div>
-      <div class="flex-gap">
-        <button class="btn-secondary" onclick="fecharModais()">Cancelar</button>
-        <button class="btn-primary" onclick="criarAula()">Salvar</button>
+    <div class="footer-copy">Feito com ❤️ por Sexta-Feira Studies © 2025</div>
+  </footer>
+
+  <!-- ═══════════════════════ MODAIS ═══════════════════════ -->
+
+  <!-- Modal Criar Disciplina -->
+  <div class="modal" id="modal-materia">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📚 Nova Disciplina</h3>
+        <button class="modal-close" onclick="closeModal('modal-materia')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Ícone (emoji)</label><input type="text" class="input-field" id="disc-icon" placeholder="📚" /></div>
+        <div class="form-group"><label>Nome</label><input type="text" class="input-field" id="disc-nome" placeholder="Ex: Matemática" /></div>
+        <div class="form-group"><label>Descrição</label><textarea class="input-field" id="disc-desc" rows="3" placeholder="Descreva a disciplina..."></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-materia')">Cancelar</button>
+        <button class="btn btn-primary" onclick="criarMateria()">Criar</button>
       </div>
     </div>
   </div>
-</div>
 
-<script type="module" src="./script.js"></script>
+  <!-- Modal Criar Aula -->
+  <div class="modal" id="modal-aula">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📝 Nova Aula</h3>
+        <button class="modal-close" onclick="closeModal('modal-aula')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Título</label><input type="text" class="input-field" id="aula-titulo-input" placeholder="Título da aula" /></div>
+        <div class="form-group"><label>Conteúdo</label><textarea class="input-field" id="aula-conteudo-input" rows="6" placeholder="Conteúdo da aula..."></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-aula')">Cancelar</button>
+        <button class="btn btn-primary" onclick="criarAula()">Criar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Quiz -->
+  <div class="modal" id="modal-quiz">
+    <div class="modal-box" style="max-width:600px;">
+      <div class="modal-header">
+        <h3>🎮 Novo Quiz</h3>
+        <button class="modal-close" onclick="closeModal('modal-quiz')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Nome do Quiz</label><input type="text" class="input-field" id="quiz-nome" placeholder="Nome do quiz" /></div>
+        <div class="form-group"><label>Tempo por questão (segundos)</label><input type="number" class="input-field" id="quiz-tempo" value="30" /></div>
+        <div id="quiz-questoes-wrap"></div>
+        <button class="btn btn-outline btn-sm" onclick="addQuestaoQuiz()" style="margin-top:8px;"><i class="fas fa-plus"></i> Adicionar Questão</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-quiz')">Cancelar</button>
+        <button class="btn btn-primary" onclick="criarQuiz()">Criar Quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Criar Post -->
+  <div class="modal" id="modal-post">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✍️ Novo Post</h3>
+        <button class="modal-close" onclick="closeModal('modal-post')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Texto</label><textarea class="input-field" id="post-texto" rows="4" placeholder="O que você quer compartilhar?"></textarea></div>
+        <div class="form-group">
+          <label>Imagem (opcional)</label>
+          <input type="file" accept="image/*" id="post-img-input" onchange="previewImg(this,'post-img-preview')" />
+          <div class="image-preview-container" id="post-img-preview-container" style="display:none;">
+            <img id="post-img-preview" class="image-preview" src="" alt="Preview" />
+            <button class="image-preview-remove" onclick="removerImagemPost()">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-post')">Cancelar</button>
+        <button class="btn btn-primary" onclick="criarPost()">Publicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Comentários -->
+  <div class="modal" id="modal-comentarios">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>💬 Comentários</h3>
+        <button class="modal-close" onclick="closeModal('modal-comentarios')">✕</button>
+      </div>
+      <div class="modal-body" id="modal-comentarios-body" style="max-height:400px;overflow-y:auto;"></div>
+      <div style="display:flex;gap:8px;padding:16px;border-top:1px solid var(--border);">
+        <input type="text" class="input-field" id="comentario-input" placeholder="Seu comentário..." style="flex:1;margin:0;" />
+        <button class="btn btn-primary btn-sm" onclick="enviarComentario()"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Perfil -->
+  <div class="modal" id="modal-editar-perfil">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>✏️ Editar Perfil</h3>
+        <button class="modal-close" onclick="closeModal('modal-editar-perfil')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Nome</label><input type="text" class="input-field" id="ep-nome" placeholder="Seu nome" /></div>
+        <div class="form-group"><label>Bio</label><textarea class="input-field" id="ep-bio" rows="3" placeholder="Conte sobre você..."></textarea></div>
+        <div class="form-group">
+          <label>Avatar</label>
+          <input type="file" accept="image/*" id="ep-avatar-input" onchange="previewImg(this,'ep-avatar-preview')" />
+          <div class="image-preview-container" id="ep-avatar-preview-container" style="display:none;">
+            <img id="ep-avatar-preview" class="image-preview" src="" alt="Preview" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-editar-perfil')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarPerfil()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ver Perfil -->
+  <div class="modal" id="modal-user-perfil">
+    <div class="modal-box" style="overflow:hidden;padding:0;">
+      <div class="profile-banner"></div>
+      <div class="profile-avatar-wrapper" style="position:relative;bottom:auto;left:24px;margin-top:-40px;">
+        <img id="mup-avatar" class="profile-avatar" src="" alt="Avatar" />
+      </div>
+      <div style="padding:20px;" id="mup-info"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-user-perfil')">Fechar</button>
+        <button class="btn btn-primary" id="mup-follow-btn" onclick="toggleFollowModal()">Seguir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Vídeo -->
+  <div class="modal" id="modal-video">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🎬 Adicionar Vídeo</h3>
+        <button class="modal-close" onclick="closeModal('modal-video')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Título</label><input type="text" class="input-field" id="video-titulo" placeholder="Título do vídeo" /></div>
+        <div class="form-group"><label>Link do YouTube</label><input type="url" class="input-field" id="video-url" placeholder="https://youtube.com/watch?v=..." /></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-video')">Cancelar</button>
+        <button class="btn btn-primary" onclick="adicionarVideo()">Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
