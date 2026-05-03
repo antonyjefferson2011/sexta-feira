@@ -531,5 +531,34 @@ async function loadUpdates() {
 async function addPoints(pts) { if (!U||pts<=0) return; const cur = (await db.ref('usuarios/'+U.uid+'/points').once('value')).val()||0; await db.ref('usuarios/'+U.uid).update({points:cur+pts}); UD.points = cur+pts; updateUI(); }
 function uploadImgBB(file, cb) { const r = new FileReader(); r.onload = async e => { const fd = new FormData(); fd.append('key',IMGBB_KEY); fd.append('image',e.target.result.split(',')[1]); try { const res = await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd}); const d = await res.json(); cb(d.data?d.data.url:''); } catch(ex) { cb(''); } }; r.readAsDataURL(file); }
 
+// ═══════════════ HISTÓRICO DE NAVEGAÇÃO ═══════════════
+let navHistory = [];
+
+// Sobrescreve a função navigate para salvar histórico
+const originalNavigate = navigate;
+navigate = function(page) {
+  if (navHistory.length === 0 || navHistory[navHistory.length - 1] !== page) {
+    navHistory.push(page);
+  }
+  if (navHistory.length > 20) navHistory.shift();
+  history.pushState({ page: page }, '', '#' + page);
+  originalNavigate(page);
+};
+
+// Botão voltar do navegador
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.page) {
+    originalNavigate(e.state.page);
+  } else {
+    originalNavigate('home');
+  }
+});
+
+// Inicia com a URL atual
+if (window.location.hash) {
+  const page = window.location.hash.substring(1);
+  setTimeout(function() { originalNavigate(page); }, 500);
+}
+
 console.log('✅ Sexta-Feira Studies PRONTO!');
 console.log('📚 Disciplinas | 🎮 Quizzes | 🏆 Ranking | ⚔️ Desafios | 🤖 Jarvis IA');
